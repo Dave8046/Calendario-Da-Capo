@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-black text-white">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Da Capo - Casa Musical</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            bg: '#000000',
+                            card: '#0a0a0a',
+                            border: '#262626',
+                            hover: '#171717',
+                            accent: '#ffffff',
+                            muted: '#a3a3a3'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #000000; }
+        ::-webkit-scrollbar-thumb { background: #262626; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #404040; }
+    </style>
+</head>
+<body class="h-full bg-black text-neutral-100 flex flex-col selection:bg-neutral-800 selection:text-white">
+
+    <!-- APP HEADER -->
+    <header class="border-b border-neutral-800 bg-black/90 backdrop-blur sticky top-0 z-30 px-4 py-3">
+        <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-white text-black font-bold flex items-center justify-center text-lg shadow-sm">
+                    DC
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight tracking-tight text-white">DA CAPO</h1>
+                    <p class="text-xs text-neutral-400 font-medium">Casa Musical · Gestor de Horarios</p>
+                </div>
+            </div>
+
+            <!-- Header Actions -->
+            <div class="flex items-center gap-2">
+                <button onclick="openCloudModal()" id="cloudStatusBtn" class="px-3 py-1.5 rounded-lg border border-neutral-800 bg-neutral-900 hover:bg-neutral-800 text-xs font-medium flex items-center gap-2 transition-colors">
+                    <span id="cloudDot" class="w-2 h-2 rounded-full bg-neutral-500"></span>
+                    <i data-lucide="wifi" class="w-3.5 h-3.5 text-neutral-400"></i>
+                    <span id="cloudStatusText" class="hidden sm:inline">Nube Live</span>
+                </button>
+                <button onclick="openTemplatesModal()" class="px-3 py-1.5 rounded-lg border border-neutral-800 bg-neutral-900 hover:bg-neutral-800 text-xs font-medium flex items-center gap-2 transition-colors">
+                    <i data-lucide="message-square" class="w-3.5 h-3.5 text-neutral-400"></i>
+                    <span class="hidden sm:inline">Plantillas WA</span>
+                </button>
+                <button onclick="exportBackupData()" class="px-3 py-1.5 rounded-lg border border-neutral-800 bg-neutral-900 hover:bg-neutral-800 text-xs font-medium flex items-center gap-2 transition-colors">
+                    <i data-lucide="download" class="w-3.5 h-3.5 text-neutral-400"></i>
+                    <span class="hidden sm:inline">Respaldo</span>
+                </button>
+                <button onclick="openLessonModal()" class="px-3 py-1.5 rounded-lg bg-white text-black hover:bg-neutral-200 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Nueva Clase</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- NAVIGATION TABS -->
+    <nav class="border-b border-neutral-800 bg-black/60 sticky top-[61px] z-20 px-4">
+        <div class="max-w-6xl mx-auto flex items-center gap-2 overflow-x-auto py-2 scrollbar-none">
+            <button onclick="switchMainTab('agenda')" id="tab-agenda" class="tab-btn px-4 py-2 rounded-lg text-xs font-medium flex items-center gap-2 border border-white bg-white text-black transition-all">
+                <i data-lucide="calendar" class="w-4 h-4"></i>
+                <span>Agenda Semanal</span>
+            </button>
+            <button onclick="switchMainTab('attendance')" id="tab-attendance" class="tab-btn px-4 py-2 rounded-lg text-xs font-medium flex items-center gap-2 border border-transparent text-neutral-400 hover:text-white hover:bg-neutral-900 transition-all">
+                <i data-lucide="check-square" class="w-4 h-4"></i>
+                <span>Control Asistencia</span>
+            </button>
+            <button onclick="switchMainTab('templates')" id="tab-templates" class="tab-btn px-4 py-2 rounded-lg text-xs font-medium flex items-center gap-2 border border-transparent text-neutral-400 hover:text-white hover:bg-neutral-900 transition-all">
+                <i data-lucide="repeat" class="w-4 h-4"></i>
+                <span>Clases Fijas</span>
+            </button>
+            <button onclick="switchMainTab('students')" id="tab-students" class="tab-btn px-4 py-2 rounded-lg text-xs font-medium flex items-center gap-2 border border-transparent text-neutral-400 hover:text-white hover:bg-neutral-900 transition-all">
+                <i data-lucide="users" class="w-4 h-4"></i>
+                <span>Alumnos y Cobros</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-1 max-w-6xl w-full mx-auto p-4 md:p-6 space-y-6">
+
+        <!-- VIEW: AGENDA -->
+        <section id="view-agenda" class="space-y-6">
+            <!-- Week Selector Header -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-neutral-950 p-4 rounded-xl border border-neutral-800">
+                <div class="flex items-center gap-3">
+                    <button onclick="changeWeek(-1)" class="p-2 rounded-lg border border-neutral-800 hover:bg-neutral-900 text-neutral-300">
+                        <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                    </button>
+                    <span id="currentWeekRange" class="text-sm font-semibold text-white tracking-wide">Semana</span>
+                    <button onclick="changeWeek(1)" class="p-2 rounded-lg border border-neutral-800 hover:bg-neutral-900 text-neutral-300">
+                        <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <button onclick="resetToToday()" class="text-xs px-3 py-1.5 rounded-lg border border-neutral-800 bg-neutral-900 hover:bg-neutral-800 text-neutral-300">
+                    Ir a Hoy
+                </button>
+            </div>
+
+            <!-- Days Navigation -->
+            <div id="daySelectors" class="grid grid-cols-7 gap-1.5 sm:gap-2">
+                <!-- Dynamic day buttons render here -->
+            </div>
+
+            <!-- Active Day Class List -->
+            <div class="space-y-4">
+                <div class="flex items-center justify-between border-b border-neutral-800 pb-2">
+                    <h2 id="selectedDayTitle" class="text-base font-bold text-white flex items-center gap-2">
+                        <span>Clases del Día</span>
+                    </h2>
+                    <span id="dayClassCount" class="text-xs px-2.5 py-1 rounded-full border border-neutral-800 bg-neutral-900 text-neutral-400">
+                        0 clases
+                    </span>
+                </div>
+
+                <div id="agendaClassList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Dynamic class cards -->
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: ATTENDANCE -->
+        <section id="view-attendance" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-neutral-800 pb-4">
+                <div>
+                    <h2 class="text-lg font-bold text-white">Registro de Asistencia</h2>
+                    <p class="text-xs text-neutral-400">Marca las asistencias de las clases semanales o mensuales</p>
+                </div>
+                <input type="date" id="attendanceDatePicker" onchange="renderAttendanceView()" class="bg-neutral-900 border border-neutral-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-white">
+            </div>
+
+            <div id="attendanceList" class="space-y-3">
+                <!-- Attendance rows -->
+            </div>
+        </section>
+
+        <!-- VIEW: FIXED LESSON TEMPLATES -->
+        <section id="view-templates" class="hidden space-y-6">
+            <div class="flex items-center justify-between border-b border-neutral-800 pb-4">
+                <div>
+                    <h2 class="text-lg font-bold text-white">Clases Fijas Semanales</h2>
+                    <p class="text-xs text-neutral-400">Plantillas de clases recurrentes que se cargan automáticamente cada semana</p>
+                </div>
+                <button onclick="openLessonModal(true)" class="px-3 py-1.5 bg-white text-black text-xs font-semibold rounded-lg hover:bg-neutral-200">
+                    + Nueva Fija
+                </button>
+            </div>
+
+            <div id="templatesList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Dynamic template cards -->
+            </div>
+        </section>
+
+        <!-- VIEW: STUDENTS & PAYMENTS -->
+        <section id="view-students" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-neutral-800 pb-4">
+                <div>
+                    <h2 class="text-lg font-bold text-white">Directorio de Alumnos y Cobros</h2>
+                    <p class="text-xs text-neutral-400">Administra la información, cobros y mensualidades</p>
+                </div>
+                <button onclick="openStudentModal()" class="px-3 py-1.5 bg-white text-black text-xs font-semibold rounded-lg hover:bg-neutral-200 flex items-center gap-1.5">
+                    <i data-lucide="user-plus" class="w-4 h-4"></i>
+                    <span>Nuevo Alumno</span>
+                </button>
+            </div>
+
+            <div id="studentsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Dynamic student cards -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL: ADD / EDIT CLASS -->
+    <div id="lessonModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-neutral-950 border border-neutral-800 w-full max-w-md rounded-xl p-6 space-y-4 text-white">
+            <div class="flex items-center justify-between border-b border-neutral-800 pb-3">
+                <h3 id="lessonModalTitle" class="font-bold text-base">Agendar Clase</h3>
+                <button onclick="closeLessonModal()" class="text-neutral-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="lessonForm" onsubmit="handleSaveLesson(event)" class="space-y-4">
+                <input type="hidden" id="lessonId">
+                <input type="hidden" id="isTemplateFlag" value="false">
+                
+                <div>
+                    <label class="block text-xs font-medium text-neutral-400 mb-1">Nombre del Alumno *</label>
+                    <input type="text" id="lessonStudent" list="studentsDatalist" required class="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-white">
+                    <datalist id="studentsDatalist"></datalist>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-neutral-400 mb-1">Instrumento</label>
+                        <input type="text" id="lessonInstrument" placeholder="Ej. Piano" class="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-neutral-400 mb-1">Hora *</label>
+                        <input type="time" id="lessonTime" required class="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-white">
+                    </div>
+                </div>
+
+                <div id="dateFieldGroup">
+                    <label class="block text-xs font-medium text-neutral-400 mb-1">Fecha de la Clase *</label>
+                    <input type="date" id="lessonDate" class="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-white">
+                </div>
+
+                <div id="dayOfWeekFieldGroup" class="hidden">
+                    <label class="block text-xs font-medium text-neutral-400 mb-1">Día de la Semana (Fija) *</label>
+                    <select id="lessonDayOfWeek" class="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-white">
+                        <option value="1">Lunes</option>
+                        <option value="2">Martes</option>
+                        <option value="3">Miércoles</option>
+                        <option value="4">Jueves</option>
+                        <option value="5">Viernes</option>
+                        <option value="6">Sábado</option>
+                        <option value="0">Domingo</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-neutral-400 mb-1">Notas u Observaciones</label>
+                    <textarea id="lessonNotes" rows="2" class="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-white" placeholder="Lección actual, temas pendiente..."></textarea>
+                </div>
+
+                <div class="flex items-center justify-end gap-2 pt-2 border-t border-neutral-800">
+                    <button type="button" onclick="closeLessonModal()" class="px-4 py-2 rounded-lg border border-neutral-800 text-xs font-medium hover:bg-neutral-900">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 rounded-lg bg-white text-black font-semibold text-xs hover:bg-neutral-200">Guardar Clase</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD / EDIT STUDENT -->
+    <div id="studentModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-neutral-950 border border-neutral-800 w-full max-w-md rounded-xl p-6 space-y-4 text-white">
+            <div class="flex items-center justify-between border-b border-neutral-800 pb-3">
+                <h3 id="studentModalTitle" class="font-bold text-base">Guardar Alumno</h3>
+                <button onclick="closeStudentModal()" class="text-neutral-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="studentForm" onsubmit="handleSaveStudent(event)" class="space-y-4">
+                <input type="hidden" id="studentOriginalName">
+                <div>
+                    <label class="block text-xs font-medium text-neutral-400 mb-1">Nombre Completo *</label>
+                    <input type="text" id="studentName" required class="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-white">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-neutral-400 mb-1">Teléfono (WhatsApp)</label>
+                        <input type="tel" id="studentPhone" placeholder="+57 300..." class="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-neutral-400 mb-1">Instrumento</label>
+                        <input type="text" id="studentInstrument" placeholder="Piano, Guitarra..." class="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-white">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-neutral-400 mb-1">Valor Mensualidad ($)</label>
+                        <input type="number" id="studentFee" placeholder="100000" class="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-neutral-400 mb-1">Día Cobro Mensual (1-31)</label>
+                        <input type="number" id="studentDueDay" min="1" max="31" placeholder="5" class="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-white">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-neutral-400 mb-1">Notas / Expediente</label>
+                    <textarea id="studentNotes" rows="2" class="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-white" placeholder="Nivel, observaciones..."></textarea>
+                </div>
+                <div class="flex items-center justify-end gap-2 pt-2 border-t border-neutral-800">
+                    <button type="button" onclick="closeStudentModal()" class="px-4 py-2 rounded-lg border border-neutral-800 text-xs font-medium hover:bg-neutral-900">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 rounded-lg bg-white text-black font-semibold text-xs hover:bg-neutral-200">Guardar Alumno</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: WHATSAPP TEMPLATES -->
+    <div id="templatesModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-neutral-950 border border-neutral-800 w-full max-w-lg rounded-xl p-6 space-y-4 text-white">
+            <div class="flex items-center justify-between border-b border-neutral-800 pb-3">
+                <h3 class="font-bold text-base">Personalizar Mensajes WhatsApp</h3>
+                <button onclick="closeTemplatesModal()" class="text-neutral-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="space-y-4 text-xs">
+                <p class="text-neutral-400">Usa las variables: <code class="text-white bg-neutral-900 px-1 py-0.5 rounded">{nombre}</code>, <code class="text-white bg-neutral-900 px-1 py-0.5 rounded">{instrumento}</code>, <code class="text-white bg-neutral-900 px-1 py-0.5 rounded">{hora}</code>, <code class="text-white bg-neutral-900 px-1 py-0.5 rounded">{monto}</code>, <code class="text-white bg-neutral-900 px-1 py-0.5 rounded">{dia_pago}</code></p>
+                <div>
+                    <label class="block font-medium text-neutral-300 mb-1">Recordatorio de Clase</label>
+                    <textarea id="tmplClassText" rows="3" class="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-white"></textarea>
+                </div>
+                <div>
+                    <label class="block font-medium text-neutral-300 mb-1">Recordatorio de Mensualidad / Pago</label>
+                    <textarea id="tmplFeeText" rows="3" class="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-white"></textarea>
+                </div>
+            </div>
+            <div class="flex items-center justify-end gap-2 pt-2 border-t border-neutral-800">
+                <button onclick="saveTemplates()" class="px-4 py-2 rounded-lg bg-white text-black font-semibold text-xs hover:bg-neutral-200">Guardar Plantillas</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: FIREBASE CONFIG -->
+    <div id="cloudModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-neutral-950 border border-neutral-800 w-full max-w-md rounded-xl p-6 space-y-4 text-white max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-neutral-800 pb-3">
+                <h3 class="font-bold text-base">Conexión Firebase Nube Live</h3>
+                <button onclick="closeCloudModal()" class="text-neutral-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <!-- UI Notification Message Box -->
+            <div id="cloudModalMsg" class="hidden text-xs p-3 rounded-lg border"></div>
+
+            <div class="space-y-3 text-xs">
+                <p class="text-neutral-400">Puedes ingresar los datos campo por campo o pegar el bloque completo abajo:</p>
+                
+                <div>
+                    <label class="block text-neutral-400 mb-1 font-medium">API Key *</label>
+                    <input type="text" id="fbApiKey" placeholder="AIzaSy..." class="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-white">
+                </div>
+
+                <div>
+                    <label class="block text-neutral-400 mb-1 font-medium">Project ID *</label>
+                    <input type="text" id="fbProjectId" placeholder="dacapo-1234" class="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-white">
+                </div>
+
+                <div>
+                    <label class="block text-neutral-400 mb-1 font-medium">App ID (Opcional)</label>
+                    <input type="text" id="fbAppId" placeholder="1:123456789:web:abc..." class="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-white">
+                </div>
+
+                <div class="pt-2 border-t border-neutral-800">
+                    <label class="block text-neutral-400 mb-1 font-medium">O pega todo el código completo aquí:</label>
+                    <textarea id="firebaseConfigInput" rows="4" placeholder='const firebaseConfig = {&#10;  apiKey: "AIzaSy...",&#10;  projectId: "dacapo-1234"&#10;};' class="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2.5 text-xs text-white font-mono focus:outline-none focus:border-white"></textarea>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-2 border-t border-neutral-800">
+                <button onclick="disconnectFirebase()" class="px-3 py-1.5 text-neutral-400 hover:text-red-400 text-xs font-medium">Desconectar</button>
+                <button onclick="connectFirebaseFromInput()" class="px-4 py-2 rounded-lg bg-white text-black font-semibold text-xs hover:bg-neutral-200">Conectar Nube</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // --- APP STATE ---
+        let state = {
+            currentWeekStart: getMonday(new Date()),
+            selectedDate: formatDateKey(new Date()),
+            students: [],
+            lessons: [],
+            templates: [],
+            attendance: {},
+            templatesWA: {
+                class: "¡Hola {nombre}! Te recordamos tu clase de {instrumento} programada para las {hora}. ¡Te esperamos en Da Capo!",
+                fee: "¡Hola {nombre}! Recuerda que el día {dia_pago} corresponde al pago de la mensualidad de {instrumento} (${monto}). ¡Gracias por hacer parte de Da Capo!"
+            }
+        };
+
+        // Default sample records if storage is empty
+        const defaultStudents = [
+            { name: "Carlos Mendoza", phone: "+573001234567", instrument: "Piano", fee: "120000", dueDay: "5", notes: "Nivel intermedio. Obra: Sonata Claro de Luna." },
+            { name: "Sofía Gómez", phone: "+573109876543", instrument: "Guitarra", fee: "100000", dueDay: "10", notes: "Aprende acordes con cejilla." },
+            { name: "Mateo Torres", phone: "+573205554433", instrument: "Batería", fee: "140000", dueDay: "15", notes: "Lectura rítmica en 4/4." }
+        ];
+
+        const defaultTemplates = [
+            { id: "tmpl_1", student: "Carlos Mendoza", instrument: "Piano", time: "15:00", dayOfWeek: "1", notes: "Clase fija de los Lunes" },
+            { id: "tmpl_2", student: "Sofía Gómez", instrument: "Guitarra", time: "16:30", dayOfWeek: "3", notes: "Clase fija de los Miércoles" }
+        ];
+
+        // --- STORAGE LOAD & SAVE ---
+        function loadLocalData() {
+            try {
+                const s = localStorage.getItem('dacapo_students');
+                const l = localStorage.getItem('dacapo_lessons');
+                const t = localStorage.getItem('dacapo_templates');
+                const a = localStorage.getItem('dacapo_attendance');
+                const w = localStorage.getItem('dacapo_wa');
+
+                if (s && JSON.parse(s).length > 0) {
+                    state.students = JSON.parse(s);
+                } else {
+                    state.students = defaultStudents;
+                }
+
+                if (l) state.lessons = JSON.parse(l);
+
+                if (t && JSON.parse(t).length > 0) {
+                    state.templates = JSON.parse(t);
+                } else {
+                    state.templates = defaultTemplates;
+                }
+
+                if (a) state.attendance = JSON.parse(a);
+                if (w) state.templatesWA = JSON.parse(w);
+
+                saveLocalData();
+            } catch(e) {
+                console.error("Error cargando almacenamiento local:", e);
+                state.students = defaultStudents;
+                state.templates = defaultTemplates;
+            }
+        }
+
+        function saveLocalData() {
+            localStorage.setItem('dacapo_students', JSON.stringify(state.students));
+            localStorage.setItem('dacapo_lessons', JSON.stringify(state.lessons));
+            localStorage.setItem('dacapo_templates', JSON.stringify(state.templates));
+            localStorage.setItem('dacapo_attendance', JSON.stringify(state.attendance));
+            localStorage.setItem('dacapo_wa', JSON.stringify(state.templatesWA));
+        }
+
+        // --- HELPER DATES ---
+        function getMonday(d) {
+            const date = new Date(d);
+            const day = date.getDay();
+            const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+            return new Date(date.setDate(diff));
+        }
+
+        function formatDateKey(dateObj) {
+            const y = dateObj.getFullYear();
+            const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const d = String(dateObj.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function getWeekDates(monday) {
+            const week = [];
+            for (let i = 0; i < 7; i++) {
+                const day = new Date(monday);
+                day.setDate(monday.getDate() + i);
+                week.push(day);
+            }
+            return week;
+        }
+
+        const DAY_NAMES = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+
+        // --- MAIN RENDERERS ---
+        function renderApp() {
+            renderDaySelectors();
+            renderAgendaView();
+            renderAttendanceView();
+            renderTemplatesView();
+            renderStudentsView();
+            updateDatalist();
+            lucide.createIcons();
+        }
+
+        function renderDaySelectors() {
+            const container = document.getElementById('daySelectors');
+            const week = getWeekDates(state.currentWeekStart);
+            const todayStr = formatDateKey(new Date());
+
+            // Update week header range
+            const endWeek = new Date(week[6]);
+            document.getElementById('currentWeekRange').innerText = 
+                `${week[0].getDate()} ${week[0].toLocaleString('es', {month:'short'})} - ${endWeek.getDate()} ${endWeek.toLocaleString('es', {month:'short'})} ${endWeek.getFullYear()}`;
+
+            container.innerHTML = week.map((dateObj, idx) => {
+                const dateKey = formatDateKey(dateObj);
+                const isSelected = dateKey === state.selectedDate;
+                const isToday = dateKey === todayStr;
+
+                return `
+                    <button onclick="selectDate('${dateKey}')" class="flex flex-col items-center p-2.5 rounded-xl border transition-all ${
+                        isSelected 
+                            ? 'bg-white text-black border-white shadow-md font-bold scale-[1.02]' 
+                            : isToday 
+                                ? 'bg-neutral-900 text-white border-neutral-600 font-semibold' 
+                                : 'bg-neutral-950 text-neutral-400 border-neutral-800 hover:border-neutral-700'
+                    }">
+                        <span class="text-[10px] uppercase tracking-wider">${DAY_NAMES[idx].slice(0,3)}</span>
+                        <span class="text-base sm:text-lg my-0.5">${dateObj.getDate()}</span>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function selectDate(dateKey) {
+            state.selectedDate = dateKey;
+            renderDaySelectors();
+            renderAgendaView();
+        }
+
+        function changeWeek(direction) {
+            const newMon = new Date(state.currentWeekStart);
+            newMon.setDate(newMon.getDate() + (direction * 7));
+            state.currentWeekStart = newMon;
+            renderDaySelectors();
+            renderAgendaView();
+        }
+
+        function resetToToday() {
+            state.currentWeekStart = getMonday(new Date());
+            state.selectedDate = formatDateKey(new Date());
+            renderDaySelectors();
+            renderAgendaView();
+        }
+
+        function renderAgendaView() {
+            const list = document.getElementById('agendaClassList');
+            const [y, m, d] = state.selectedDate.split('-').map(Number);
+            const dateObj = new Date(y, m - 1, d);
+            const dayOfWeek = dateObj.getDay(); // 0 is Sunday
+
+            document.getElementById('selectedDayTitle').innerText = `Clases del ${dateObj.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}`;
+
+            // Combine one-off lessons for date + matching recurring templates
+            const dayLessons = state.lessons.filter(l => l.date === state.selectedDate);
+            const templateLessons = state.templates.filter(t => parseInt(t.dayOfWeek) === dayOfWeek).map(t => ({
+                ...t,
+                isTemplateInstance: true
+            }));
+
+            const allForDay = [...dayLessons, ...templateLessons].sort((a,b) => (a.time || '').localeCompare(b.time || ''));
+            document.getElementById('dayClassCount').innerText = `${allForDay.length} clases`;
+
+            if (allForDay.length === 0) {
+                list.innerHTML = `
+                    <div class="col-span-full text-center py-12 border border-dashed border-neutral-800 rounded-xl">
+                        <i data-lucide="calendar-x" class="w-8 h-8 text-neutral-600 mx-auto mb-2"></i>
+                        <p class="text-xs text-neutral-400">No hay clases agendadas para este día.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = allForDay.map(l => {
+                const student = state.students.find(s => s.name.toLowerCase() === (l.student || '').toLowerCase());
+                const phone = student ? student.phone : '';
+                const attendanceKey = `${state.selectedDate}_${l.student}_${l.time}`;
+                const status = state.attendance[attendanceKey] || 'pending';
+
+                return `
+                    <div class="bg-neutral-950 border border-neutral-800 hover:border-neutral-700 rounded-xl p-4 space-y-3 transition-all">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded bg-neutral-900 border border-neutral-800 text-neutral-300">${l.time} HS</span>
+                                <h4 class="font-bold text-white text-sm mt-1.5">${l.student}</h4>
+                                <p class="text-xs text-neutral-400">${l.instrument || 'Música'}</p>
+                            </div>
+                            ${l.isTemplateInstance ? '<span class="text-[10px] bg-neutral-900 border border-neutral-700 px-2 py-0.5 rounded text-neutral-400">Fija</span>' : ''}
+                        </div>
+
+                        ${l.notes ? `<p class="text-xs text-neutral-400 bg-neutral-900/50 p-2 rounded border border-neutral-800/50">${l.notes}</p>` : ''}
+
+                        <div class="flex items-center justify-between pt-2 border-t border-neutral-800/80">
+                            <!-- Attendance status buttons -->
+                            <div class="flex items-center gap-1">
+                                <button onclick="setAttendance('${attendanceKey}', 'present')" class="p-1.5 rounded ${status === 'present' ? 'bg-white text-black font-bold' : 'text-neutral-500 hover:text-white'}">
+                                    <i data-lucide="check" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="setAttendance('${attendanceKey}', 'absent')" class="p-1.5 rounded ${status === 'absent' ? 'bg-white text-black font-bold' : 'text-neutral-500 hover:text-white'}">
+                                    <i data-lucide="x" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                ${phone ? `
+                                    <button onclick="sendWA('class', '${l.student}', '${l.instrument}', '${l.time}')" class="p-1.5 text-neutral-400 hover:text-white" title="Enviar Recordatorio WA">
+                                        <i data-lucide="message-circle" class="w-4 h-4"></i>
+                                    </button>
+                                ` : ''}
+                                ${!l.isTemplateInstance ? `
+                                    <button onclick="deleteLesson('${l.id}')" class="p-1.5 text-neutral-500 hover:text-red-400">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function renderAttendanceView() {
+            const list = document.getElementById('attendanceList');
+            const datePicker = document.getElementById('attendanceDatePicker');
+            if (!datePicker.value) datePicker.value = state.selectedDate;
+            const targetDate = datePicker.value;
+
+            // Gather all scheduled for that day
+            const [y, m, d] = targetDate.split('-').map(Number);
+            const dayOfWeek = new Date(y, m - 1, d).getDay();
+
+            const dayLessons = state.lessons.filter(l => l.date === targetDate);
+            const templateLessons = state.templates.filter(t => parseInt(t.dayOfWeek) === dayOfWeek);
+            const allForDay = [...dayLessons, ...templateLessons];
+
+            if (allForDay.length === 0) {
+                list.innerHTML = `<p class="text-xs text-neutral-500 text-center py-8">Sin clases registradas para este día de asistencia.</p>`;
+                return;
+            }
+
+            list.innerHTML = allForDay.map(l => {
+                const attKey = `${targetDate}_${l.student}_${l.time}`;
+                const status = state.attendance[attKey] || 'pending';
+
+                return `
+                    <div class="bg-neutral-950 border border-neutral-800 p-3.5 rounded-xl flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-bold text-white">${l.student}</p>
+                            <p class="text-xs text-neutral-400">${l.time} HS · ${l.instrument || 'Música'}</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="setAttendance('${attKey}', 'present')" class="px-3 py-1.5 rounded-lg text-xs font-semibold ${status==='present' ? 'bg-white text-black' : 'border border-neutral-800 text-neutral-400 hover:text-white'}">Asistió</button>
+                            <button onclick="setAttendance('${attKey}', 'absent')" class="px-3 py-1.5 rounded-lg text-xs font-semibold ${status==='absent' ? 'bg-neutral-800 text-white' : 'border border-neutral-800 text-neutral-400 hover:text-white'}">Ausente</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function setAttendance(key, status) {
+            if (state.attendance[key] === status) {
+                delete state.attendance[key];
+            } else {
+                state.attendance[key] = status;
+            }
+            saveLocalData();
+            renderAgendaView();
+            renderAttendanceView();
+        }
+
+        function renderAttendanceView() {
+            const list = document.getElementById('attendanceList');
+            if (!list) return;
+            const datePicker = document.getElementById('attendanceDatePicker');
+            if (datePicker && !datePicker.value) datePicker.value = state.selectedDate;
+            const targetDate = datePicker ? datePicker.value : state.selectedDate;
+
+            // Gather all scheduled for that day
+            const [y, m, d] = targetDate.split('-').map(Number);
+            const dayOfWeek = new Date(y, m - 1, d).getDay();
+
+            const dayLessons = state.lessons.filter(l => l.date === targetDate);
+            const templateLessons = state.templates.filter(t => parseInt(t.dayOfWeek) === dayOfWeek);
+            const allForDay = [...dayLessons, ...templateLessons];
+
+            if (allForDay.length === 0) {
+                list.innerHTML = `<p class="text-xs text-neutral-500 text-center py-8">Sin clases registradas para este día de asistencia.</p>`;
+                return;
+            }
+
+            list.innerHTML = allForDay.map(l => {
+                const attKey = `${targetDate}_${l.student}_${l.time}`;
+                const status = state.attendance[attKey] || 'pending';
+
+                return `
+                    <div class="bg-neutral-950 border border-neutral-800 p-3.5 rounded-xl flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-bold text-white">${l.student}</p>
+                            <p class="text-xs text-neutral-400">${l.time} HS · ${l.instrument || 'Música'}</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="setAttendance('${attKey}', 'present')" class="px-3 py-1.5 rounded-lg text-xs font-semibold ${status==='present' ? 'bg-white text-black' : 'border border-neutral-800 text-neutral-400 hover:text-white'}">Asistió</button>
+                            <button onclick="setAttendance('${attKey}', 'absent')" class="px-3 py-1.5 rounded-lg text-xs font-semibold ${status==='absent' ? 'bg-neutral-800 text-white' : 'border border-neutral-800 text-neutral-400 hover:text-white'}">Ausente</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderTemplatesView() {
+            const list = document.getElementById('templatesList');
+            if (state.templates.length === 0) {
+                list.innerHTML = `<div class="col-span-full text-center py-8 border border-dashed border-neutral-800 rounded-xl text-xs text-neutral-500">No hay clases fijas registradas.</div>`;
+                return;
+            }
+
+            list.innerHTML = state.templates.map(t => `
+                <div class="bg-neutral-950 border border-neutral-800 rounded-xl p-4 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold px-2 py-0.5 rounded bg-white text-black">${DAY_NAMES[t.dayOfWeek == 0 ? 6 : t.dayOfWeek - 1]} ${t.time} HS</span>
+                        <button onclick="deleteTemplate('${t.id}')" class="text-neutral-500 hover:text-red-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                    <h4 class="font-bold text-white text-sm">${t.student}</h4>
+                    <p class="text-xs text-neutral-400">${t.instrument || 'Música'}</p>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function renderStudentsView() {
+            const grid = document.getElementById('studentsGrid');
+            if (state.students.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-8 border border-dashed border-neutral-800 rounded-xl text-xs text-neutral-500">No hay alumnos registrados.</div>`;
+                return;
+            }
+
+            grid.innerHTML = state.students.map(s => `
+                <div class="bg-neutral-950 border border-neutral-800 rounded-xl p-4 space-y-3">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h4 class="font-bold text-white text-base">${s.name}</h4>
+                            <p class="text-xs text-neutral-400">${s.instrument || 'Instrumento no especificado'}</p>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button onclick="openStudentModal('${s.name}')" class="p-1.5 text-neutral-400 hover:text-white"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                            <button onclick="deleteStudent('${s.name}')" class="p-1.5 text-neutral-400 hover:text-red-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="text-xs space-y-1 text-neutral-300 bg-neutral-900/60 p-2.5 rounded-lg border border-neutral-800">
+                        <p><strong>Tel:</strong> ${s.phone || 'N/A'}</p>
+                        <p><strong>Mensualidad:</strong> $${s.fee || '0'}</p>
+                        <p><strong>Día de Cobro:</strong> Día ${s.dueDay || '1'}</p>
+                        ${s.notes ? `<p class="text-neutral-400 mt-1 border-t border-neutral-800 pt-1">${s.notes}</p>` : ''}
+                    </div>
+
+                    <div class="flex items-center justify-end gap-2 pt-1">
+                        ${s.phone ? `
+                            <button onclick="sendWA('fee', '${s.name}', '${s.instrument}', '', '${s.fee}', '${s.dueDay}')" class="w-full py-1.5 rounded bg-neutral-900 border border-neutral-800 text-xs text-neutral-200 hover:bg-neutral-800 flex items-center justify-center gap-2">
+                                <i data-lucide="dollar-sign" class="w-3.5 h-3.5"></i> Recordar Pago
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function updateDatalist() {
+            const dl = document.getElementById('studentsDatalist');
+            dl.innerHTML = state.students.map(s => `<option value="${s.name}">${s.instrument ? '('+s.instrument+')' : ''}</option>`).join('');
+        }
+
+        // --- NAVIGATION TABS ---
+        function switchMainTab(tab) {
+            ['agenda', 'attendance', 'templates', 'students'].forEach(t => {
+                document.getElementById(`view-${t}`).classList.add('hidden');
+                const btn = document.getElementById(`tab-${t}`);
+                btn.className = 'tab-btn px-4 py-2 rounded-lg text-xs font-medium flex items-center gap-2 border border-transparent text-neutral-400 hover:text-white hover:bg-neutral-900 transition-all';
+            });
+
+            document.getElementById(`view-${tab}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-${tab}`);
+            activeBtn.className = 'tab-btn px-4 py-2 rounded-lg text-xs font-medium flex items-center gap-2 border border-white bg-white text-black transition-all';
+        }
+
+        // --- HANDLERS & MODALS ---
+        function openLessonModal(isTemplate = false) {
+            document.getElementById('lessonModal').classList.remove('hidden');
+            document.getElementById('isTemplateFlag').value = isTemplate ? "true" : "false";
+            document.getElementById('lessonModalTitle').innerText = isTemplate ? "Nueva Clase Fija Semanal" : "Agendar Clase Puntual";
+            
+            document.getElementById('dateFieldGroup').classList.toggle('hidden', isTemplate);
+            document.getElementById('dayOfWeekFieldGroup').classList.toggle('hidden', !isTemplate);
+            document.getElementById('lessonDate').value = state.selectedDate;
+        }
+
+        function closeLessonModal() {
+            document.getElementById('lessonModal').classList.add('hidden');
+            document.getElementById('lessonForm').reset();
+        }
+
+        function handleSaveLesson(e) {
+            e.preventDefault();
+            const isTemplate = document.getElementById('isTemplateFlag').value === "true";
+            const student = document.getElementById('lessonStudent').value.trim();
+            const instrument = document.getElementById('lessonInstrument').value.trim();
+            const time = document.getElementById('lessonTime').value;
+            const notes = document.getElementById('lessonNotes').value.trim();
+
+            const item = {
+                id: Date.now().toString(),
+                student,
+                instrument,
+                time,
+                notes
+            };
+
+            if (isTemplate) {
+                item.dayOfWeek = document.getElementById('lessonDayOfWeek').value;
+                state.templates.push(item);
+            } else {
+                item.date = document.getElementById('lessonDate').value;
+                state.lessons.push(item);
+            }
+
+            // Also auto-add student if new
+            if (student && !state.students.some(s => s.name.toLowerCase() === student.toLowerCase())) {
+                state.students.push({ name: student, instrument, phone: '', fee: '', dueDay: '5', notes: '' });
+            }
+
+            saveLocalData();
+            closeLessonModal();
+            renderApp();
+        }
+
+        function deleteLesson(id) {
+            state.lessons = state.lessons.filter(l => l.id !== id);
+            saveLocalData();
+            renderAgendaView();
+        }
+
+        function deleteTemplate(id) {
+            state.templates = state.templates.filter(t => t.id !== id);
+            saveLocalData();
+            renderTemplatesView();
+            renderAgendaView();
+        }
+
+        function openStudentModal(nameToEdit = null) {
+            document.getElementById('studentModal').classList.remove('hidden');
+            if (nameToEdit) {
+                const s = state.students.find(x => x.name === nameToEdit);
+                if (s) {
+                    document.getElementById('studentOriginalName').value = s.name;
+                    document.getElementById('studentName').value = s.name;
+                    document.getElementById('studentPhone').value = s.phone || '';
+                    document.getElementById('studentInstrument').value = s.instrument || '';
+                    document.getElementById('studentFee').value = s.fee || '';
+                    document.getElementById('studentDueDay').value = s.dueDay || '';
+                    document.getElementById('studentNotes').value = s.notes || '';
+                    document.getElementById('studentModalTitle').innerText = "Editar Alumno";
+                    return;
+                }
+            }
+            document.getElementById('studentOriginalName').value = '';
+            document.getElementById('studentModalTitle').innerText = "Guardar Alumno";
+            document.getElementById('studentForm').reset();
+        }
+
+        function closeStudentModal() {
+            document.getElementById('studentModal').classList.add('hidden');
+            document.getElementById('studentForm').reset();
+        }
+
+        function handleSaveStudent(e) {
+            e.preventDefault();
+            const orig = document.getElementById('studentOriginalName').value;
+            const name = document.getElementById('studentName').value.trim();
+            const phone = document.getElementById('studentPhone').value.trim();
+            const instrument = document.getElementById('studentInstrument').value.trim();
+            const fee = document.getElementById('studentFee').value.trim();
+            const dueDay = document.getElementById('studentDueDay').value.trim();
+            const notes = document.getElementById('studentNotes').value.trim();
+
+            if (orig) {
+                // Update existing
+                const idx = state.students.findIndex(s => s.name === orig);
+                if (idx !== -1) {
+                    state.students[idx] = { name, phone, instrument, fee, dueDay, notes };
+                }
+                // Sync name change across lessons
+                state.lessons.forEach(l => { if (l.student === orig) l.student = name; });
+                state.templates.forEach(t => { if (t.student === orig) t.student = name; });
+            } else {
+                state.students.push({ name, phone, instrument, fee, dueDay, notes });
+            }
+
+            saveLocalData();
+            closeStudentModal();
+            renderApp();
+        }
+
+        function deleteStudent(name) {
+            state.students = state.students.filter(s => s.name !== name);
+            saveLocalData();
+            renderApp();
+        }
+
+        // --- WHATSAPP TEMPLATES ---
+        function openTemplatesModal() {
+            document.getElementById('templatesModal').classList.remove('hidden');
+            document.getElementById('tmplClassText').value = state.templatesWA.class;
+            document.getElementById('tmplFeeText').value = state.templatesWA.fee;
+        }
+
+        function closeTemplatesModal() {
+            document.getElementById('templatesModal').classList.add('hidden');
+        }
+
+        function saveTemplates() {
+            state.templatesWA.class = document.getElementById('tmplClassText').value;
+            state.templatesWA.fee = document.getElementById('tmplFeeText').value;
+            saveLocalData();
+            closeTemplatesModal();
+        }
+
+        function sendWA(type, studentName, instrument = '', time = '', fee = '', dueDay = '') {
+            const s = state.students.find(x => x.name === studentName);
+            const phone = s ? s.phone.replace(/[^0-9]/g, '') : '';
+            
+            let text = type === 'class' ? state.templatesWA.class : state.templatesWA.fee;
+            text = text.replace(/{nombre}/g, studentName)
+                       .replace(/{instrumento}/g, instrument || s?.instrument || 'Música')
+                       .replace(/{hora}/g, time)
+                       .replace(/{monto}/g, fee || s?.fee || '0')
+                       .replace(/{dia_pago}/g, dueDay || s?.dueDay || '1');
+
+            const url = phone 
+                ? `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(text)}`
+                : `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+            
+            window.open(url, '_blank');
+        }
+
+        // --- FIREBASE LIVE CLOUD SYNC ---
+        function openCloudModal() { 
+            document.getElementById('cloudModal').classList.remove('hidden'); 
+            const msgBox = document.getElementById('cloudModalMsg');
+            if (msgBox) msgBox.classList.add('hidden');
+        }
+        function closeCloudModal() { document.getElementById('cloudModal').classList.add('hidden'); }
+
+        function showCloudModalMsg(text, isError = true) {
+            const msgBox = document.getElementById('cloudModalMsg');
+            if (!msgBox) return;
+            msgBox.classList.remove('hidden');
+            msgBox.innerText = text;
+            if (isError) {
+                msgBox.className = "text-xs p-3 rounded-lg border border-red-800/80 bg-red-950/40 text-red-300";
+            } else {
+                msgBox.className = "text-xs p-3 rounded-lg border border-emerald-800/80 bg-emerald-950/40 text-emerald-300";
+            }
+        }
+
+        function connectFirebaseFromInput() {
+            try {
+                let apiKey = document.getElementById('fbApiKey').value.trim();
+                let projectId = document.getElementById('fbProjectId').value.trim();
+                let appId = document.getElementById('fbAppId').value.trim();
+                let rawText = document.getElementById('firebaseConfigInput').value.trim();
+
+                let conf = {};
+
+                // Prioritize text block if filled
+                if (rawText) {
+                    if (rawText.includes('{')) {
+                        const startIdx = rawText.indexOf('{');
+                        const endIdx = rawText.lastIndexOf('}') + 1;
+                        rawText = rawText.substring(startIdx, endIdx);
+                    }
+                    let formattedJson = rawText
+                        .replace(/(['"])?([a-zA-Z0-9_]+)(['"])?:/g, '"$2":')
+                        .replace(/'/g, '"');
+                    conf = JSON.parse(formattedJson);
+                } else if (apiKey && projectId) {
+                    conf = { apiKey, projectId, appId };
+                }
+
+                if (!conf.apiKey || !conf.projectId) {
+                    showCloudModalMsg("Por favor escribe la API Key y el Project ID, o pega el bloque completo de Firebase.");
+                    return;
+                }
+
+                localStorage.setItem('dacapo_firebase_config', JSON.stringify(conf));
+                document.getElementById('cloudDot').className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+                document.getElementById('cloudStatusText').innerText = "Nube Conectada";
+                showCloudModalMsg("¡Conexión exitosa a la nube!", false);
+                setTimeout(() => closeCloudModal(), 1200);
+            } catch(e) {
+                showCloudModalMsg("Error al leer la configuración. Verifica que los datos coincidan con los de tu proyecto de Firebase.");
+            }
+        }
+
+        function disconnectFirebase() {
+            localStorage.removeItem('dacapo_firebase_config');
+            document.getElementById('cloudDot').className = "w-2 h-2 rounded-full bg-neutral-500";
+            document.getElementById('cloudStatusText').innerText = "Nube Live";
+            showCloudModalMsg("Se ha desconectado la nube.", false);
+            setTimeout(() => closeCloudModal(), 1000);
+        }
+
+        function exportBackupData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", `DaCapo_Backup_${formatDateKey(new Date())}.json`);
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+        }
+
+        // --- INIT ---
+        window.onload = function() {
+            loadLocalData();
+            renderApp();
+        };
+    </script>
+</body>
+</html>
