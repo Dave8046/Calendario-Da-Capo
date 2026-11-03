@@ -346,7 +346,7 @@
             margin-bottom: 4px;
         }
 
-        input, select {
+        input, select, textarea {
             width: 100%;
             padding: 10px;
             background: #000;
@@ -356,7 +356,7 @@
             font-size: 0.9rem;
         }
 
-        input:focus, select:focus {
+        input:focus, select:focus, textarea:focus {
             outline: none;
             border-color: var(--text-color);
         }
@@ -562,22 +562,42 @@
                         <option value="Justificado">Justificado</option>
                     </select>
                 </div>
-                <button class="btn" onclick="saveAttendance()">Registrar y Enviar Aviso WhatsApp</button>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn" onclick="saveAttendance()">Registrar Asistencia</button>
+                    <button class="btn btn-whatsapp" style="width: auto;" onclick="sendCustomAttendanceWhatsApp()">💬 Enviar Aviso</button>
+                </div>
             </div>
 
             <div class="card">
-                <h2>Historial Reciente</h2>
+                <div class="flex-between" style="margin-bottom: 8px;">
+                    <h2>Historial Reciente</h2>
+                    <button class="btn btn-small btn-danger" onclick="clearOldAttendances()">🗑️ Limpiar Historial</button>
+                </div>
                 <div id="attendanceHistoryContainer">Sin registros.</div>
             </div>
         </section>
 
-        <!-- AJUSTES -->
+        <!-- AJUSTES Y PLANTILLAS -->
         <section id="tab-ajustes" class="tab-content">
-            <h2>Ajustes y Nube</h2>
+            <h2>Plantillas de WhatsApp</h2>
             <div class="card">
-                <h2>Conexión Firebase Live</h2>
+                <div class="form-group">
+                    <label>Plantilla Recordatorio de Cobro</label>
+                    <textarea id="templateCobro" rows="3" oninput="saveTemplates()">Hola {nombre}, te saludamos de Da Capo - Casa Musical. Te recordamos que tienes pendiente tu mensualidad por un monto de ${monto}. ¡Muchas gracias! 🎶</textarea>
+                    <span style="font-size: 0.7rem; color: var(--text-muted);">Usa {nombre} y {monto} como variables automáticas.</span>
+                </div>
+                <div class="form-group">
+                    <label>Plantilla Aviso de Asistencia</label>
+                    <textarea id="templateAsistencia" rows="3" oninput="saveTemplates()">Hola {nombre}, te saludamos de Da Capo - Casa Musical. Te informamos que tu registro de clase del {fecha} quedó marcado como: *{estado}*. ¡Saludos! 🎵</textarea>
+                    <span style="font-size: 0.7rem; color: var(--text-muted);">Usa {nombre}, {fecha} y {estado} como variables.</span>
+                </div>
+            </div>
+
+            <h2>Conexión y Nube</h2>
+            <div class="card">
+                <h2>Firebase Live</h2>
                 <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
-                    Las credenciales guardadas quedan ligadas permanentemente a este dispositivo.
+                    Sincronización automática entre múltiples dispositivos.
                 </p>
                 <button class="btn btn-outline" onclick="openCloudModal()">Configurar Credenciales</button>
             </div>
@@ -699,6 +719,7 @@
             const today = new Date().toISOString().substring(0, 10);
             document.getElementById('attendanceDate').value = today;
 
+            loadTemplatesToUI();
             initFirebaseFromStorage();
             renderWeekNavigator();
             renderStudents();
@@ -706,6 +727,20 @@
             populateSuggestionsList();
             renderAttendanceHistory();
         });
+
+        function loadTemplatesToUI() {
+            const tCobro = localStorage.getItem('dacapo_tpl_cobro');
+            const tAsis = localStorage.getItem('dacapo_tpl_asis');
+            if(tCobro) document.getElementById('templateCobro').value = tCobro;
+            if(tAsis) document.getElementById('templateAsistencia').value = tAsis;
+        }
+
+        function saveTemplates() {
+            const tCobro = document.getElementById('templateCobro').value;
+            const tAsis = document.getElementById('templateAsistencia').value;
+            localStorage.setItem('dacapo_tpl_cobro', tCobro);
+            localStorage.setItem('dacapo_tpl_asis', tAsis);
+        }
 
         function initFirebaseFromStorage() {
             const apiKey = localStorage.getItem('dacapo_fb_apikey');
@@ -763,11 +798,8 @@
             }
         }
 
-        // ESCUCHADOR EN TIEMPO REAL MULTI-DISPOSITIVO
         function syncWithFirestore() {
             if (!db) return;
-            
-            // 1. Escuchar la colección de Estudiantes/Clases
             db.collection("students").onSnapshot((snapshot) => {
                 let cloudStudents = [];
                 snapshot.forEach((doc) => { cloudStudents.push({ id: doc.id, ...doc.data() }); });
@@ -777,21 +809,15 @@
                 renderWeekNavigator();
                 populateAttendanceDropdown();
                 populateSuggestionsList();
-            }, (error) => {
-                console.error("Error al escuchar cambios en students:", error);
             });
 
-            // 2. Escuchar la colección de Asistencias
             db.collection("attendances").onSnapshot((snapshot) => {
                 let cloudAttendances = [];
                 snapshot.forEach((doc) => { cloudAttendances.push({ id: doc.id, ...doc.data() }); });
-                // Ordenar más recientes primero
                 cloudAttendances.sort((a,b) => b.id.localeCompare(a.id));
                 attendances = cloudAttendances;
                 localStorage.setItem('dacapo_attendances', JSON.stringify(attendances));
                 renderAttendanceHistory();
-            }, (error) => {
-                console.error("Error al escuchar cambios en attendances:", error);
             });
         }
 
@@ -995,8 +1021,12 @@
                 return alert("El alumno no tiene registrado un número de teléfono/WhatsApp.");
             }
             const phoneClean = student.phone.replace(/[^0-9+]/g, '');
-            const message = encodeURIComponent(`Hola ${student.name}, te saludamos de Da Capo - Casa Musical. Te recordamos que tienes pendiente el pago de tu mensualidad por un monto de $${(student.fee || 0).toLocaleString()}. ¡Muchas gracias! 🎶`);
-            window.open(`https://wa.me/${phoneClean}?text=${message}`, '_blank');
+            let template = document.getElementById('templateCobro').value;
+            let messageText = template
+                .replace('{nombre}', student.name)
+                .replace('{monto}', (student.fee || 0).toLocaleString());
+
+            window.open(`https://wa.me/${phoneClean}?text=${encodeURIComponent(messageText)}`, '_blank');
         }
 
         function renderStudents() {
@@ -1068,13 +1098,6 @@
             }
         }
 
-        function deleteStudent(id) {
-            const target = students.find(s => s.id === id);
-            if (target) {
-                deleteStudentByName(target.name);
-            }
-        }
-
         function populateAttendanceDropdown() {
             const select = document.getElementById('attendanceStudentSelect');
             if (students.length === 0) { select.innerHTML = `<option value="">Sin registros</option>`; return; }
@@ -1097,31 +1120,67 @@
             if (db) db.collection("attendances").doc(record.id).set(record);
 
             renderAttendanceHistory();
+            alert("Asistencia guardada correctamente.");
+        }
 
-            if (student && student.phone) {
-                if (confirm(`Asistencia guardada. ¿Deseas enviar el reporte de asistencia ("${status}") a ${student.name} por WhatsApp?`)) {
-                    const phoneClean = student.phone.replace(/[^0-9+]/g, '');
-                    const message = encodeURIComponent(`Hola ${student.name}, te saludamos de Da Capo - Casa Musical. Te informamos que tu registro de asistencia para la clase del ${date} quedó marcado como: *${status}*. ¡Saludos! 🎶`);
-                    window.open(`https://wa.me/${phoneClean}?text=${message}`, '_blank');
-                }
-            } else {
-                alert("Asistencia guardada.");
+        // FUNCIÓN INDEPENDIENTE DE ENVÍO DE WHATSAPP PARA ASISTENCIA
+        function sendCustomAttendanceWhatsApp() {
+            const date = document.getElementById('attendanceDate').value;
+            const studentId = document.getElementById('attendanceStudentSelect').value;
+            const status = document.getElementById('attendanceStatusSelect').value;
+
+            if (!studentId || !date) return alert("Selecciona un alumno y una fecha.");
+
+            const student = students.find(s => s.id === studentId);
+            if (!student || !student.phone) {
+                return alert("El alumno seleccionado no tiene un número de teléfono/WhatsApp registrado.");
             }
+
+            const phoneClean = student.phone.replace(/[^0-9+]/g, '');
+            let template = document.getElementById('templateAsistencia').value;
+            let messageText = template
+                .replace('{nombre}', student.name)
+                .replace('{fecha}', date)
+                .replace('{estado}', status);
+
+            window.open(`https://wa.me/${phoneClean}?text=${encodeURIComponent(messageText)}`, '_blank');
         }
 
         function renderAttendanceHistory() {
             const container = document.getElementById('attendanceHistoryContainer');
             if (attendances.length === 0) { container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted);">Sin asistencias.</p>`; return; }
 
-            container.innerHTML = attendances.slice(0, 10).map(a => `
-                <div class="class-card" style="padding:12px;">
+            container.innerHTML = attendances.slice(0, 15).map(a => `
+                <div class="class-card" style="padding:10px 14px;">
                     <div class="class-details">
                         <div class="class-student-name">${a.studentName}</div>
                         <div class="class-meta"><span>📅 ${a.date}</span></div>
                     </div>
-                    <span class="badge-fija" style="background:#222; color:#fff;">${a.status}</span>
+                    <span class="badge-fija" style="background:#222; color:#fff; margin-right:6px;">${a.status}</span>
+                    <button class="btn btn-small btn-danger" onclick="deleteAttendance('${a.id}')">🗑️</button>
                 </div>
             `).join('');
+        }
+
+        function deleteAttendance(id) {
+            if (confirm("¿Deseas eliminar este registro de asistencia?")) {
+                attendances = attendances.filter(a => a.id !== id);
+                localStorage.setItem('dacapo_attendances', JSON.stringify(attendances));
+                if (db) db.collection("attendances").doc(id).delete();
+                renderAttendanceHistory();
+            }
+        }
+
+        function clearOldAttendances() {
+            if (confirm("¿Estás seguro de eliminar todo el historial de asistencias antiguo?")) {
+                const idsToDelete = attendances.map(a => a.id);
+                attendances = [];
+                localStorage.removeItem('dacapo_attendances');
+                if (db) {
+                    idsToDelete.forEach(id => db.collection("attendances").doc(id).delete());
+                }
+                renderAttendanceHistory();
+            }
         }
 
         function exportData() {
