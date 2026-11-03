@@ -103,8 +103,8 @@
         }
 
         .container {
-            padding: 20px;
-            max-width: 650px;
+            padding: 15px;
+            max-width: 800px;
             margin: 0 auto;
         }
 
@@ -146,7 +146,6 @@
             font-weight: 600;
         }
 
-        /* SELECTOR DE VISTAS AGENDA */
         .view-selector {
             display: flex;
             gap: 8px;
@@ -168,6 +167,94 @@
         .view-btn.active {
             background: var(--accent);
             color: #000;
+        }
+
+        /* DISEÑO DE CALENDARIO VISUAL EN PARRILLA */
+        .calendar-grid-week {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            overflow-x: auto;
+        }
+
+        .calendar-day-col {
+            background: #0d0d0d;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 4px;
+            min-height: 250px;
+        }
+
+        .calendar-day-header {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-align: center;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #222;
+            color: var(--accent);
+            margin-bottom: 6px;
+        }
+
+        .class-card-chip {
+            background: #1a1a1a;
+            border-left: 3px solid var(--success);
+            border-radius: 4px;
+            padding: 6px 4px;
+            margin-bottom: 6px;
+            font-size: 0.7rem;
+        }
+
+        .class-card-chip .name {
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .class-card-chip .time {
+            color: var(--text-muted);
+            font-size: 0.65rem;
+        }
+
+        .calendar-month-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .month-header-cell {
+            text-align: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            padding: 4px 0;
+        }
+
+        .month-day-cell {
+            background: #0d0d0d;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            min-height: 55px;
+            padding: 4px;
+            font-size: 0.7rem;
+        }
+
+        .month-day-number {
+            font-weight: 700;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+
+        .month-event-dot {
+            background: #222;
+            border-radius: 3px;
+            padding: 2px 3px;
+            margin-top: 2px;
+            font-size: 0.6rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .form-group {
@@ -224,7 +311,7 @@
             color: #fff;
         }
 
-        .student-item, .attendance-item, .class-item {
+        .student-item, .attendance-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -232,25 +319,8 @@
             border-bottom: 1px solid var(--border-color);
         }
 
-        .student-item:last-child, .attendance-item:last-child, .class-item:last-child {
+        .student-item:last-child, .attendance-item:last-child {
             border-bottom: none;
-        }
-
-        .day-box {
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 10px;
-            margin-bottom: 10px;
-            background: #0a0a0a;
-        }
-
-        .day-header {
-            font-weight: 700;
-            font-size: 0.9rem;
-            color: var(--accent);
-            border-bottom: 1px solid #222;
-            padding-bottom: 5px;
-            margin-bottom: 8px;
         }
 
         .modal {
@@ -314,33 +384,25 @@
     </header>
 
     <div class="container">
-        <!-- AGENDA CON VISTAS DIA / SEMANA / MES -->
+        <!-- CALENDARIO INTERACTIVO DE CLASES -->
         <section id="tab-agenda" class="tab-content active">
-            <h2>Agenda de Clases</h2>
+            <h2>Calendario de Clases</h2>
             
             <div class="view-selector">
-                <button class="view-btn active" onclick="setAgendaView('diaria', this)">Diaria</button>
-                <button class="view-btn" onclick="setAgendaView('semanal', this)">Semanal</button>
-                <button class="view-btn" onclick="setAgendaView('mensual', this)">Mensual</button>
-            </div>
-
-            <div class="card" id="datePickerCard">
-                <div class="form-group">
-                    <label id="dateLabel">Seleccionar Fecha</label>
-                    <input type="date" id="agendaDate" onchange="renderAgenda()">
-                </div>
+                <button class="view-btn active" onclick="setCalendarView('semanal', this)">Vista Semanal</button>
+                <button class="view-btn" onclick="setCalendarView('mensual', this)">Vista Mensual</button>
             </div>
 
             <div class="card">
-                <h2 id="agendaTitle">Clases del Día</h2>
-                <div id="agendaContent">Cargando horario...</div>
+                <h2 id="calendarTitle">Horario de la Semana</h2>
+                <div id="calendarContainer">Cargando horario...</div>
             </div>
         </section>
 
         <!-- ALUMNOS Y MENSUALIDADES -->
         <section id="tab-alumnos" class="tab-content">
             <div class="kpi-card">
-                <label>TOTAL MENSUALIDADES ESTIMADO</label>
+                <label>SUMA TOTAL MENSUALIDADES</label>
                 <div class="kpi-value" id="totalFeeDisplay">$0.00</div>
             </div>
 
@@ -406,7 +468,7 @@
     <nav>
         <button class="nav-btn active" onclick="switchTab('agenda', this)">
             <span>📅</span>
-            <span>Agenda</span>
+            <span>Calendario</span>
         </button>
         <button class="nav-btn" onclick="switchTab('alumnos', this)">
             <span>👥</span>
@@ -497,18 +559,17 @@
         let students = JSON.parse(localStorage.getItem('dacapo_students')) || [];
         let attendances = JSON.parse(localStorage.getItem('dacapo_attendances')) || [];
         let db = null;
-        let currentAgendaView = 'diaria';
+        let currentCalendarView = 'semanal';
 
-        const diasSemana = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+        const diasSemana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 
         document.addEventListener("DOMContentLoaded", () => {
             const today = new Date().toISOString().substring(0, 10);
-            document.getElementById('agendaDate').value = today;
             document.getElementById('attendanceDate').value = today;
             
             initFirebaseFromStorage();
             renderStudents();
-            renderAgenda();
+            renderCalendar();
             populateAttendanceDropdown();
             renderAttendanceHistory();
         });
@@ -574,7 +635,7 @@
                     students = cloudStudents;
                     localStorage.setItem('dacapo_students', JSON.stringify(students));
                     renderStudents();
-                    renderAgenda();
+                    renderCalendar();
                     populateAttendanceDropdown();
                 }
             });
@@ -606,70 +667,63 @@
         function openStudentModal() { document.getElementById('studentModal').classList.add('active'); }
         function closeStudentModal() { document.getElementById('studentModal').classList.remove('active'); }
 
-        // VISTAS AGENDA (DIARIA, SEMANAL, MENSUAL)
-        function setAgendaView(view, btn) {
-            currentAgendaView = view;
+        // VISTAS CALENDARIO (SEMANAL / MENSUAL)
+        function setCalendarView(view, btn) {
+            currentCalendarView = view;
             document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            renderAgenda();
+            renderCalendar();
         }
 
-        function renderAgenda() {
-            const content = document.getElementById('agendaContent');
-            const dateVal = document.getElementById('agendaDate').value;
-            const selectedDate = new Date(dateVal + 'T00:00:00');
-            const dayName = diasSemana[selectedDate.getDay()];
+        function renderCalendar() {
+            const container = document.getElementById('calendarContainer');
 
-            if (currentAgendaView === 'diaria') {
-                document.getElementById('agendaTitle').innerText = `Clases del Día (${dayName} ${dateVal})`;
-                const dayStudents = students.filter(s => s.day === dayName);
-                if (dayStudents.length === 0) {
-                    content.innerHTML = `<p style="font-size:0.85rem; color:var(--text-muted);">No hay clases programadas para los ${dayName}s.</p>`;
-                    return;
-                }
-                content.innerHTML = dayStudents.map(s => `
-                    <div class="class-item">
-                        <div>
-                            <strong>${s.name}</strong>
-                            <div style="font-size:0.75rem; color:var(--text-muted);">${s.instrument || 'Instrumento'} • ${s.time || 'Hora no asignada'}</div>
-                        </div>
-                        <span class="badge" style="background:#222; color:#fff;">${s.time || 'Programada'}</span>
-                    </div>
-                `).join('');
-            } 
-            else if (currentAgendaView === 'semanal') {
-                document.getElementById('agendaTitle').innerText = `Horario Semanal Completo`;
-                const ordenDias = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+            if (currentCalendarView === 'semanal') {
+                document.getElementById('calendarTitle').innerText = `Parrilla Semanal de Clases`;
                 
-                content.innerHTML = ordenDias.map(d => {
-                    const list = students.filter(s => s.day === d);
-                    return `
-                        <div class="day-box">
-                            <div class="day-header">${d} (${list.length})</div>
-                            ${list.length === 0 ? '<div style="font-size:0.75rem; color:var(--text-muted);">Sin clases</div>' : 
-                                list.map(s => `<div style="font-size:0.85rem; padding:3px 0;">⏰ <strong>${s.time || '16:00'}</strong> - ${s.name} (${s.instrument || 'Música'})</div>`).join('')}
+                container.innerHTML = `
+                    <div class="calendar-grid-week">
+                        ${diasSemana.map(d => {
+                            const list = students.filter(s => s.day === d);
+                            return `
+                                <div class="calendar-day-col">
+                                    <div class="calendar-day-header">${d.substring(0, 3)}</div>
+                                    ${list.map(s => `
+                                        <div class="class-card-chip">
+                                            <div class="name">${s.name}</div>
+                                            <div class="time">⏰ ${s.time || '16:00'}</div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            } else {
+                document.getElementById('calendarTitle').innerText = `Calendario Mensual`;
+                
+                let monthCells = '';
+                // Renderizar simulación de cuadrícula mensual de 31 días
+                for(let i = 1; i <= 31; i++) {
+                    const dayIndex = (i - 1) % 7;
+                    const dayName = diasSemana[dayIndex];
+                    const dayStudents = students.filter(s => s.day === dayName);
+
+                    monthCells += `
+                        <div class="month-day-cell">
+                            <div class="month-day-number">${i}</div>
+                            ${dayStudents.map(s => `
+                                <div class="month-event-dot">${s.name.split(' ')[0]}</div>
+                            `).join('')}
                         </div>
                     `;
-                }).join('');
-            }
-            else if (currentAgendaView === 'mensual') {
-                document.getElementById('agendaTitle').innerText = `Resumen Mensual de Alumnos`;
-                const totalClasesEstimadas = students.length * 4;
-                content.innerHTML = `
-                    <div style="text-align:center; padding:10px;">
-                        <p style="font-size:0.9rem; margin-bottom:8px;">Total Alumnos Registrados: <strong>${students.length}</strong></p>
-                        <p style="font-size:0.9rem; margin-bottom:12px;">Estimado de Clases al Mes: <strong>${totalClasesEstimadas} sesiones</strong></p>
-                        <hr style="border-color:var(--border-color); margin-bottom:12px;">
+                }
+
+                container.innerHTML = `
+                    <div class="calendar-month-grid">
+                        ${diasSemana.map(d => `<div class="month-header-cell">${d.substring(0, 3)}</div>`).join('')}
+                        ${monthCells}
                     </div>
-                    ${students.map(s => `
-                        <div class="class-item">
-                            <div>
-                                <strong>${s.name}</strong>
-                                <div style="font-size:0.75rem; color:var(--text-muted);">${s.day || 'Sin día'} a las ${s.time || 'Sin hora'}</div>
-                            </div>
-                            <span class="badge badge-presente">4 clases/mes</span>
-                        </div>
-                    `).join('')}
                 `;
             }
         }
@@ -703,7 +757,7 @@
             }
 
             renderStudents();
-            renderAgenda();
+            renderCalendar();
             populateAttendanceDropdown();
             closeStudentModal();
 
@@ -746,7 +800,7 @@
                 localStorage.setItem('dacapo_students', JSON.stringify(students));
                 if (db) db.collection("students").doc(id).delete();
                 renderStudents();
-                renderAgenda();
+                renderCalendar();
                 populateAttendanceDropdown();
             }
         }
@@ -825,7 +879,7 @@
                 students = [];
                 attendances = [];
                 renderStudents();
-                renderAgenda();
+                renderCalendar();
                 renderAttendanceHistory();
             }
         }
