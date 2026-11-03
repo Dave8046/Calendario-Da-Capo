@@ -513,7 +513,7 @@
             <div id="classesListContainer"></div>
         </section>
 
-        <!-- ALUMNOS -->
+        <!-- ALUMNOS Y MENSUALIDADES ÚNICAS -->
         <section id="tab-alumnos" class="tab-content">
             <div class="kpi-card">
                 <div class="kpi-title">TOTAL MENSUALIDADES ESTIMADO</div>
@@ -543,7 +543,7 @@
                     <input type="date" id="attendanceDate">
                 </div>
                 <div class="form-group">
-                    <label>Alumno</label>
+                    <label>Alumno y Horario</label>
                     <select id="attendanceStudentSelect"></select>
                 </div>
                 <div class="form-group">
@@ -624,11 +624,11 @@
         </div>
     </div>
 
-    <!-- MODAL EDITAR / CREAR CON SUGERENCIAS INTELIGENTES -->
+    <!-- MODAL EDITAR / CREAR CLASE -->
     <div class="modal" id="studentModal">
         <div class="modal-body">
             <div class="flex-between">
-                <h2 id="modalStudentTitle">Nuevo Alumno / Clase</h2>
+                <h2 id="modalStudentTitle">Agregar Día de Clase al Alumno</h2>
                 <span onclick="closeStudentModal()" style="cursor:pointer; font-size: 1.2rem;">✕</span>
             </div>
             <input type="hidden" id="editingStudentId" value="">
@@ -642,7 +642,7 @@
                 <input type="text" id="studentInstrument" placeholder="Ej. Cello, Piano, Otro">
             </div>
             <div class="form-group">
-                <label>Día de Clase</label>
+                <label>Día de la Clase (ej. Lunes, Miércoles)</label>
                 <select id="studentDay">
                     <option value="LUN">Lunes</option>
                     <option value="MAR">Martes</option>
@@ -654,7 +654,7 @@
                 </select>
             </div>
             <div class="form-group">
-                <label>Hora de Clase</label>
+                <label>Hora de esta clase</label>
                 <input type="time" id="studentTime" value="08:00">
             </div>
             <div class="form-group">
@@ -662,10 +662,10 @@
                 <input type="number" id="studentDuration" value="60">
             </div>
             <div class="form-group">
-                <label>Valor Mensualidad ($)</label>
-                <input type="number" id="studentFee" placeholder="Ej. 500">
+                <label>Valor Mensualidad Única ($)</label>
+                <input type="number" id="studentFee" placeholder="Ej. 500 (Se asigna al estudiante)">
             </div>
-            <button class="btn" onclick="saveStudent()">Guardar Registro</button>
+            <button class="btn" onclick="saveStudent()">Guardar Clase</button>
         </div>
     </div>
 
@@ -839,11 +839,11 @@
                     <div class="class-details">
                         <div class="class-header-row">
                             <span class="class-student-name">${s.name}</span>
-                            <span class="badge-fija">CLASE</span>
+                            <span class="badge-fija">${s.day} • ${s.time || '08:00'}</span>
                             ${s.paid ? '<span class="badge-paid">PAGADO</span>' : '<span class="badge-pending">PENDIENTE</span>'}
                         </div>
                         <div class="class-meta">
-                            <span>🕒 ${s.time || '08:00'} (${s.duration || '60'} min)</span>
+                            <span>🕒 ${s.duration || '60'} min</span>
                             <span>🎵 ${s.instrument || 'Otro'}</span>
                         </div>
                     </div>
@@ -865,7 +865,7 @@
             if (id) {
                 const s = students.find(item => item.id === id);
                 if (s) {
-                    document.getElementById('modalStudentTitle').innerText = "Editar Alumno / Clase";
+                    document.getElementById('modalStudentTitle').innerText = "Editar Clase / Alumno";
                     document.getElementById('editingStudentId').value = s.id;
                     document.getElementById('studentName').value = s.name;
                     document.getElementById('studentInstrument').value = s.instrument || '';
@@ -875,7 +875,7 @@
                     document.getElementById('studentFee').value = s.fee || '';
                 }
             } else {
-                document.getElementById('modalStudentTitle').innerText = "Nuevo Alumno / Clase";
+                document.getElementById('modalStudentTitle').innerText = "Agregar Día de Clase al Alumno";
                 document.getElementById('editingStudentId').value = "";
                 document.getElementById('studentName').value = "";
                 document.getElementById('studentInstrument').value = "";
@@ -886,7 +886,6 @@
 
         function closeStudentModal() { document.getElementById('studentModal').classList.remove('active'); }
 
-        // AUTOCOMPLETE / SUGERENCIAS Y VALIDACIÓN DE DUPLICADOS
         function populateSuggestionsList() {
             const datalist = document.getElementById('studentsSuggestions');
             const uniqueNames = [...new Set(students.map(s => s.name))];
@@ -913,10 +912,10 @@
 
             if (!name) return alert("Ingresa el nombre del alumno.");
 
-            // Validar si ya existe una clase exactamente igual para evitar duplicados erroneos
+            // Validar duplicado exacto de día y hora
             const duplicate = students.find(s => s.name.toLowerCase() === name.toLowerCase() && s.day === day && s.time === time && s.id !== id);
             if (duplicate) {
-                if (!confirm(`⚠️ Atención: Ya existe una clase registrada para ${name} el día ${day} a las ${time}. ¿Deseas guardarla de todas formas?`)) {
+                if (!confirm(`⚠️ Atención: ${name} ya tiene registrada otra clase el día ${day} a las ${time}. ¿Deseas agregar este bloque de todas formas?`)) {
                     return;
                 }
             }
@@ -942,72 +941,99 @@
             closeStudentModal();
         }
 
-        function togglePaymentStatus(id) {
-            const idx = students.findIndex(s => s.id === id);
-            if (idx !== -1) {
-                const currentStatus = !!students[idx].paid;
-                const newStatus = !currentStatus;
-                
-                if (confirm(`¿Deseas cambiar el estado de pago de la mensualidad de ${students[idx].name} a ${newStatus ? 'PAGADO' : 'PENDIENTE'}?`)) {
-                    students[idx].paid = newStatus;
-                    localStorage.setItem('dacapo_students', JSON.stringify(students));
-                    if (db) db.collection("students").doc(id).update({ paid: newStatus });
-                    renderStudents();
-                    renderWeekNavigator();
-                }
+        // FUNCIÓN CLAVE: ACTUALIZA EL ESTADO DE PAGO PARA TODOS LOS BLOQUES DE CLASE DE UN MISMO ALUMNO
+        function togglePaymentStatusByName(studentName) {
+            const isCurrentlyPaid = students.find(s => s.name.toLowerCase() === studentName.toLowerCase() && s.paid);
+            const newStatus = !isCurrentlyPaid;
+
+            if (confirm(`¿Deseas marcar la mensualidad de ${studentName} como ${newStatus ? 'PAGADA' : 'PENDIENTE'}? (Se actualizará para todos sus días de clase)`)) {
+                students.forEach(s => {
+                    if (s.name.toLowerCase() === studentName.toLowerCase()) {
+                        s.paid = newStatus;
+                        if (db) db.collection("students").doc(s.id).update({ paid: newStatus });
+                    }
+                });
+                localStorage.setItem('dacapo_students', JSON.stringify(students));
+                renderStudents();
+                renderWeekNavigator();
             }
         }
 
         function renderStudents() {
             const container = document.getElementById('studentsListContainer');
             const query = document.getElementById('searchStudent').value.toLowerCase();
-            const filtered = students.filter(s => s.name.toLowerCase().includes(query));
+            
+            // AGRUPAR POR ALUMNO ÚNICO PARA QUE LA MENSUALIDAD NO SE SUME MÚLTIPLES VECES
+            const uniqueStudentNames = [...new Set(students.map(s => s.name))];
+            const uniqueStudentsList = uniqueStudentNames.map(name => {
+                return students.find(s => s.name === name);
+            });
 
-            const totalFee = students.reduce((sum, s) => sum + (parseFloat(s.fee) || 0), 0);
-            const paidTotal = students.filter(s => s.paid).reduce((sum, s) => sum + (parseFloat(s.fee) || 0), 0);
+            const filtered = uniqueStudentsList.filter(s => s.name.toLowerCase().includes(query));
+
+            // SUMAR SOLO LAS MENSUALIDADES ÚNICAS DE CADA ESTUDIANTE
+            const totalFee = uniqueStudentsList.reduce((sum, s) => sum + (parseFloat(s.fee) || 0), 0);
+            const paidTotal = uniqueStudentsList.filter(s => s.paid).reduce((sum, s) => sum + (parseFloat(s.fee) || 0), 0);
             const pendingTotal = totalFee - paidTotal;
 
             document.getElementById('totalFeeDisplay').innerText = `$${totalFee.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
             document.getElementById('paidSummaryDisplay').innerText = `Cobrado: $${paidTotal.toLocaleString()} | Pendiente: $${pendingTotal.toLocaleString()}`;
 
             if (filtered.length === 0) {
-                container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted);">No hay registros encontrados.</p>`;
+                container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted);">No hay alumnos registrados.</p>`;
                 return;
             }
 
-            container.innerHTML = filtered.map(s => `
-                <div class="class-card" style="flex-direction:column; align-items:stretch;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <span class="class-student-name">${s.name}</span>
-                            <span class="badge-fija" style="margin-left:6px;">${s.day || 'LUN'} • ${s.time || '08:00'}</span>
-                            ${s.paid ? '<span class="badge-paid">PAGADO</span>' : '<span class="badge-pending">PENDIENTE</span>'}
+            container.innerHTML = filtered.map(s => {
+                // Encontrar todos los días/horarios que tiene este alumno
+                const studentClasses = students.filter(st => st.name.toLowerCase() === s.name.toLowerCase());
+                const scheduleText = studentClasses.map(sc => `${sc.day} (${sc.time})`).join(' • ');
+
+                return `
+                    <div class="class-card" style="flex-direction:column; align-items:stretch;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <span class="class-student-name">${s.name}</span>
+                                ${s.paid ? '<span class="badge-paid" style="margin-left:6px;">PAGADO</span>' : '<span class="badge-pending" style="margin-left:6px;">PENDIENTE</span>'}
+                            </div>
+                            <div style="font-weight:700; color:var(--success); font-size:1.1rem;">
+                                $${(parseFloat(s.fee) || 0).toLocaleString()} <span style="font-size:0.7rem; color:var(--text-muted); font-weight:normal;">/mes</span>
+                            </div>
                         </div>
-                        <div style="font-weight:700; color:var(--success); font-size:1.1rem;">
-                            $${(parseFloat(s.fee) || 0).toLocaleString()}
+                        <div class="class-meta" style="margin-top:6px;">
+                            <span>🎵 ${s.instrument || 'Otro'} • 📅 Días: ${scheduleText}</span>
+                        </div>
+                        <div class="actions-group">
+                            <button class="btn btn-small btn-outline" onclick="openStudentModal('${s.id}')">➕ Agregar Día / Editar</button>
+                            <button class="btn btn-small btn-outline" onclick="togglePaymentStatusByName('${s.name}')">${s.paid ? '🔴 Marcar Pendiente' : '🟢 Marcar Pagado'}</button>
+                            <button class="btn btn-small btn-danger" onclick="deleteStudentByName('${s.name}')">🗑️ Eliminar Alumno</button>
                         </div>
                     </div>
-                    <div class="class-meta" style="margin-top:6px;">
-                        <span>🎵 ${s.instrument || 'Otro'} • 🕒 ${s.duration || '60'} min</span>
-                    </div>
-                    <div class="actions-group">
-                        <button class="btn btn-small btn-outline" onclick="openStudentModal('${s.id}')">✏️ Editar</button>
-                        <button class="btn btn-small btn-outline" onclick="togglePaymentStatus('${s.id}')">${s.paid ? '🔴 Marcar Pendiente' : '🟢 Marcar Pagado'}</button>
-                        <button class="btn btn-small btn-danger" onclick="deleteStudent('${s.id}')">🗑️ Eliminar</button>
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
-        function deleteStudent(id) {
-            if (confirm("¿Deseas eliminar este registro de clase?")) {
-                students = students.filter(s => s.id !== id);
+        function deleteStudentByName(name) {
+            if (confirm(`¿Deseas eliminar a ${name} y todos sus horarios de clase registrados?`)) {
+                const idsToDelete = students.filter(s => s.name.toLowerCase() === name.toLowerCase()).map(s => s.id);
+                students = students.filter(s => s.name.toLowerCase() !== name.toLowerCase());
                 localStorage.setItem('dacapo_students', JSON.stringify(students));
-                if (db) db.collection("students").doc(id).delete();
+                
+                if (db) {
+                    idsToDelete.forEach(id => db.collection("students").doc(id).delete());
+                }
+
                 renderStudents();
                 renderWeekNavigator();
                 populateAttendanceDropdown();
                 populateSuggestionsList();
+            }
+        }
+
+        function deleteStudent(id) {
+            const target = students.find(s => s.id === id);
+            if (target) {
+                deleteStudentByName(target.name);
             }
         }
 
@@ -1025,7 +1051,7 @@
             if (!studentId || !date) return alert("Selecciona alumno y fecha.");
 
             const student = students.find(s => s.id === studentId);
-            const record = { id: Date.now().toString(), studentId, studentName: student ? student.name : 'Alumno', date, status };
+            const record = { id: Date.now().toString(), studentId, studentName: student ? `${student.name} (${student.day})` : 'Alumno', date, status };
 
             attendances.unshift(record);
             localStorage.setItem('dacapo_attendances', JSON.stringify(attendances));
