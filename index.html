@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Da Capo - Casa Musical</title>
-    <link rel="manifest" href="data:application/manifest+json;base64,ewogICJub21lIjogIkRhIENhcG8gLSBDYXNhIE11c2ljYWwiLAogICJzaG9ydF9uYW1lIjogIkRhIENhcG8iLAogICJzdGFydF91cmwiOiAiLi8iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMwMDAwMDAiLAogICJ0aGVtZV9jb2xvciI6ICIjMDAwMDAwIgp9">
+    <link rel="manifest" href="data:application/manifest+json;base64,ewogICJub21lIjogIkRhIENhcG8gLSBDYXNhIE11c2ljYWwiLAogICJzaG9ydF9uYW1lIjogIkRhIENhcG8iLAogICJzdGFydF91cmwiOiAiLi8iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMwMDAwMDAiLAogICJ0aGVtZV9jb2xvciI6埙MDAwMDAwIgp9">
     <style>
         :root {
             --bg-color: #000000;
@@ -13,9 +13,9 @@
             --text-color: #ffffff;
             --text-muted: #888888;
             --accent: #ffffff;
-            --accent-hover: #dddddd;
             --danger: #ff4444;
             --success: #00c853;
+            --warning: #ffab00;
         }
 
         * {
@@ -28,7 +28,7 @@
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
-            padding-bottom: 70px;
+            padding-bottom: 80px;
         }
 
         header {
@@ -124,6 +124,22 @@
             margin-bottom: 15px;
         }
 
+        .kpi-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .kpi-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--success);
+            margin-top: 5px;
+        }
+
         h2 {
             font-size: 1.1rem;
             margin-bottom: 15px;
@@ -184,7 +200,7 @@
             color: #fff;
         }
 
-        .student-item {
+        .student-item, .attendance-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -192,7 +208,7 @@
             border-bottom: 1px solid var(--border-color);
         }
 
-        .student-item:last-child {
+        .student-item:last-child, .attendance-item:last-child {
             border-bottom: none;
         }
 
@@ -227,16 +243,15 @@
 
         .badge {
             font-size: 0.7rem;
-            padding: 2px 8px;
+            padding: 3px 8px;
             border-radius: 10px;
             background: #222;
             color: var(--text-muted);
         }
 
-        .badge-success {
-            background: rgba(0, 200, 83, 0.2);
-            color: var(--success);
-        }
+        .badge-presente { background: rgba(0, 200, 83, 0.2); color: var(--success); }
+        .badge-ausente { background: rgba(255, 68, 68, 0.2); color: var(--danger); }
+        .badge-justificado { background: rgba(255, 171, 0, 0.2); color: var(--warning); }
 
         .flex-between {
             display: flex;
@@ -244,9 +259,7 @@
             align-items: center;
         }
 
-        .mt-10 {
-            margin-top: 10px;
-        }
+        .mt-10 { margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -260,7 +273,7 @@
     </header>
 
     <div class="container">
-        <!-- AGENCIA / AGENDA -->
+        <!-- AGENDA -->
         <section id="tab-agenda" class="tab-content active">
             <h2>Agenda de Clases</h2>
             <div class="card">
@@ -275,12 +288,18 @@
             </div>
         </section>
 
-        <!-- ALUMNOS -->
+        <!-- ALUMNOS Y MENSUALIDADES -->
         <section id="tab-alumnos" class="tab-content">
+            <div class="kpi-card">
+                <label>TOTAL MENSUALIDADES ESTIMADO</label>
+                <div class="kpi-value" id="totalFeeDisplay">$0.00</div>
+            </div>
+
             <div class="flex-between" style="margin-bottom: 15px;">
                 <h2>Lista de Alumnos</h2>
-                <button class="btn" style="width: auto; padding: 6px 12px; font-size: 0.8rem;" onclick="openStudentModal()">+ Nuevo</button>
+                <button class="btn" style="width: auto; padding: 6px 12px; font-size: 0.8rem;" onclick="openStudentModal()">+ Nuevo Alumno</button>
             </div>
+            
             <div class="card">
                 <input type="text" id="searchStudent" placeholder="Buscar alumno..." oninput="renderStudents()" style="margin-bottom: 10px;">
                 <div id="studentsList">Cargando alumnos...</div>
@@ -289,21 +308,30 @@
 
         <!-- ASISTENCIA -->
         <section id="tab-asistencia" class="tab-content">
-            <h2>Registro de Asistencia</h2>
+            <h2>Control de Asistencia</h2>
             <div class="card">
+                <div class="form-group">
+                    <label>Fecha de Clase</label>
+                    <input type="date" id="attendanceDate">
+                </div>
                 <div class="form-group">
                     <label>Alumno</label>
                     <select id="attendanceStudent"></select>
                 </div>
                 <div class="form-group">
-                    <label>Estado</label>
+                    <label>Estado de Asistencia</label>
                     <select id="attendanceStatus">
                         <option value="Presente">Presente</option>
                         <option value="Ausente">Ausente</option>
                         <option value="Justificado">Justificado</option>
                     </select>
                 </div>
-                <button class="btn" onclick="saveAttendance()">Registrar Asistencia</button>
+                <button class="btn" onclick="saveAttendance()">Guardar Asistencia</button>
+            </div>
+
+            <div class="card">
+                <h2>Historial Reciente de Asistencias</h2>
+                <div id="attendanceHistory">Sin registros recientes.</div>
             </div>
         </section>
 
@@ -318,7 +346,7 @@
                 <button class="btn btn-outline" onclick="openCloudModal()">Configurar Nube</button>
             </div>
             <div class="card">
-                <h2>Copia de Seguridad Local</h2>
+                <h2>Copia de Seguridad</h2>
                 <button class="btn btn-outline" onclick="exportData()" style="margin-bottom: 8px;">Exportar Respaldo JSON</button>
                 <button class="btn btn-danger" onclick="clearLocalData()">Limpiar Datos Locales</button>
             </div>
@@ -388,6 +416,10 @@
                 <label>Instrumento / Curso</label>
                 <input type="text" id="studentInstrument" placeholder="Ej. Cello, Piano">
             </div>
+            <div class="form-group">
+                <label>Valor Mensualidad ($)</label>
+                <input type="number" id="studentFee" placeholder="Ej. 500">
+            </div>
             <button class="btn" onclick="saveStudent()">Guardar Alumno</button>
         </div>
     </div>
@@ -397,21 +429,22 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // ESTADO GLOBAL CON PERSISTENCIA
         let students = JSON.parse(localStorage.getItem('dacapo_students')) || [];
         let attendances = JSON.parse(localStorage.getItem('dacapo_attendances')) || [];
         let db = null;
 
         document.addEventListener("DOMContentLoaded", () => {
-            document.getElementById('agendaDate').valueToDate = new Date();
-            document.getElementById('agendaDate').value = new Date().toISOString().substring(0, 10);
+            const today = new Date().toISOString().substring(0, 10);
+            document.getElementById('agendaDate').value = today;
+            document.getElementById('attendanceDate').value = today;
+            
             initFirebaseFromStorage();
             renderStudents();
             loadAgenda();
             populateAttendanceDropdown();
+            renderAttendanceHistory();
         });
 
-        // PERSISTENCIA FIREBASE
         function initFirebaseFromStorage() {
             const apiKey = localStorage.getItem('dacapo_fb_apikey');
             const projectId = localStorage.getItem('dacapo_fb_projectid');
@@ -469,7 +502,6 @@
 
         function syncWithFirestore() {
             if (!db) return;
-            // Sincronización en tiempo real de alumnos
             db.collection("students").onSnapshot((snapshot) => {
                 let cloudStudents = [];
                 snapshot.forEach((doc) => {
@@ -482,9 +514,20 @@
                     populateAttendanceDropdown();
                 }
             });
+
+            db.collection("attendances").onSnapshot((snapshot) => {
+                let cloudAttendances = [];
+                snapshot.forEach((doc) => {
+                    cloudAttendances.push({ id: doc.id, ...doc.data() });
+                });
+                if (cloudAttendances.length > 0) {
+                    attendances = cloudAttendances;
+                    localStorage.setItem('dacapo_attendances', JSON.stringify(attendances));
+                    renderAttendanceHistory();
+                }
+            });
         }
 
-        // CONTROL DE TABS
         function switchTab(tabId, btn) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
@@ -492,7 +535,6 @@
             btn.classList.add('active');
         }
 
-        // MODALES
         function openCloudModal() {
             document.getElementById('firebaseApiKey').value = localStorage.getItem('dacapo_fb_apikey') || '';
             document.getElementById('firebaseProjectId').value = localStorage.getItem('dacapo_fb_projectid') || '';
@@ -502,19 +544,21 @@
         function openStudentModal() { document.getElementById('studentModal').classList.add('active'); }
         function closeStudentModal() { document.getElementById('studentModal').classList.remove('active'); }
 
-        // ALUMNOS CRUD
+        // ALUMNOS & MENSUALIDADES
         function saveStudent() {
             const name = document.getElementById('studentName').value.trim();
             const phone = document.getElementById('studentPhone').value.trim();
             const instrument = document.getElementById('studentInstrument').value.trim();
+            const fee = parseFloat(document.getElementById('studentFee').value) || 0;
 
-            if (!name) return alert("Ingresa al menos el nombre.");
+            if (!name) return alert("Ingresa al menos el nombre del alumno.");
 
             const newStudent = {
                 id: Date.now().toString(),
                 name,
                 phone,
-                instrument
+                instrument,
+                fee
             };
 
             students.push(newStudent);
@@ -531,12 +575,17 @@
             document.getElementById('studentName').value = '';
             document.getElementById('studentPhone').value = '';
             document.getElementById('studentInstrument').value = '';
+            document.getElementById('studentFee').value = '';
         }
 
         function renderStudents() {
             const list = document.getElementById('studentsList');
             const query = document.getElementById('searchStudent').value.toLowerCase();
             const filtered = students.filter(s => s.name.toLowerCase().includes(query));
+
+            // Calcular total de mensualidades
+            const totalFee = students.reduce((sum, s) => sum + (parseFloat(s.fee) || 0), 0);
+            document.getElementById('totalFeeDisplay').innerText = `$${totalFee.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
 
             if (filtered.length === 0) {
                 list.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted);">No hay alumnos registrados.</p>`;
@@ -549,42 +598,100 @@
                         <strong>${s.name}</strong>
                         <div style="font-size:0.75rem; color:var(--text-muted);">${s.instrument || 'Sin instrumento'} • ${s.phone || 'Sin tel'}</div>
                     </div>
-                    <span class="badge badge-success">Activo</span>
+                    <div style="text-align: right;">
+                        <div style="font-weight:600; font-size:0.9rem; color:var(--success);">$${(parseFloat(s.fee) || 0).toLocaleString()}</div>
+                        <button onclick="deleteStudent('${s.id}')" style="background:none; border:none; color:var(--danger); font-size:0.7rem; cursor:pointer; margin-top:2px;">Eliminar</button>
+                    </div>
                 </div>
             `).join('');
         }
 
+        function deleteStudent(id) {
+            if (confirm("¿Deseas eliminar este alumno?")) {
+                students = students.filter(s => s.id !== id);
+                localStorage.setItem('dacapo_students', JSON.stringify(students));
+                if (db) db.collection("students").doc(id).delete();
+                renderStudents();
+                populateAttendanceDropdown();
+            }
+        }
+
+        // CONTROL DE ASISTENCIA
         function populateAttendanceDropdown() {
             const select = document.getElementById('attendanceStudent');
+            if (students.length === 0) {
+                select.innerHTML = `<option value="">No hay alumnos</option>`;
+                return;
+            }
             select.innerHTML = students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
         }
 
         function saveAttendance() {
+            const date = document.getElementById('attendanceDate').value;
             const studentId = document.getElementById('attendanceStudent').value;
             const status = document.getElementById('attendanceStatus').value;
+
             if (!studentId) return alert("Selecciona un alumno.");
+            if (!date) return alert("Selecciona una fecha.");
+
+            const student = students.find(s => s.id === studentId);
 
             const record = {
                 id: Date.now().toString(),
                 studentId,
-                status,
-                date: new Date().toISOString()
+                studentName: student ? student.name : 'Alumno Desconocido',
+                date,
+                status
             };
 
-            attendances.push(record);
+            attendances.unshift(record);
             localStorage.setItem('dacapo_attendances', JSON.stringify(attendances));
 
             if (db) {
                 db.collection("attendances").doc(record.id).set(record);
             }
 
-            alert("Asistencia registrada.");
+            renderAttendanceHistory();
+            alert(`Asistencia registrada para ${record.studentName}.`);
+        }
+
+        function renderAttendanceHistory() {
+            const container = document.getElementById('attendanceHistory');
+            if (attendances.length === 0) {
+                container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted);">Sin registros de asistencia.</p>`;
+                return;
+            }
+
+            container.innerHTML = attendances.slice(0, 15).map(a => `
+                <div class="attendance-item">
+                    <div>
+                        <strong>${a.studentName}</strong>
+                        <div style="font-size:0.75rem; color:var(--text-muted);">${a.date}</div>
+                    </div>
+                    <span class="badge badge-${a.status.toLowerCase()}">${a.status}</span>
+                </div>
+            `).join('');
         }
 
         function loadAgenda() {
             const date = document.getElementById('agendaDate').value;
             const agendaList = document.getElementById('agendaList');
-            agendaList.innerHTML = `<p style="font-size:0.88rem; color:var(--text-muted);">Fecha seleccionada: ${date}. No hay clases programadas.</p>`;
+            const todaysAttendances = attendances.filter(a => a.date === date);
+
+            if (todaysAttendances.length === 0) {
+                agendaList.innerHTML = `<p style="font-size:0.88rem; color:var(--text-muted);">Sin actividad o clases registradas para ${date}.</p>`;
+                return;
+            }
+
+            agendaList.innerHTML = todaysAttendances.map(a => `
+                <div class="attendance-item">
+                    <div>
+                        <strong>${a.studentName}</strong>
+                        <div style="font-size:0.75rem; color:var(--text-muted);">Registro de Clase</div>
+                    </div>
+                    <span class="badge badge-${a.status.toLowerCase()}">${a.status}</span>
+                </div>
+            `).join('');
         }
 
         function exportData() {
@@ -604,6 +711,7 @@
                 students = [];
                 attendances = [];
                 renderStudents();
+                renderAttendanceHistory();
             }
         }
     </script>
