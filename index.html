@@ -138,6 +138,7 @@
         .alert-text {
             font-size: 0.82rem;
             color: #ffdf80;
+            line-height: 1.3;
         }
 
         .alert-banner.danger .alert-text {
@@ -333,6 +334,7 @@
             color: var(--text-muted);
             display: flex;
             gap: 8px;
+            flex-wrap: wrap;
         }
 
         .kpi-card {
@@ -527,7 +529,7 @@
     <div class="container">
         <!-- AGENDA -->
         <section id="tab-agenda" class="tab-content active">
-            <!-- ALERTA INTELIGENTE DE CLASES DE HOY -->
+            <!-- ALERTA DE CLASES DE HOY -->
             <div id="todayClassesAlert"></div>
 
             <div class="subtabs">
@@ -556,7 +558,7 @@
 
         <!-- ALUMNOS Y ALERTAS DE PAGO -->
         <section id="tab-alumnos" class="tab-content">
-            <!-- ALERTA DE MENSUALIDADES PENDIENTES -->
+            <!-- ALERTA DE MENSUALIDADES PENDIENTES O VENCIDAS -->
             <div id="pendingPaymentsAlert"></div>
 
             <div class="kpi-card">
@@ -619,8 +621,8 @@
             <div class="card">
                 <div class="form-group">
                     <label>Plantilla Recordatorio de Cobro</label>
-                    <textarea id="templateCobro" rows="3" oninput="saveTemplates()">Hola {nombre}, te saludamos de Da Capo - Casa Musical. Te recordamos que tienes pendiente tu mensualidad por un monto de ${monto}. ¡Muchas gracias! 🎶</textarea>
-                    <span style="font-size: 0.7rem; color: var(--text-muted);">Usa {nombre} y {monto} como variables automáticas.</span>
+                    <textarea id="templateCobro" rows="3" oninput="saveTemplates()">Hola {nombre}, te saludamos de Da Capo - Casa Musical. Te recordamos que tienes pendiente tu mensualidad por un monto de ${monto} (Vence el {vencimiento}). ¡Muchas gracias! 🎶</textarea>
+                    <span style="font-size: 0.7rem; color: var(--text-muted);">Usa {nombre}, {monto} y {vencimiento} como variables.</span>
                 </div>
                 <div class="form-group">
                     <label>Plantilla Aviso de Asistencia</label>
@@ -732,6 +734,10 @@
             <div class="form-group">
                 <label>Valor Mensualidad Única ($)</label>
                 <input type="number" id="studentFee" placeholder="Ej. 500">
+            </div>
+            <div class="form-group">
+                <label>Fecha de Vencimiento de Mensualidad</label>
+                <input type="date" id="studentDueDate">
             </div>
             <button class="btn" onclick="saveStudent()">Guardar Registro</button>
         </div>
@@ -859,10 +865,11 @@
             });
         }
 
-        // SISTEMA DE ALERTAS Y NOTIFICACIONES
+        // SISTEMA DE ALERTAS Y NOTIFICACIONES INTELIGENTES CON FECHA DE VENCIMIENTO
         function checkNotifications() {
-            const todayIndex = new Date().getDay(); // 0 Dom, 1 Lun, etc.
+            const todayIndex = new Date().getDay();
             const todayAbbr = daysMap[todayIndex];
+            const todayStr = new Date().toISOString().substring(0, 10);
 
             // 1. Clases de hoy
             const todayClasses = students.filter(s => s.day === todayAbbr);
@@ -888,19 +895,24 @@
                 `;
             }
 
-            // 2. Alumnos con mensualidades pendientes
+            // 2. Alumnos con mensualidades vencidas o pendientes por fecha
             const uniqueNames = [...new Set(students.map(s => s.name))];
             const uniqueList = uniqueNames.map(name => students.find(s => s.name === name));
-            const pendingList = uniqueList.filter(s => !s.paid);
+            
+            const pendingList = uniqueList.filter(s => {
+                if (s.paid) return false;
+                if (!s.dueDate) return true; // Si no tiene fecha puesta pero está pendiente, cuenta como aviso
+                return s.dueDate <= todayStr; // Si la fecha de vencimiento ya llegó o pasó
+            });
 
             const pendingAlertContainer = document.getElementById('pendingPaymentsAlert');
             if (pendingList.length > 0) {
-                const pendingNames = pendingList.map(s => s.name).join(', ');
+                const pendingNames = pendingList.map(s => `${s.name} ${s.dueDate ? '('+s.dueDate+')' : ''}`).join(', ');
                 pendingAlertContainer.innerHTML = `
                     <div class="alert-banner danger">
                         <div class="alert-icon">⚠️</div>
                         <div class="alert-text">
-                            <strong>Alerta de Cobros Pendientes (${pendingList.length}):</strong><br>Hay mensualidades pendientes de: ${pendingNames}
+                            <strong>Mensualidades Vencidas / Pendientes (${pendingList.length}):</strong><br>Requieren atención: ${pendingNames}
                         </div>
                     </div>
                 `;
@@ -1016,6 +1028,7 @@
                     document.getElementById('studentTime').value = s.time || '08:00';
                     document.getElementById('studentDuration').value = s.duration || '60';
                     document.getElementById('studentFee').value = s.fee || '';
+                    document.getElementById('studentDueDate').value = s.dueDate || '';
                 }
             } else {
                 document.getElementById('modalStudentTitle').innerText = "Agregar Día de Clase al Alumno";
@@ -1024,6 +1037,7 @@
                 document.getElementById('studentPhone').value = "";
                 document.getElementById('studentInstrument').value = "";
                 document.getElementById('studentFee').value = "";
+                document.getElementById('studentDueDate').value = new Date().toISOString().substring(0, 10);
             }
             document.getElementById('studentModal').classList.add('active');
         }
@@ -1043,6 +1057,7 @@
                 document.getElementById('studentInstrument').value = found.instrument || '';
                 document.getElementById('studentFee').value = found.fee || '';
                 document.getElementById('studentDuration').value = found.duration || '60';
+                document.getElementById('studentDueDate').value = found.dueDate || '';
             }
         }
 
@@ -1055,6 +1070,7 @@
             const time = document.getElementById('studentTime').value;
             const duration = document.getElementById('studentDuration').value;
             const fee = parseFloat(document.getElementById('studentFee').value) || 0;
+            const dueDate = document.getElementById('studentDueDate').value;
 
             if (!name) return alert("Ingresa el nombre del alumno.");
 
@@ -1068,11 +1084,11 @@
             if (id) {
                 const idx = students.findIndex(s => s.id === id);
                 if (idx !== -1) {
-                    students[idx] = { ...students[idx], name, phone, instrument, day, time, duration, fee };
+                    students[idx] = { ...students[idx], name, phone, instrument, day, time, duration, fee, dueDate };
                     if (db) db.collection("students").doc(id).set(students[idx]);
                 }
             } else {
-                const newStudent = { id: Date.now().toString(), name, phone, instrument, day, time, duration, fee, paid: false };
+                const newStudent = { id: Date.now().toString(), name, phone, instrument, day, time, duration, fee, dueDate, paid: false };
                 students.push(newStudent);
                 if (db) db.collection("students").doc(newStudent.id).set(newStudent);
             }
@@ -1114,7 +1130,8 @@
             let template = document.getElementById('templateCobro').value;
             let messageText = template
                 .replace('{nombre}', student.name)
-                .replace('{monto}', (student.fee || 0).toLocaleString());
+                .replace('{monto}', (student.fee || 0).toLocaleString())
+                .replace('{vencimiento}', student.dueDate || 'pronto');
 
             window.open(`https://wa.me/${phoneClean}?text=${encodeURIComponent(messageText)}`, '_blank');
         }
@@ -1158,7 +1175,9 @@
                             </div>
                         </div>
                         <div class="class-meta" style="margin-top:6px;">
-                            <span>🎵 ${s.instrument || 'Otro'} • 📅 Días: ${scheduleText}</span>
+                            <span>🎵 ${s.instrument || 'Otro'}</span>
+                            <span>📅 Vence: ${s.dueDate || 'No asignada'}</span>
+                            <span>⏰ ${scheduleText}</span>
                         </div>
                         <div class="actions-group">
                             <button class="btn btn-small btn-outline" onclick="openStudentModal('${s.id}')">➕ Editar/Día</button>
