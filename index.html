@@ -3,18 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Da Capo - Casa Musical</title>
-    <link rel="manifest" href="data:application/manifest+json;base64,ewogICJub21lIjogIkRhIENhcG8gLSBDYXNhIE11c2ljYWwiLAogICJzaG9ydF9uYW1lIjogIkRhIENhcG8iLAogICJzdGFydF91cmwiOiAiLi8iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMwMDAwMDAiLAogICJ0aGVtZV9jb2xvciI6ICIjMDAwMDAwIgp9">
+    <title>Da Capo - MusicSchedule</title>
     <style>
         :root {
-            --bg-color: #000000;
-            --card-bg: #111111;
-            --border-color: #222222;
+            --bg-color: #070913;
+            --card-bg: #0f1322;
+            --card-inner: #161c30;
+            --border-color: #1e2640;
             --text-color: #ffffff;
-            --text-muted: #888888;
-            --accent: #ffffff;
-            --danger: #ff4444;
-            --success: #00c853;
+            --text-muted: #8a94b0;
+            --accent-purple: #635bff;
+            --accent-purple-light: #7a73ff;
+            --accent-purple-bg: rgba(99, 91, 255, 0.15);
+            --danger: #ff4d4d;
+            --success: #00e676;
             --warning: #ffab00;
         }
 
@@ -23,88 +25,77 @@
             margin: 0;
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
-            padding-bottom: 80px;
+            padding-bottom: 90px;
         }
 
         header {
-            background: var(--card-bg);
-            border-bottom: 1px solid var(--border-color);
-            padding: 15px 20px;
+            padding: 20px 16px 10px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
         }
 
-        .logo {
-            font-size: 1.2rem;
-            font-weight: 700;
-            letter-spacing: 1px;
-        }
-
-        .cloud-status {
-            font-size: 0.8rem;
-            padding: 5px 10px;
-            border-radius: 20px;
-            background: #222;
-            border: 1px solid #333;
-            cursor: pointer;
+        .header-left {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 12px;
+        }
+
+        .app-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #7a73ff, #4d44e6);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 12px rgba(99, 91, 255, 0.3);
+        }
+
+        .app-title-group h1 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        .app-title-group span {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .cloud-badge {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
         }
 
         .status-dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: #666;
+            background: #555;
         }
 
         .status-dot.online {
             background: var(--success);
-        }
-
-        nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: var(--card-bg);
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-around;
-            padding: 10px 0;
-            z-index: 100;
-        }
-
-        .nav-btn {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 0.75rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            cursor: pointer;
-            width: 25%;
-        }
-
-        .nav-btn.active {
-            color: var(--text-color);
+            box-shadow: 0 0 8px var(--success);
         }
 
         .container {
-            padding: 15px;
-            max-width: 800px;
+            padding: 12px 16px;
+            max-width: 500px;
             margin: 0 auto;
         }
 
@@ -116,304 +107,471 @@
             display: block;
         }
 
-        .card {
+        .subtabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .subtab-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 14px;
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .subtab-btn.active {
+            background: var(--accent-purple);
+            border-color: var(--accent-purple);
+            color: #ffffff;
+            box-shadow: 0 4px 14px rgba(99, 91, 255, 0.35);
+        }
+
+        .week-navigator {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .nav-arrow {
+            background: var(--card-inner);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .week-info {
+            text-align: center;
+        }
+
+        .week-info label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .week-info span {
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        .days-carousel {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 6px;
+            margin-bottom: 20px;
+            scrollbar-width: none;
+        }
+
+        .days-carousel::-webkit-scrollbar {
+            display: none;
+        }
+
+        .day-chip {
+            min-width: 58px;
+            height: 72px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .day-chip .day-name {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .day-chip .day-num {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-top: 2px;
+        }
+
+        .day-chip.active {
+            background: var(--accent-purple);
+            border-color: var(--accent-purple-light);
+            box-shadow: 0 4px 16px rgba(99, 91, 255, 0.4);
+        }
+
+        .day-chip.active .day-name, .day-chip.active .day-num {
+            color: #ffffff;
+        }
+
+        .day-dot {
+            width: 5px;
+            height: 5px;
+            background: #ffffff;
+            border-radius: 50%;
+            position: absolute;
+            bottom: 8px;
+        }
+
+        .day-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .day-section-header h2 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .classes-count-badge {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            color: var(--accent-purple-light);
+            font-weight: 600;
+        }
+
+        .class-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
             padding: 16px;
-            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 12px;
+        }
+
+        .class-icon-box {
+            width: 44px;
+            height: 44px;
+            background: var(--card-inner);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: var(--accent-purple-light);
+        }
+
+        .class-details {
+            flex: 1;
+        }
+
+        .class-header-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .class-student-name {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .badge-fija {
+            background: var(--accent-purple-bg);
+            color: var(--accent-purple-light);
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-paid {
+            background: rgba(0, 230, 118, 0.15);
+            color: var(--success);
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 6px;
+        }
+
+        .badge-pending {
+            background: rgba(255, 171, 0, 0.15);
+            color: var(--warning);
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 6px;
+        }
+
+        .class-meta {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .kpi-card {
-            background: #1a1a1a;
-            border: 1px solid #333;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 15px;
+            background: linear-gradient(135deg, #12182c, #0f1322);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            padding: 18px;
             text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .kpi-title {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            letter-spacing: 0.5px;
         }
 
         .kpi-value {
             font-size: 1.8rem;
-            font-weight: 700;
+            font-weight: 800;
             color: var(--success);
-            margin-top: 5px;
+            margin-top: 4px;
         }
 
-        h2 {
-            font-size: 1.1rem;
-            margin-bottom: 15px;
-            font-weight: 600;
-        }
-
-        .view-selector {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 15px;
-        }
-
-        .view-btn {
-            flex: 1;
-            padding: 8px;
-            background: #111;
+        .card {
+            background: var(--card-bg);
             border: 1px solid var(--border-color);
-            color: var(--text-muted);
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-
-        .view-btn.active {
-            background: var(--accent);
-            color: #000;
-        }
-
-        /* DISEÑO DE CALENDARIO VISUAL EN PARRILLA */
-        .calendar-grid-week {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 6px;
-            overflow-x: auto;
-        }
-
-        .calendar-day-col {
-            background: #0d0d0d;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 8px 4px;
-            min-height: 250px;
-        }
-
-        .calendar-day-header {
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-align: center;
-            padding-bottom: 6px;
-            border-bottom: 1px solid #222;
-            color: var(--accent);
-            margin-bottom: 6px;
-        }
-
-        .class-card-chip {
-            background: #1a1a1a;
-            border-left: 3px solid var(--success);
-            border-radius: 4px;
-            padding: 6px 4px;
-            margin-bottom: 6px;
-            font-size: 0.7rem;
-        }
-
-        .class-card-chip .name {
-            font-weight: 600;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .class-card-chip .time {
-            color: var(--text-muted);
-            font-size: 0.65rem;
-        }
-
-        .calendar-month-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 4px;
-        }
-
-        .month-header-cell {
-            text-align: center;
-            font-size: 0.7rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            padding: 4px 0;
-        }
-
-        .month-day-cell {
-            background: #0d0d0d;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            min-height: 55px;
-            padding: 4px;
-            font-size: 0.7rem;
-        }
-
-        .month-day-number {
-            font-weight: 700;
-            font-size: 0.65rem;
-            color: var(--text-muted);
-            margin-bottom: 2px;
-        }
-
-        .month-event-dot {
-            background: #222;
-            border-radius: 3px;
-            padding: 2px 3px;
-            margin-top: 2px;
-            font-size: 0.6rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            border-radius: 18px;
+            padding: 16px;
+            margin-bottom: 16px;
         }
 
         .form-group {
-            margin-bottom: 12px;
+            margin-bottom: 14px;
         }
 
         label {
             display: block;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             color: var(--text-muted);
-            margin-bottom: 4px;
+            margin-bottom: 6px;
         }
 
-        input, select, textarea {
+        input, select {
             width: 100%;
-            padding: 10px;
-            background: #000;
+            padding: 12px;
+            background: var(--bg-color);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
+            border-radius: 12px;
             color: var(--text-color);
             font-size: 0.9rem;
         }
 
-        input:focus, select:focus, textarea:focus {
+        input:focus, select:focus {
             outline: none;
-            border-color: var(--accent);
+            border-color: var(--accent-purple);
         }
 
         .btn {
             width: 100%;
-            padding: 12px;
-            background: var(--accent);
-            color: #000;
+            padding: 14px;
+            background: var(--accent-purple);
+            color: #fff;
             border: none;
-            border-radius: 8px;
-            font-weight: 600;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.9rem;
             cursor: pointer;
-            transition: opacity 0.2s;
-            margin-top: 5px;
+            box-shadow: 0 4px 14px rgba(99, 91, 255, 0.3);
         }
 
-        .btn:active {
-            opacity: 0.8;
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            border-radius: 8px;
+            width: auto;
         }
 
         .btn-outline {
             background: transparent;
             color: var(--text-color);
             border: 1px solid var(--border-color);
+            box-shadow: none;
         }
 
         .btn-danger {
             background: var(--danger);
-            color: #fff;
+            box-shadow: none;
         }
 
-        .student-item, .attendance-item {
+        nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(15, 19, 34, 0.92);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid var(--border-color);
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--border-color);
+            justify-content: space-around;
+            padding: 10px 0 16px 0;
+            z-index: 100;
         }
 
-        .student-item:last-child, .attendance-item:last-child {
-            border-bottom: none;
+        .nav-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.72rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            width: 25%;
+        }
+
+        .nav-btn.active {
+            color: var(--accent-purple-light);
+            font-weight: 700;
+        }
+
+        .fab-button {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            background: var(--accent-purple);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #fff;
+            box-shadow: 0 6px 20px rgba(99, 91, 255, 0.5);
+            cursor: pointer;
+            z-index: 99;
         }
 
         .modal {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.85);
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
             z-index: 200;
             align-items: center;
             justify-content: center;
             padding: 20px;
         }
 
-        .modal.active {
-            display: flex;
-        }
+        .modal.active { display: flex; }
 
         .modal-body {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
+            border-radius: 20px;
             width: 100%;
-            max-width: 500px;
+            max-width: 480px;
             padding: 20px;
             max-height: 90vh;
             overflow-y: auto;
         }
 
-        .badge {
-            font-size: 0.7rem;
-            padding: 3px 8px;
-            border-radius: 10px;
-            background: #222;
-            color: var(--text-muted);
-        }
-
-        .badge-presente { background: rgba(0, 200, 83, 0.2); color: var(--success); }
-        .badge-ausente { background: rgba(255, 68, 68, 0.2); color: var(--danger); }
-        .badge-justificado { background: rgba(255, 171, 0, 0.2); color: var(--warning); }
-
         .flex-between {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 12px;
         }
 
-        .mt-10 { margin-top: 10px; }
+        .actions-group {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+        }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo">Da Capo</div>
-        <div class="cloud-status" onclick="openCloudModal()">
+        <div class="header-left">
+            <div class="app-icon">🎵</div>
+            <div class="app-title-group">
+                <h1>MusicSchedule</h1>
+                <span>Semana Actual</span>
+            </div>
+        </div>
+        <div class="cloud-badge" onclick="openCloudModal()">
             <div class="status-dot" id="cloudDot"></div>
-            <span id="cloudText">Nube Disconecta</span>
+            <span>☁️</span>
         </div>
     </header>
 
     <div class="container">
-        <!-- CALENDARIO INTERACTIVO DE CLASES -->
+        <!-- AGENDA -->
         <section id="tab-agenda" class="tab-content active">
-            <h2>Calendario de Clases</h2>
-            
-            <div class="view-selector">
-                <button class="view-btn active" onclick="setCalendarView('semanal', this)">Vista Semanal</button>
-                <button class="view-btn" onclick="setCalendarView('mensual', this)">Vista Mensual</button>
+            <div class="subtabs">
+                <button class="subtab-btn active">📅 Esta Semana</button>
+                <button class="subtab-btn" onclick="switchTab('alumnos', document.querySelectorAll('.nav-btn')[1])">🔄 Clases Fijas (Base)</button>
             </div>
 
-            <div class="card">
-                <h2 id="calendarTitle">Horario de la Semana</h2>
-                <div id="calendarContainer">Cargando horario...</div>
+            <div class="week-navigator">
+                <button class="nav-arrow" onclick="changeWeek(-1)">‹</button>
+                <div class="week-info">
+                    <label>Navegar Semana</label>
+                    <span id="weekRangeDisplay">Cargando...</span>
+                </div>
+                <button class="nav-arrow" onclick="changeWeek(1)">›</button>
             </div>
+
+            <div class="days-carousel" id="daysCarousel"></div>
+
+            <div class="day-section-header">
+                <h2 id="selectedDayTitle">Cargando día...</h2>
+                <span class="classes-count-badge" id="classesCountBadge">0 clase(s)</span>
+            </div>
+
+            <div id="classesListContainer"></div>
         </section>
 
-        <!-- ALUMNOS Y MENSUALIDADES -->
+        <!-- ALUMNOS Y COBROS -->
         <section id="tab-alumnos" class="tab-content">
             <div class="kpi-card">
-                <label>SUMA TOTAL MENSUALIDADES</label>
+                <div class="kpi-title">TOTAL MENSUALIDADES ESTIMADO</div>
                 <div class="kpi-value" id="totalFeeDisplay">$0.00</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 6px;" id="paidSummaryDisplay">Cobrado: $0.00 | Pendiente: $0.00</div>
             </div>
 
-            <div class="flex-between" style="margin-bottom: 15px;">
-                <h2>Lista de Alumnos</h2>
-                <button class="btn" style="width: auto; padding: 6px 12px; font-size: 0.8rem;" onclick="openStudentModal()">+ Nuevo Alumno</button>
+            <div class="flex-between">
+                <h2>Alumnos Registrados</h2>
+                <button class="btn" style="width: auto; padding: 8px 14px;" onclick="openStudentModal()">+ Alumno</button>
             </div>
-            
-            <div class="card">
-                <input type="text" id="searchStudent" placeholder="Buscar alumno..." oninput="renderStudents()" style="margin-bottom: 10px;">
-                <div id="studentsList">Cargando alumnos...</div>
+
+            <div class="card" style="margin-top: 10px;">
+                <input type="text" id="searchStudent" placeholder="Buscar por nombre..." oninput="renderStudents()">
+                <div id="studentsListContainer" style="margin-top: 12px;"></div>
             </div>
         </section>
 
@@ -427,73 +585,73 @@
                 </div>
                 <div class="form-group">
                     <label>Alumno</label>
-                    <select id="attendanceStudent"></select>
+                    <select id="attendanceStudentSelect"></select>
                 </div>
                 <div class="form-group">
-                    <label>Estado de Asistencia</label>
-                    <select id="attendanceStatus">
+                    <label>Estado</label>
+                    <select id="attendanceStatusSelect">
                         <option value="Presente">Presente</option>
                         <option value="Ausente">Ausente</option>
                         <option value="Justificado">Justificado</option>
                     </select>
                 </div>
-                <button class="btn" onclick="saveAttendance()">Guardar Asistencia</button>
+                <button class="btn" onclick="saveAttendance()">Registrar Asistencia</button>
             </div>
 
             <div class="card">
                 <h2>Historial Reciente</h2>
-                <div id="attendanceHistory">Sin registros.</div>
+                <div id="attendanceHistoryContainer">Sin registros.</div>
             </div>
         </section>
 
         <!-- AJUSTES -->
         <section id="tab-ajustes" class="tab-content">
-            <h2>Ajustes y Datos</h2>
+            <h2>Ajustes y Nube</h2>
             <div class="card">
                 <h2>Conexión Firebase Live</h2>
-                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">
-                    Las credenciales guardadas permanecen de manera persistente en este dispositivo.
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
+                    Las credenciales guardadas quedan ligadas permanentemente a este dispositivo.
                 </p>
-                <button class="btn btn-outline" onclick="openCloudModal()">Configurar Nube</button>
+                <button class="btn btn-outline" onclick="openCloudModal()">Configurar Credenciales</button>
             </div>
             <div class="card">
                 <h2>Copia de Seguridad</h2>
-                <button class="btn btn-outline" onclick="exportData()" style="margin-bottom: 8px;">Exportar Respaldo JSON</button>
+                <button class="btn btn-outline" onclick="exportData()" style="margin-bottom: 10px;">Exportar Respaldo JSON</button>
                 <button class="btn btn-danger" onclick="clearLocalData()">Limpiar Datos Locales</button>
             </div>
         </section>
     </div>
 
+    <!-- BOTON FLOTANTE -->
+    <div class="fab-button" onclick="openStudentModal()">+</div>
+
     <!-- NAVEGACIÓN -->
     <nav>
         <button class="nav-btn active" onclick="switchTab('agenda', this)">
-            <span>📅</span>
-            <span>Calendario</span>
+            <span style="font-size:1.1rem;">📅</span>
+            <span>Horario</span>
         </button>
         <button class="nav-btn" onclick="switchTab('alumnos', this)">
-            <span>👥</span>
+            <span style="font-size:1.1rem;">👥</span>
             <span>Alumnos</span>
         </button>
         <button class="nav-btn" onclick="switchTab('asistencia', this)">
-            <span>✔</span>
+            <span style="font-size:1.1rem;">✔</span>
             <span>Asistencia</span>
         </button>
         <button class="nav-btn" onclick="switchTab('ajustes', this)">
-            <span>⚙</span>
+            <span style="font-size:1.1rem;">⚙</span>
             <span>Ajustes</span>
         </button>
     </nav>
 
-    <!-- MODAL NUBE FIREBASE -->
+    <!-- MODAL FIREBASE -->
     <div class="modal" id="cloudModal">
         <div class="modal-body">
             <div class="flex-between">
-                <h2>Configurar Nube Live</h2>
+                <h2>Configuración Firebase Live</h2>
                 <span onclick="closeCloudModal()" style="cursor:pointer; font-size: 1.2rem;">✕</span>
             </div>
-            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
-                Ingresa tu API Key y Project ID para mantener sincronizado este dispositivo permanentemente.
-            </p>
             <div class="form-group">
                 <label>API Key</label>
                 <input type="text" id="firebaseApiKey" placeholder="AIzaSy...">
@@ -504,44 +662,44 @@
             </div>
             <div id="cloudFeedback" style="font-size: 0.8rem; margin-bottom: 10px;"></div>
             <button class="btn" onclick="saveFirebaseConfig()">Conectar y Guardar</button>
-            <button class="btn btn-outline mt-10" onclick="closeCloudModal()">Cancelar</button>
         </div>
     </div>
 
-    <!-- MODAL NUEVO ALUMNO -->
+    <!-- MODAL REGISTRO/EDICION ALUMNO -->
     <div class="modal" id="studentModal">
         <div class="modal-body">
             <div class="flex-between">
-                <h2>Nuevo Alumno</h2>
+                <h2 id="modalStudentTitle">Nuevo Alumno / Clase Fija</h2>
                 <span onclick="closeStudentModal()" style="cursor:pointer; font-size: 1.2rem;">✕</span>
             </div>
+            <input type="hidden" id="editingStudentId" value="">
             <div class="form-group">
-                <label>Nombre Completo</label>
-                <input type="text" id="studentName" placeholder="Ej. Juan Pérez">
-            </div>
-            <div class="form-group">
-                <label>Teléfono (WhatsApp)</label>
-                <input type="tel" id="studentPhone" placeholder="Ej. +52123456789">
+                <label>Nombre del Alumno</label>
+                <input type="text" id="studentName" placeholder="Ej. Eliana">
             </div>
             <div class="form-group">
                 <label>Instrumento / Curso</label>
-                <input type="text" id="studentInstrument" placeholder="Ej. Cello, Piano">
+                <input type="text" id="studentInstrument" placeholder="Ej. Cello, Piano, Otro">
             </div>
             <div class="form-group">
-                <label>Día habitual de clase</label>
+                <label>Día Fijo de Clase</label>
                 <select id="studentDay">
-                    <option value="Lunes">Lunes</option>
-                    <option value="Martes">Martes</option>
-                    <option value="Miércoles">Miércoles</option>
-                    <option value="Jueves">Jueves</option>
-                    <option value="Viernes">Viernes</option>
-                    <option value="Sábado">Sábado</option>
-                    <option value="Domingo">Domingo</option>
+                    <option value="LUN">Lunes</option>
+                    <option value="MAR">Martes</option>
+                    <option value="MIÉ">Miércoles</option>
+                    <option value="JUE">Jueves</option>
+                    <option value="VIE">Viernes</option>
+                    <option value="SÁB">Sábado</option>
+                    <option value="DOM">Domingo</option>
                 </select>
             </div>
             <div class="form-group">
-                <label>Hora de clase</label>
-                <input type="time" id="studentTime" value="16:00">
+                <label>Hora de Clase</label>
+                <input type="time" id="studentTime" value="08:00">
+            </div>
+            <div class="form-group">
+                <label>Duración (minutos)</label>
+                <input type="number" id="studentDuration" value="60">
             </div>
             <div class="form-group">
                 <label>Valor Mensualidad ($)</label>
@@ -559,17 +717,19 @@
         let students = JSON.parse(localStorage.getItem('dacapo_students')) || [];
         let attendances = JSON.parse(localStorage.getItem('dacapo_attendances')) || [];
         let db = null;
-        let currentCalendarView = 'semanal';
 
-        const diasSemana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+        let currentWeekOffset = 0;
+        let selectedDayIndex = 5; // Sábado
+
+        const daysMap = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
 
         document.addEventListener("DOMContentLoaded", () => {
             const today = new Date().toISOString().substring(0, 10);
             document.getElementById('attendanceDate').value = today;
-            
+
             initFirebaseFromStorage();
+            renderWeekNavigator();
             renderStudents();
-            renderCalendar();
             populateAttendanceDropdown();
             renderAttendanceHistory();
         });
@@ -584,14 +744,14 @@
                         firebase.initializeApp({ apiKey, projectId });
                     }
                     db = firebase.firestore();
-                    updateCloudUI(true, "Nube Conectada");
+                    updateCloudUI(true);
                     syncWithFirestore();
                 } catch (e) {
                     console.error(e);
-                    updateCloudUI(false, "Error de Conexión");
+                    updateCloudUI(false);
                 }
             } else {
-                updateCloudUI(false, "Nube Disconecta");
+                updateCloudUI(false);
             }
         }
 
@@ -602,7 +762,7 @@
 
             if (!apiKey || !projectId) {
                 feedback.style.color = "var(--danger)";
-                feedback.innerText = "Por favor llena ambos campos.";
+                feedback.innerText = "Por favor completa los campos.";
                 return;
             }
 
@@ -618,12 +778,10 @@
             }, 800);
         }
 
-        function updateCloudUI(online, text) {
+        function updateCloudUI(online) {
             const dot = document.getElementById('cloudDot');
-            const label = document.getElementById('cloudText');
             if (online) dot.classList.add('online');
             else dot.classList.remove('online');
-            label.innerText = text;
         }
 
         function syncWithFirestore() {
@@ -635,20 +793,94 @@
                     students = cloudStudents;
                     localStorage.setItem('dacapo_students', JSON.stringify(students));
                     renderStudents();
-                    renderCalendar();
+                    renderWeekNavigator();
                     populateAttendanceDropdown();
                 }
             });
+        }
 
-            db.collection("attendances").onSnapshot((snapshot) => {
-                let cloudAttendances = [];
-                snapshot.forEach((doc) => { cloudAttendances.push({ id: doc.id, ...doc.data() }); });
-                if (cloudAttendances.length > 0) {
-                    attendances = cloudAttendances;
-                    localStorage.setItem('dacapo_attendances', JSON.stringify(attendances));
-                    renderAttendanceHistory();
-                }
+        function changeWeek(direction) {
+            currentWeekOffset += direction;
+            renderWeekNavigator();
+        }
+
+        function renderWeekNavigator() {
+            const curr = new Date();
+            const first = curr.getDate() - curr.getDay() + (currentWeekOffset * 7);
+            
+            const startDate = new Date(curr.setDate(first));
+            const endDate = new Date(curr.setDate(first + 6));
+
+            const options = { month: 'short', day: 'numeric' };
+            document.getElementById('weekRangeDisplay').innerText = 
+                `${startDate.toLocaleDateString('es-ES', options)} – ${endDate.toLocaleDateString('es-ES', options)}`;
+
+            renderDaysCarousel(startDate);
+        }
+
+        function renderDaysCarousel(startDate) {
+            const carousel = document.getElementById('daysCarousel');
+            let html = '';
+
+            for (let i = 0; i < 7; i++) {
+                const dayDate = new Date(startDate);
+                dayDate.setDate(startDate.getDate() + i);
+                const dayAbbr = daysMap[dayDate.getDay()];
+                const dayNum = dayDate.getDate();
+
+                const isSelected = (i === selectedDayIndex);
+
+                html += `
+                    <div class="day-chip ${isSelected ? 'active' : ''}" onclick="selectDay(${i}, '${dayAbbr}', '${dayDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}')">
+                        <span class="day-name">${dayAbbr}</span>
+                        <span class="day-num">${dayNum}</span>
+                        ${isSelected ? '<div class="day-dot"></div>' : ''}
+                    </div>
+                `;
+            }
+
+            carousel.innerHTML = html;
+            selectDay(selectedDayIndex, daysMap[(startDate.getDay() + selectedDayIndex) % 7], "Sábado, 31 de octubre");
+        }
+
+        function selectDay(index, dayAbbr, fullTitle) {
+            selectedDayIndex = index;
+            document.querySelectorAll('.day-chip').forEach((chip, idx) => {
+                if (idx === index) chip.classList.add('active');
+                else chip.classList.remove('active');
             });
+
+            document.getElementById('selectedDayTitle').innerText = fullTitle || `${dayAbbr}`;
+            renderClassesForDay(dayAbbr);
+        }
+
+        function renderClassesForDay(dayAbbr) {
+            const container = document.getElementById('classesListContainer');
+            const dayClasses = students.filter(s => s.day === dayAbbr);
+
+            document.getElementById('classesCountBadge').innerText = `${dayClasses.length} clase(s)`;
+
+            if (dayClasses.length === 0) {
+                container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-muted); padding: 10px 0;">No hay clases programadas para este día.</p>`;
+                return;
+            }
+
+            container.innerHTML = dayClasses.map(s => `
+                <div class="class-card">
+                    <div class="class-icon-box">🎶</div>
+                    <div class="class-details">
+                        <div class="class-header-row">
+                            <span class="class-student-name">${s.name}</span>
+                            <span class="badge-fija">FIJA</span>
+                            ${s.paid ? '<span class="badge-paid">PAGADO</span>' : '<span class="badge-pending">PENDIENTE</span>'}
+                        </div>
+                        <div class="class-meta">
+                            <span>🕒 ${s.time || '08:00'} (${s.duration || '60'} min)</span>
+                            <span>🎵 ${s.instrument || 'Otro'}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
         }
 
         function switchTab(tabId, btn) {
@@ -658,137 +890,119 @@
             btn.classList.add('active');
         }
 
-        function openCloudModal() {
-            document.getElementById('firebaseApiKey').value = localStorage.getItem('dacapo_fb_apikey') || '';
-            document.getElementById('firebaseProjectId').value = localStorage.getItem('dacapo_fb_projectid') || '';
-            document.getElementById('cloudModal').classList.add('active');
-        }
+        function openCloudModal() { document.getElementById('cloudModal').classList.add('active'); }
         function closeCloudModal() { document.getElementById('cloudModal').classList.remove('active'); }
-        function openStudentModal() { document.getElementById('studentModal').classList.add('active'); }
+        
+        function openStudentModal(id = null) {
+            if (id) {
+                const s = students.find(item => item.id === id);
+                if (s) {
+                    document.getElementById('modalStudentTitle').innerText = "Editar Alumno";
+                    document.getElementById('editingStudentId').value = s.id;
+                    document.getElementById('studentName').value = s.name;
+                    document.getElementById('studentInstrument').value = s.instrument || '';
+                    document.getElementById('studentDay').value = s.day || 'LUN';
+                    document.getElementById('studentTime').value = s.time || '08:00';
+                    document.getElementById('studentDuration').value = s.duration || '60';
+                    document.getElementById('studentFee').value = s.fee || '';
+                }
+            } else {
+                document.getElementById('modalStudentTitle').innerText = "Nuevo Alumno / Clase Fija";
+                document.getElementById('editingStudentId').value = "";
+                document.getElementById('studentName').value = "";
+                document.getElementById('studentInstrument').value = "";
+                document.getElementById('studentFee').value = "";
+            }
+            document.getElementById('studentModal').classList.add('active');
+        }
+
         function closeStudentModal() { document.getElementById('studentModal').classList.remove('active'); }
 
-        // VISTAS CALENDARIO (SEMANAL / MENSUAL)
-        function setCalendarView(view, btn) {
-            currentCalendarView = view;
-            document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            renderCalendar();
-        }
-
-        function renderCalendar() {
-            const container = document.getElementById('calendarContainer');
-
-            if (currentCalendarView === 'semanal') {
-                document.getElementById('calendarTitle').innerText = `Parrilla Semanal de Clases`;
-                
-                container.innerHTML = `
-                    <div class="calendar-grid-week">
-                        ${diasSemana.map(d => {
-                            const list = students.filter(s => s.day === d);
-                            return `
-                                <div class="calendar-day-col">
-                                    <div class="calendar-day-header">${d.substring(0, 3)}</div>
-                                    ${list.map(s => `
-                                        <div class="class-card-chip">
-                                            <div class="name">${s.name}</div>
-                                            <div class="time">⏰ ${s.time || '16:00'}</div>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            `;
-                        }).join('')}
-                    </div>
-                `;
-            } else {
-                document.getElementById('calendarTitle').innerText = `Calendario Mensual`;
-                
-                let monthCells = '';
-                // Renderizar simulación de cuadrícula mensual de 31 días
-                for(let i = 1; i <= 31; i++) {
-                    const dayIndex = (i - 1) % 7;
-                    const dayName = diasSemana[dayIndex];
-                    const dayStudents = students.filter(s => s.day === dayName);
-
-                    monthCells += `
-                        <div class="month-day-cell">
-                            <div class="month-day-number">${i}</div>
-                            ${dayStudents.map(s => `
-                                <div class="month-event-dot">${s.name.split(' ')[0]}</div>
-                            `).join('')}
-                        </div>
-                    `;
-                }
-
-                container.innerHTML = `
-                    <div class="calendar-month-grid">
-                        ${diasSemana.map(d => `<div class="month-header-cell">${d.substring(0, 3)}</div>`).join('')}
-                        ${monthCells}
-                    </div>
-                `;
-            }
-        }
-
-        // ALUMNOS & MENSUALIDADES
         function saveStudent() {
+            const id = document.getElementById('editingStudentId').value;
             const name = document.getElementById('studentName').value.trim();
-            const phone = document.getElementById('studentPhone').value.trim();
             const instrument = document.getElementById('studentInstrument').value.trim();
             const day = document.getElementById('studentDay').value;
             const time = document.getElementById('studentTime').value;
+            const duration = document.getElementById('studentDuration').value;
             const fee = parseFloat(document.getElementById('studentFee').value) || 0;
 
-            if (!name) return alert("Ingresa al menos el nombre del alumno.");
+            if (!name) return alert("Ingresa el nombre del alumno.");
 
-            const newStudent = {
-                id: Date.now().toString(),
-                name,
-                phone,
-                instrument,
-                day,
-                time,
-                fee
-            };
-
-            students.push(newStudent);
-            localStorage.setItem('dacapo_students', JSON.stringify(students));
-
-            if (db) {
-                db.collection("students").doc(newStudent.id).set(newStudent);
+            if (id) {
+                // Editar
+                const idx = students.findIndex(s => s.id === id);
+                if (idx !== -1) {
+                    students[idx] = { ...students[idx], name, instrument, day, time, duration, fee };
+                    if (db) db.collection("students").doc(id).update(students[idx]);
+                }
+            } else {
+                // Nuevo
+                const newStudent = { id: Date.now().toString(), name, instrument, day, time, duration, fee, paid: false };
+                students.push(newStudent);
+                if (db) db.collection("students").doc(newStudent.id).set(newStudent);
             }
 
+            localStorage.setItem('dacapo_students', JSON.stringify(students));
+
             renderStudents();
-            renderCalendar();
+            renderWeekNavigator();
             populateAttendanceDropdown();
             closeStudentModal();
+        }
 
-            document.getElementById('studentName').value = '';
-            document.getElementById('studentPhone').value = '';
-            document.getElementById('studentInstrument').value = '';
-            document.getElementById('studentFee').value = '';
+        function togglePaymentStatus(id) {
+            const idx = students.findIndex(s => s.id === id);
+            if (idx !== -1) {
+                const currentStatus = !!students[idx].paid;
+                const newStatus = !currentStatus;
+                
+                if (confirm(`¿Deseas marcar la mensualidad de ${students[idx].name} como ${newStatus ? 'PAGADA' : 'PENDIENTE'}?`)) {
+                    students[idx].paid = newStatus;
+                    localStorage.setItem('dacapo_students', JSON.stringify(students));
+                    if (db) db.collection("students").doc(id).update({ paid: newStatus });
+                    renderStudents();
+                    renderWeekNavigator();
+                }
+            }
         }
 
         function renderStudents() {
-            const list = document.getElementById('studentsList');
+            const container = document.getElementById('studentsListContainer');
             const query = document.getElementById('searchStudent').value.toLowerCase();
             const filtered = students.filter(s => s.name.toLowerCase().includes(query));
 
             const totalFee = students.reduce((sum, s) => sum + (parseFloat(s.fee) || 0), 0);
+            const paidTotal = students.filter(s => s.paid).reduce((sum, s) => sum + (parseFloat(s.fee) || 0), 0);
+            const pendingTotal = totalFee - paidTotal;
+
             document.getElementById('totalFeeDisplay').innerText = `$${totalFee.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+            document.getElementById('paidSummaryDisplay').innerText = `Cobrado: $${paidTotal.toLocaleString()} | Pendiente: $${pendingTotal.toLocaleString()}`;
 
             if (filtered.length === 0) {
-                list.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted);">No hay alumnos registrados.</p>`;
+                container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted);">No hay alumnos encontrados.</p>`;
                 return;
             }
 
-            list.innerHTML = filtered.map(s => `
-                <div class="student-item">
-                    <div>
-                        <strong>${s.name}</strong>
-                        <div style="font-size:0.75rem; color:var(--text-muted);">${s.instrument || 'Sin inst.'} • ${s.day || 'Día n/a'} ${s.time || ''}</div>
+            container.innerHTML = filtered.map(s => `
+                <div class="class-card" style="flex-direction:column; align-items:stretch;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <span class="class-student-name">${s.name}</span>
+                            <span class="badge-fija" style="margin-left:6px;">${s.day || 'FIJA'}</span>
+                            ${s.paid ? '<span class="badge-paid">PAGADO</span>' : '<span class="badge-pending">PENDIENTE</span>'}
+                        </div>
+                        <div style="font-weight:700; color:var(--success); font-size:1.1rem;">
+                            $${(parseFloat(s.fee) || 0).toLocaleString()}
+                        </div>
                     </div>
-                    <div style="text-align: right;">
-                        <div style="font-weight:600; font-size:0.9rem; color:var(--success);">$${(parseFloat(s.fee) || 0).toLocaleString()}</div>
-                        <button onclick="deleteStudent('${s.id}')" style="background:none; border:none; color:var(--danger); font-size:0.7rem; cursor:pointer; margin-top:2px;">Eliminar</button>
+                    <div class="class-meta" style="margin-top:6px;">
+                        <span>🎵 ${s.instrument || 'Otro'} • 🕒 ${s.time || '08:00'} (${s.duration || '60'} min)</span>
+                    </div>
+                    <div class="actions-group">
+                        <button class="btn btn-small btn-outline" onclick="openStudentModal('${s.id}')">✏️ Editar</button>
+                        <button class="btn btn-small btn-outline" onclick="togglePaymentStatus('${s.id}')">${s.paid ? '🔴 Marcar Pendiente' : '🟢 Marcar Pagado'}</button>
+                        <button class="btn btn-small btn-danger" onclick="deleteStudent('${s.id}')">🗑️ Eliminar</button>
                     </div>
                 </div>
             `).join('');
@@ -800,87 +1014,67 @@
                 localStorage.setItem('dacapo_students', JSON.stringify(students));
                 if (db) db.collection("students").doc(id).delete();
                 renderStudents();
-                renderCalendar();
+                renderWeekNavigator();
                 populateAttendanceDropdown();
             }
         }
 
-        // CONTROL DE ASISTENCIA
         function populateAttendanceDropdown() {
-            const select = document.getElementById('attendanceStudent');
-            if (students.length === 0) {
-                select.innerHTML = `<option value="">No hay alumnos</option>`;
-                return;
-            }
+            const select = document.getElementById('attendanceStudentSelect');
+            if (students.length === 0) { select.innerHTML = `<option value="">Sin alumnos</option>`; return; }
             select.innerHTML = students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
         }
 
         function saveAttendance() {
             const date = document.getElementById('attendanceDate').value;
-            const studentId = document.getElementById('attendanceStudent').value;
-            const status = document.getElementById('attendanceStatus').value;
+            const studentId = document.getElementById('attendanceStudentSelect').value;
+            const status = document.getElementById('attendanceStatusSelect').value;
 
-            if (!studentId) return alert("Selecciona un alumno.");
-            if (!date) return alert("Selecciona una fecha.");
+            if (!studentId || !date) return alert("Selecciona alumno y fecha.");
 
             const student = students.find(s => s.id === studentId);
-
-            const record = {
-                id: Date.now().toString(),
-                studentId,
-                studentName: student ? student.name : 'Alumno Desconocido',
-                date,
-                status
-            };
+            const record = { id: Date.now().toString(), studentId, studentName: student ? student.name : 'Alumno', date, status };
 
             attendances.unshift(record);
             localStorage.setItem('dacapo_attendances', JSON.stringify(attendances));
 
-            if (db) {
-                db.collection("attendances").doc(record.id).set(record);
-            }
+            if (db) db.collection("attendances").doc(record.id).set(record);
 
             renderAttendanceHistory();
-            alert(`Asistencia registrada para ${record.studentName}.`);
+            alert("Asistencia guardada.");
         }
 
         function renderAttendanceHistory() {
-            const container = document.getElementById('attendanceHistory');
-            if (attendances.length === 0) {
-                container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted);">Sin registros de asistencia.</p>`;
-                return;
-            }
+            const container = document.getElementById('attendanceHistoryContainer');
+            if (attendances.length === 0) { container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted);">Sin asistencias.</p>`; return; }
 
-            container.innerHTML = attendances.slice(0, 15).map(a => `
-                <div class="attendance-item">
-                    <div>
-                        <strong>${a.studentName}</strong>
-                        <div style="font-size:0.75rem; color:var(--text-muted);">${a.date}</div>
+            container.innerHTML = attendances.slice(0, 10).map(a => `
+                <div class="class-card" style="padding:12px;">
+                    <div class="class-details">
+                        <div class="class-student-name">${a.studentName}</div>
+                        <div class="class-meta"><span>📅 ${a.date}</span></div>
                     </div>
-                    <span class="badge badge-${a.status.toLowerCase()}">${a.status}</span>
+                    <span class="badge-fija" style="background:#222; color:#fff;">${a.status}</span>
                 </div>
             `).join('');
         }
 
         function exportData() {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ students, attendances }));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `dacapo_respaldo_${new Date().toISOString().substring(0,10)}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
+            const anchor = document.createElement('a');
+            anchor.setAttribute("href", dataStr);
+            anchor.setAttribute("download", `dacapo_respaldo.json`);
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
         }
 
         function clearLocalData() {
-            if (confirm("¿Seguro que deseas borrar los datos locales? Esto no afectará a la nube si está conectada.")) {
+            if (confirm("¿Borrar datos locales? No borrará la nube.")) {
                 localStorage.removeItem('dacapo_students');
                 localStorage.removeItem('dacapo_attendances');
-                students = [];
-                attendances = [];
-                renderStudents();
-                renderCalendar();
-                renderAttendanceHistory();
+                students = []; attendances = [];
+                renderStudents(); renderWeekNavigator(); renderAttendanceHistory();
             }
         }
     </script>
