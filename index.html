@@ -406,10 +406,11 @@
         }
 
         .btn-small {
-            padding: 6px 12px;
+            padding: 8px 12px;
             font-size: 0.75rem;
             border-radius: 8px;
             width: auto;
+            font-weight: 600;
         }
 
         .btn-outline {
@@ -508,8 +509,9 @@
 
         .actions-group {
             display: flex;
-            gap: 6px;
-            margin-top: 8px;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
         }
     </style>
 </head>
@@ -530,7 +532,7 @@
     </header>
 
     <div class="container">
-        <!-- AGENDA -->
+        <!-- AGENDA DE CLASES -->
         <section id="tab-agenda" class="tab-content active">
             <div class="subtabs">
                 <button class="subtab-btn active">📅 Esta Semana</button>
@@ -556,12 +558,14 @@
             <div id="classesListContainer"></div>
         </section>
 
-        <!-- ALUMNOS Y COBROS -->
+        <!-- ALUMNOS, EDICIÓN Y ESTADO DE PAGOS -->
         <section id="tab-alumnos" class="tab-content">
             <div class="kpi-card">
                 <div class="kpi-title">TOTAL MENSUALIDADES ESTIMADO</div>
                 <div class="kpi-value" id="totalFeeDisplay">$0.00</div>
-                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 6px;" id="paidSummaryDisplay">Cobrado: $0.00 | Pendiente: $0.00</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 8px;" id="paidSummaryDisplay">
+                    Cobrado: $0.00 | Pendiente: $0.00
+                </div>
             </div>
 
             <div class="flex-between">
@@ -622,10 +626,10 @@
         </section>
     </div>
 
-    <!-- BOTON FLOTANTE -->
+    <!-- BOTÓN FLOTANTE NUEVO ALUMNO -->
     <div class="fab-button" onclick="openStudentModal()">+</div>
 
-    <!-- NAVEGACIÓN -->
+    <!-- BARRA DE NAVEGACIÓN INFERIOR -->
     <nav>
         <button class="nav-btn active" onclick="switchTab('agenda', this)">
             <span style="font-size:1.1rem;">📅</span>
@@ -645,7 +649,7 @@
         </button>
     </nav>
 
-    <!-- MODAL FIREBASE -->
+    <!-- MODAL CONFIGURACIÓN FIREBASE -->
     <div class="modal" id="cloudModal">
         <div class="modal-body">
             <div class="flex-between">
@@ -665,7 +669,7 @@
         </div>
     </div>
 
-    <!-- MODAL REGISTRO/EDICION ALUMNO -->
+    <!-- MODAL AGREGAR / EDITAR ALUMNO -->
     <div class="modal" id="studentModal">
         <div class="modal-body">
             <div class="flex-between">
@@ -893,6 +897,7 @@
         function openCloudModal() { document.getElementById('cloudModal').classList.add('active'); }
         function closeCloudModal() { document.getElementById('cloudModal').classList.remove('active'); }
         
+        // APERTURA DE MODAL PARA NUEVO O EDITAR
         function openStudentModal(id = null) {
             if (id) {
                 const s = students.find(item => item.id === id);
@@ -918,6 +923,7 @@
 
         function closeStudentModal() { document.getElementById('studentModal').classList.remove('active'); }
 
+        // GUARDAR CAMBIOS DE CREACIÓN O EDICIÓN
         function saveStudent() {
             const id = document.getElementById('editingStudentId').value;
             const name = document.getElementById('studentName').value.trim();
@@ -930,14 +936,12 @@
             if (!name) return alert("Ingresa el nombre del alumno.");
 
             if (id) {
-                // Editar
                 const idx = students.findIndex(s => s.id === id);
                 if (idx !== -1) {
                     students[idx] = { ...students[idx], name, instrument, day, time, duration, fee };
                     if (db) db.collection("students").doc(id).update(students[idx]);
                 }
             } else {
-                // Nuevo
                 const newStudent = { id: Date.now().toString(), name, instrument, day, time, duration, fee, paid: false };
                 students.push(newStudent);
                 if (db) db.collection("students").doc(newStudent.id).set(newStudent);
@@ -951,13 +955,14 @@
             closeStudentModal();
         }
 
+        // CAMBIAR ESTADO DE PAGO (PAGADO / PENDIENTE)
         function togglePaymentStatus(id) {
             const idx = students.findIndex(s => s.id === id);
             if (idx !== -1) {
                 const currentStatus = !!students[idx].paid;
                 const newStatus = !currentStatus;
                 
-                if (confirm(`¿Deseas marcar la mensualidad de ${students[idx].name} como ${newStatus ? 'PAGADA' : 'PENDIENTE'}?`)) {
+                if (confirm(`¿Deseas cambiar el estado de mensualidad de ${students[idx].name} a ${newStatus ? 'PAGADO' : 'PENDIENTE'}?`)) {
                     students[idx].paid = newStatus;
                     localStorage.setItem('dacapo_students', JSON.stringify(students));
                     if (db) db.collection("students").doc(id).update({ paid: newStatus });
@@ -967,6 +972,7 @@
             }
         }
 
+        // MOSTRAR LISTA DE ALUMNOS CON BOTONES DE EDICIÓN Y PAGO
         function renderStudents() {
             const container = document.getElementById('studentsListContainer');
             const query = document.getElementById('searchStudent').value.toLowerCase();
