@@ -3,20 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Da Capo - MusicSchedule</title>
+    <title>Da Capo - Casa Musical</title>
     <style>
         :root {
-            --bg-color: #070913;
-            --card-bg: #0f1322;
-            --card-inner: #161c30;
-            --border-color: #1e2640;
+            --bg-color: #000000;
+            --card-bg: #111111;
+            --card-inner: #1a1a1a;
+            --border-color: #222222;
             --text-color: #ffffff;
-            --text-muted: #8a94b0;
+            --text-muted: #888888;
             --accent-purple: #635bff;
-            --accent-purple-light: #7a73ff;
-            --accent-purple-bg: rgba(99, 91, 255, 0.15);
-            --danger: #ff4d4d;
-            --success: #00e676;
+            --danger: #ff4444;
+            --success: #00c853;
             --warning: #ffab00;
         }
 
@@ -34,68 +32,52 @@
             padding-bottom: 90px;
         }
 
+        /* HEADER ORIGINAL CON LOGO DA CAPO */
         header {
-            padding: 20px 16px 10px 16px;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .app-icon {
-            width: 44px;
-            height: 44px;
-            background: linear-gradient(135deg, #7a73ff, #4d44e6);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            box-shadow: 0 4px 12px rgba(99, 91, 255, 0.3);
-        }
-
-        .app-title-group h1 {
-            font-size: 1.15rem;
+        .logo {
+            font-size: 1.2rem;
             font-weight: 700;
-            letter-spacing: -0.3px;
+            letter-spacing: 1px;
         }
 
-        .app-title-group span {
-            font-size: 0.78rem;
-            color: var(--text-muted);
-        }
-
-        .cloud-badge {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            padding: 8px 12px;
-            border-radius: 12px;
+        .cloud-status {
+            font-size: 0.8rem;
+            padding: 5px 10px;
+            border-radius: 20px;
+            background: #222;
+            border: 1px solid #333;
+            cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 8px;
-            cursor: pointer;
+            gap: 6px;
         }
 
         .status-dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: #555;
+            background: #666;
         }
 
         .status-dot.online {
             background: var(--success);
-            box-shadow: 0 0 8px var(--success);
+            box-shadow: 0 0 6px var(--success);
         }
 
         .container {
-            padding: 12px 16px;
-            max-width: 500px;
+            padding: 15px;
+            max-width: 550px;
             margin: 0 auto;
         }
 
@@ -107,58 +89,53 @@
             display: block;
         }
 
+        /* SUBTABS Y NAVEGADOR DE SEMANA */
         .subtabs {
             display: flex;
             gap: 10px;
-            margin-bottom: 16px;
+            margin-bottom: 15px;
         }
 
         .subtab-btn {
             flex: 1;
-            padding: 12px;
-            border-radius: 14px;
+            padding: 10px;
+            border-radius: 10px;
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             color: var(--text-muted);
             font-size: 0.85rem;
             font-weight: 600;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
         }
 
         .subtab-btn.active {
             background: var(--accent-purple);
             border-color: var(--accent-purple);
             color: #ffffff;
-            box-shadow: 0 4px 14px rgba(99, 91, 255, 0.35);
         }
 
         .week-navigator {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 12px 16px;
+            border-radius: 12px;
+            padding: 10px 14px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 16px;
+            margin-bottom: 15px;
         }
 
         .nav-arrow {
-            background: var(--card-inner);
+            background: #000;
             border: 1px solid var(--border-color);
             color: var(--text-color);
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 0.9rem;
         }
 
         .week-info {
@@ -166,23 +143,23 @@
         }
 
         .week-info label {
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             color: var(--text-muted);
             display: block;
-            margin-bottom: 2px;
         }
 
         .week-info span {
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             font-weight: 700;
         }
 
+        /* CARRUSEL DE DÍAS */
         .days-carousel {
             display: flex;
             gap: 8px;
             overflow-x: auto;
             padding-bottom: 6px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             scrollbar-width: none;
         }
 
@@ -191,11 +168,11 @@
         }
 
         .day-chip {
-            min-width: 58px;
-            height: 72px;
+            min-width: 54px;
+            height: 68px;
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 16px;
+            border-radius: 12px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -206,22 +183,20 @@
         }
 
         .day-chip .day-name {
-            font-size: 0.68rem;
+            font-size: 0.65rem;
             color: var(--text-muted);
             font-weight: 600;
-            text-transform: uppercase;
         }
 
         .day-chip .day-num {
-            font-size: 1.15rem;
+            font-size: 1.1rem;
             font-weight: 700;
             margin-top: 2px;
         }
 
         .day-chip.active {
             background: var(--accent-purple);
-            border-color: var(--accent-purple-light);
-            box-shadow: 0 4px 16px rgba(99, 91, 255, 0.4);
+            border-color: var(--accent-purple);
         }
 
         .day-chip.active .day-name, .day-chip.active .day-num {
@@ -229,12 +204,12 @@
         }
 
         .day-dot {
-            width: 5px;
-            height: 5px;
+            width: 4px;
+            height: 4px;
             background: #ffffff;
             border-radius: 50%;
             position: absolute;
-            bottom: 8px;
+            bottom: 6px;
         }
 
         .day-section-header {
@@ -253,34 +228,32 @@
         .classes-count-badge {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.78rem;
-            color: var(--accent-purple-light);
-            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
         }
 
         .class-card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 18px;
-            padding: 16px;
+            border-radius: 12px;
+            padding: 14px;
             display: flex;
             align-items: center;
-            gap: 14px;
-            margin-bottom: 12px;
+            gap: 12px;
+            margin-bottom: 10px;
         }
 
         .class-icon-box {
-            width: 44px;
-            height: 44px;
+            width: 40px;
+            height: 40px;
             background: var(--card-inner);
-            border-radius: 14px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.1rem;
-            color: var(--accent-purple-light);
+            font-size: 1rem;
         }
 
         .class-details {
@@ -290,32 +263,31 @@
         .class-header-row {
             display: flex;
             align-items: center;
-            gap: 8px;
-            margin-bottom: 4px;
+            gap: 6px;
+            margin-bottom: 3px;
         }
 
         .class-student-name {
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 700;
         }
 
         .badge-fija {
-            background: var(--accent-purple-bg);
-            color: var(--accent-purple-light);
+            background: #222;
+            color: var(--text-muted);
             font-size: 0.65rem;
             font-weight: 700;
-            padding: 2px 8px;
-            border-radius: 6px;
-            letter-spacing: 0.5px;
+            padding: 2px 6px;
+            border-radius: 4px;
         }
 
         .badge-paid {
-            background: rgba(0, 230, 118, 0.15);
+            background: rgba(0, 200, 83, 0.15);
             color: var(--success);
             font-size: 0.65rem;
             font-weight: 700;
-            padding: 2px 8px;
-            border-radius: 6px;
+            padding: 2px 6px;
+            border-radius: 4px;
         }
 
         .badge-pending {
@@ -323,32 +295,30 @@
             color: var(--warning);
             font-size: 0.65rem;
             font-weight: 700;
-            padding: 2px 8px;
-            border-radius: 6px;
+            padding: 2px 6px;
+            border-radius: 4px;
         }
 
         .class-meta {
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             color: var(--text-muted);
             display: flex;
-            align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .kpi-card {
-            background: linear-gradient(135deg, #12182c, #0f1322);
+            background: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 18px;
-            padding: 18px;
+            border-radius: 12px;
+            padding: 16px;
             text-align: center;
-            margin-bottom: 16px;
+            margin-bottom: 15px;
         }
 
         .kpi-title {
             font-size: 0.75rem;
             color: var(--text-muted);
             font-weight: 600;
-            letter-spacing: 0.5px;
         }
 
         .kpi-value {
@@ -361,81 +331,75 @@
         .card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 18px;
+            border-radius: 12px;
             padding: 16px;
-            margin-bottom: 16px;
+            margin-bottom: 15px;
         }
 
         .form-group {
-            margin-bottom: 14px;
+            margin-bottom: 12px;
         }
 
         label {
             display: block;
             font-size: 0.78rem;
             color: var(--text-muted);
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
 
         input, select {
             width: 100%;
-            padding: 12px;
-            background: var(--bg-color);
+            padding: 10px;
+            background: #000;
             border: 1px solid var(--border-color);
-            border-radius: 12px;
+            border-radius: 8px;
             color: var(--text-color);
             font-size: 0.9rem;
         }
 
         input:focus, select:focus {
             outline: none;
-            border-color: var(--accent-purple);
+            border-color: var(--text-color);
         }
 
         .btn {
             width: 100%;
-            padding: 14px;
-            background: var(--accent-purple);
-            color: #fff;
+            padding: 12px;
+            background: var(--text-color);
+            color: #000;
             border: none;
-            border-radius: 12px;
+            border-radius: 8px;
             font-weight: 700;
             font-size: 0.9rem;
             cursor: pointer;
-            box-shadow: 0 4px 14px rgba(99, 91, 255, 0.3);
         }
 
         .btn-small {
-            padding: 8px 12px;
+            padding: 6px 10px;
             font-size: 0.75rem;
-            border-radius: 8px;
+            border-radius: 6px;
             width: auto;
-            font-weight: 600;
         }
 
         .btn-outline {
             background: transparent;
             color: var(--text-color);
             border: 1px solid var(--border-color);
-            box-shadow: none;
         }
 
         .btn-danger {
             background: var(--danger);
-            box-shadow: none;
+            color: #fff;
         }
 
         nav {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(15, 19, 34, 0.92);
-            backdrop-filter: blur(12px);
+            bottom: 0; left: 0; right: 0;
+            background: var(--card-bg);
             border-top: 1px solid var(--border-color);
             display: flex;
             justify-content: space-around;
-            padding: 10px 0 16px 0;
+            padding: 10px 0;
             z-index: 100;
         }
 
@@ -453,24 +417,24 @@
         }
 
         .nav-btn.active {
-            color: var(--accent-purple-light);
+            color: var(--text-color);
             font-weight: 700;
         }
 
         .fab-button {
             position: fixed;
-            bottom: 80px;
+            bottom: 75px;
             right: 20px;
-            width: 56px;
-            height: 56px;
+            width: 52px;
+            height: 52px;
             background: var(--accent-purple);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 22px;
             color: #fff;
-            box-shadow: 0 6px 20px rgba(99, 91, 255, 0.5);
+            box-shadow: 0 4px 12px rgba(99, 91, 255, 0.4);
             cursor: pointer;
             z-index: 99;
         }
@@ -479,8 +443,7 @@
             display: none;
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(4px);
+            background: rgba(0, 0, 0, 0.85);
             z-index: 200;
             align-items: center;
             justify-content: center;
@@ -492,7 +455,7 @@
         .modal-body {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 20px;
+            border-radius: 12px;
             width: 100%;
             max-width: 480px;
             padding: 20px;
@@ -509,8 +472,8 @@
 
         .actions-group {
             display: flex;
-            gap: 8px;
-            margin-top: 10px;
+            gap: 6px;
+            margin-top: 8px;
             flex-wrap: wrap;
         }
     </style>
@@ -518,21 +481,15 @@
 <body>
 
     <header>
-        <div class="header-left">
-            <div class="app-icon">🎵</div>
-            <div class="app-title-group">
-                <h1>MusicSchedule</h1>
-                <span>Semana Actual</span>
-            </div>
-        </div>
-        <div class="cloud-badge" onclick="openCloudModal()">
+        <div class="logo">Da Capo</div>
+        <div class="cloud-status" onclick="openCloudModal()">
             <div class="status-dot" id="cloudDot"></div>
-            <span>☁️</span>
+            <span id="cloudText">Nube Disconecta</span>
         </div>
     </header>
 
     <div class="container">
-        <!-- AGENDA DE CLASES -->
+        <!-- AGENDA -->
         <section id="tab-agenda" class="tab-content active">
             <div class="subtabs">
                 <button class="subtab-btn active">📅 Esta Semana</button>
@@ -558,19 +515,19 @@
             <div id="classesListContainer"></div>
         </section>
 
-        <!-- ALUMNOS, EDICIÓN Y ESTADO DE PAGOS -->
+        <!-- ALUMNOS Y PAGOS -->
         <section id="tab-alumnos" class="tab-content">
             <div class="kpi-card">
                 <div class="kpi-title">TOTAL MENSUALIDADES ESTIMADO</div>
                 <div class="kpi-value" id="totalFeeDisplay">$0.00</div>
-                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 8px;" id="paidSummaryDisplay">
+                <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 6px;" id="paidSummaryDisplay">
                     Cobrado: $0.00 | Pendiente: $0.00
                 </div>
             </div>
 
             <div class="flex-between">
                 <h2>Alumnos Registrados</h2>
-                <button class="btn" style="width: auto; padding: 8px 14px;" onclick="openStudentModal()">+ Alumno</button>
+                <button class="btn" style="width: auto; padding: 6px 12px; font-size: 0.8rem;" onclick="openStudentModal()">+ Alumno</button>
             </div>
 
             <div class="card" style="margin-top: 10px;">
@@ -626,10 +583,10 @@
         </section>
     </div>
 
-    <!-- BOTÓN FLOTANTE NUEVO ALUMNO -->
+    <!-- BOTON FLOTANTE -->
     <div class="fab-button" onclick="openStudentModal()">+</div>
 
-    <!-- BARRA DE NAVEGACIÓN INFERIOR -->
+    <!-- NAVEGACIÓN -->
     <nav>
         <button class="nav-btn active" onclick="switchTab('agenda', this)">
             <span style="font-size:1.1rem;">📅</span>
@@ -649,11 +606,11 @@
         </button>
     </nav>
 
-    <!-- MODAL CONFIGURACIÓN FIREBASE -->
+    <!-- MODAL FIREBASE -->
     <div class="modal" id="cloudModal">
         <div class="modal-body">
             <div class="flex-between">
-                <h2>Configuración Firebase Live</h2>
+                <h2>Configurar Nube Live</h2>
                 <span onclick="closeCloudModal()" style="cursor:pointer; font-size: 1.2rem;">✕</span>
             </div>
             <div class="form-group">
@@ -669,7 +626,7 @@
         </div>
     </div>
 
-    <!-- MODAL AGREGAR / EDITAR ALUMNO -->
+    <!-- MODAL EDITAR / CREAR -->
     <div class="modal" id="studentModal">
         <div class="modal-body">
             <div class="flex-between">
@@ -713,7 +670,7 @@
         </div>
     </div>
 
-    <!-- FIREBASE SDKs -->
+    <!-- SDKs FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
@@ -723,7 +680,7 @@
         let db = null;
 
         let currentWeekOffset = 0;
-        let selectedDayIndex = 5; // Sábado
+        let selectedDayIndex = 5;
 
         const daysMap = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
 
@@ -784,8 +741,14 @@
 
         function updateCloudUI(online) {
             const dot = document.getElementById('cloudDot');
-            if (online) dot.classList.add('online');
-            else dot.classList.remove('online');
+            const label = document.getElementById('cloudText');
+            if (online) {
+                dot.classList.add('online');
+                if(label) label.innerText = "Nube Conectada";
+            } else {
+                dot.classList.remove('online');
+                if(label) label.innerText = "Nube Disconecta";
+            }
         }
 
         function syncWithFirestore() {
@@ -897,7 +860,6 @@
         function openCloudModal() { document.getElementById('cloudModal').classList.add('active'); }
         function closeCloudModal() { document.getElementById('cloudModal').classList.remove('active'); }
         
-        // APERTURA DE MODAL PARA NUEVO O EDITAR
         function openStudentModal(id = null) {
             if (id) {
                 const s = students.find(item => item.id === id);
@@ -923,7 +885,6 @@
 
         function closeStudentModal() { document.getElementById('studentModal').classList.remove('active'); }
 
-        // GUARDAR CAMBIOS DE CREACIÓN O EDICIÓN
         function saveStudent() {
             const id = document.getElementById('editingStudentId').value;
             const name = document.getElementById('studentName').value.trim();
@@ -955,14 +916,13 @@
             closeStudentModal();
         }
 
-        // CAMBIAR ESTADO DE PAGO (PAGADO / PENDIENTE)
         function togglePaymentStatus(id) {
             const idx = students.findIndex(s => s.id === id);
             if (idx !== -1) {
                 const currentStatus = !!students[idx].paid;
                 const newStatus = !currentStatus;
                 
-                if (confirm(`¿Deseas cambiar el estado de mensualidad de ${students[idx].name} a ${newStatus ? 'PAGADO' : 'PENDIENTE'}?`)) {
+                if (confirm(`¿Deseas cambiar el estado de pago de ${students[idx].name} a ${newStatus ? 'PAGADO' : 'PENDIENTE'}?`)) {
                     students[idx].paid = newStatus;
                     localStorage.setItem('dacapo_students', JSON.stringify(students));
                     if (db) db.collection("students").doc(id).update({ paid: newStatus });
@@ -972,7 +932,6 @@
             }
         }
 
-        // MOSTRAR LISTA DE ALUMNOS CON BOTONES DE EDICIÓN Y PAGO
         function renderStudents() {
             const container = document.getElementById('studentsListContainer');
             const query = document.getElementById('searchStudent').value.toLowerCase();
