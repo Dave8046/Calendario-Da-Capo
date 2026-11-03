@@ -13,6 +13,7 @@
             --text-color: #ffffff;
             --text-muted: #888888;
             --accent-purple: #635bff;
+            --whatsapp-green: #25d366;
             --danger: #ff4444;
             --success: #00c853;
             --warning: #ffab00;
@@ -385,6 +386,13 @@
             border: 1px solid var(--border-color);
         }
 
+        .btn-whatsapp {
+            background: var(--whatsapp-green);
+            color: #000;
+            font-weight: 700;
+            border: none;
+        }
+
         .btn-danger {
             background: var(--danger);
             color: #fff;
@@ -513,7 +521,7 @@
             <div id="classesListContainer"></div>
         </section>
 
-        <!-- ALUMNOS Y MENSUALIDADES ÚNICAS -->
+        <!-- ALUMNOS -->
         <section id="tab-alumnos" class="tab-content">
             <div class="kpi-card">
                 <div class="kpi-title">TOTAL MENSUALIDADES ESTIMADO</div>
@@ -554,7 +562,7 @@
                         <option value="Justificado">Justificado</option>
                     </select>
                 </div>
-                <button class="btn" onclick="saveAttendance()">Registrar Asistencia</button>
+                <button class="btn" onclick="saveAttendance()">Registrar y Enviar Aviso WhatsApp</button>
             </div>
 
             <div class="card">
@@ -638,11 +646,15 @@
                 <datalist id="studentsSuggestions"></datalist>
             </div>
             <div class="form-group">
+                <label>Teléfono / WhatsApp (ej. +52...)</label>
+                <input type="tel" id="studentPhone" placeholder="+521234567890">
+            </div>
+            <div class="form-group">
                 <label>Instrumento / Curso</label>
                 <input type="text" id="studentInstrument" placeholder="Ej. Cello, Piano, Otro">
             </div>
             <div class="form-group">
-                <label>Día de la Clase (ej. Lunes, Miércoles)</label>
+                <label>Día de la Clase</label>
                 <select id="studentDay">
                     <option value="LUN">Lunes</option>
                     <option value="MAR">Martes</option>
@@ -663,13 +675,13 @@
             </div>
             <div class="form-group">
                 <label>Valor Mensualidad Única ($)</label>
-                <input type="number" id="studentFee" placeholder="Ej. 500 (Se asigna al estudiante)">
+                <input type="number" id="studentFee" placeholder="Ej. 500">
             </div>
-            <button class="btn" onclick="saveStudent()">Guardar Clase</button>
+            <button class="btn" onclick="saveStudent()">Guardar Registro</button>
         </div>
     </div>
 
-    <!-- SDKs FIREBASE -->
+    <!-- SDKs FIREBASE compat -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
@@ -751,19 +763,35 @@
             }
         }
 
+        // ESCUCHADOR EN TIEMPO REAL MULTI-DISPOSITIVO
         function syncWithFirestore() {
             if (!db) return;
+            
+            // 1. Escuchar la colección de Estudiantes/Clases
             db.collection("students").onSnapshot((snapshot) => {
                 let cloudStudents = [];
                 snapshot.forEach((doc) => { cloudStudents.push({ id: doc.id, ...doc.data() }); });
-                if (cloudStudents.length > 0) {
-                    students = cloudStudents;
-                    localStorage.setItem('dacapo_students', JSON.stringify(students));
-                    renderStudents();
-                    renderWeekNavigator();
-                    populateAttendanceDropdown();
-                    populateSuggestionsList();
-                }
+                students = cloudStudents;
+                localStorage.setItem('dacapo_students', JSON.stringify(students));
+                renderStudents();
+                renderWeekNavigator();
+                populateAttendanceDropdown();
+                populateSuggestionsList();
+            }, (error) => {
+                console.error("Error al escuchar cambios en students:", error);
+            });
+
+            // 2. Escuchar la colección de Asistencias
+            db.collection("attendances").onSnapshot((snapshot) => {
+                let cloudAttendances = [];
+                snapshot.forEach((doc) => { cloudAttendances.push({ id: doc.id, ...doc.data() }); });
+                // Ordenar más recientes primero
+                cloudAttendances.sort((a,b) => b.id.localeCompare(a.id));
+                attendances = cloudAttendances;
+                localStorage.setItem('dacapo_attendances', JSON.stringify(attendances));
+                renderAttendanceHistory();
+            }, (error) => {
+                console.error("Error al escuchar cambios en attendances:", error);
             });
         }
 
@@ -868,6 +896,7 @@
                     document.getElementById('modalStudentTitle').innerText = "Editar Clase / Alumno";
                     document.getElementById('editingStudentId').value = s.id;
                     document.getElementById('studentName').value = s.name;
+                    document.getElementById('studentPhone').value = s.phone || '';
                     document.getElementById('studentInstrument').value = s.instrument || '';
                     document.getElementById('studentDay').value = s.day || 'LUN';
                     document.getElementById('studentTime').value = s.time || '08:00';
@@ -878,6 +907,7 @@
                 document.getElementById('modalStudentTitle').innerText = "Agregar Día de Clase al Alumno";
                 document.getElementById('editingStudentId').value = "";
                 document.getElementById('studentName').value = "";
+                document.getElementById('studentPhone').value = "";
                 document.getElementById('studentInstrument').value = "";
                 document.getElementById('studentFee').value = "";
             }
@@ -895,6 +925,7 @@
         function suggestStudentData(nameVal) {
             const found = students.find(s => s.name.toLowerCase() === nameVal.trim().toLowerCase());
             if (found) {
+                document.getElementById('studentPhone').value = found.phone || '';
                 document.getElementById('studentInstrument').value = found.instrument || '';
                 document.getElementById('studentFee').value = found.fee || '';
                 document.getElementById('studentDuration').value = found.duration || '60';
@@ -904,6 +935,7 @@
         function saveStudent() {
             const id = document.getElementById('editingStudentId').value;
             const name = document.getElementById('studentName').value.trim();
+            const phone = document.getElementById('studentPhone').value.trim();
             const instrument = document.getElementById('studentInstrument').value.trim();
             const day = document.getElementById('studentDay').value;
             const time = document.getElementById('studentTime').value;
@@ -912,7 +944,6 @@
 
             if (!name) return alert("Ingresa el nombre del alumno.");
 
-            // Validar duplicado exacto de día y hora
             const duplicate = students.find(s => s.name.toLowerCase() === name.toLowerCase() && s.day === day && s.time === time && s.id !== id);
             if (duplicate) {
                 if (!confirm(`⚠️ Atención: ${name} ya tiene registrada otra clase el día ${day} a las ${time}. ¿Deseas agregar este bloque de todas formas?`)) {
@@ -923,11 +954,11 @@
             if (id) {
                 const idx = students.findIndex(s => s.id === id);
                 if (idx !== -1) {
-                    students[idx] = { ...students[idx], name, instrument, day, time, duration, fee };
-                    if (db) db.collection("students").doc(id).update(students[idx]);
+                    students[idx] = { ...students[idx], name, phone, instrument, day, time, duration, fee };
+                    if (db) db.collection("students").doc(id).set(students[idx]);
                 }
             } else {
-                const newStudent = { id: Date.now().toString(), name, instrument, day, time, duration, fee, paid: false };
+                const newStudent = { id: Date.now().toString(), name, phone, instrument, day, time, duration, fee, paid: false };
                 students.push(newStudent);
                 if (db) db.collection("students").doc(newStudent.id).set(newStudent);
             }
@@ -941,12 +972,11 @@
             closeStudentModal();
         }
 
-        // FUNCIÓN CLAVE: ACTUALIZA EL ESTADO DE PAGO PARA TODOS LOS BLOQUES DE CLASE DE UN MISMO ALUMNO
         function togglePaymentStatusByName(studentName) {
             const isCurrentlyPaid = students.find(s => s.name.toLowerCase() === studentName.toLowerCase() && s.paid);
             const newStatus = !isCurrentlyPaid;
 
-            if (confirm(`¿Deseas marcar la mensualidad de ${studentName} como ${newStatus ? 'PAGADA' : 'PENDIENTE'}? (Se actualizará para todos sus días de clase)`)) {
+            if (confirm(`¿Deseas marcar la mensualidad de ${studentName} como ${newStatus ? 'PAGADA' : 'PENDIENTE'}?`)) {
                 students.forEach(s => {
                     if (s.name.toLowerCase() === studentName.toLowerCase()) {
                         s.paid = newStatus;
@@ -959,11 +989,20 @@
             }
         }
 
+        function sendWhatsAppPaymentReminder(studentName) {
+            const student = students.find(s => s.name.toLowerCase() === studentName.toLowerCase());
+            if (!student || !student.phone) {
+                return alert("El alumno no tiene registrado un número de teléfono/WhatsApp.");
+            }
+            const phoneClean = student.phone.replace(/[^0-9+]/g, '');
+            const message = encodeURIComponent(`Hola ${student.name}, te saludamos de Da Capo - Casa Musical. Te recordamos que tienes pendiente el pago de tu mensualidad por un monto de $${(student.fee || 0).toLocaleString()}. ¡Muchas gracias! 🎶`);
+            window.open(`https://wa.me/${phoneClean}?text=${message}`, '_blank');
+        }
+
         function renderStudents() {
             const container = document.getElementById('studentsListContainer');
             const query = document.getElementById('searchStudent').value.toLowerCase();
             
-            // AGRUPAR POR ALUMNO ÚNICO PARA QUE LA MENSUALIDAD NO SE SUME MÚLTIPLES VECES
             const uniqueStudentNames = [...new Set(students.map(s => s.name))];
             const uniqueStudentsList = uniqueStudentNames.map(name => {
                 return students.find(s => s.name === name);
@@ -971,7 +1010,6 @@
 
             const filtered = uniqueStudentsList.filter(s => s.name.toLowerCase().includes(query));
 
-            // SUMAR SOLO LAS MENSUALIDADES ÚNICAS DE CADA ESTUDIANTE
             const totalFee = uniqueStudentsList.reduce((sum, s) => sum + (parseFloat(s.fee) || 0), 0);
             const paidTotal = uniqueStudentsList.filter(s => s.paid).reduce((sum, s) => sum + (parseFloat(s.fee) || 0), 0);
             const pendingTotal = totalFee - paidTotal;
@@ -985,7 +1023,6 @@
             }
 
             container.innerHTML = filtered.map(s => {
-                // Encontrar todos los días/horarios que tiene este alumno
                 const studentClasses = students.filter(st => st.name.toLowerCase() === s.name.toLowerCase());
                 const scheduleText = studentClasses.map(sc => `${sc.day} (${sc.time})`).join(' • ');
 
@@ -1004,9 +1041,10 @@
                             <span>🎵 ${s.instrument || 'Otro'} • 📅 Días: ${scheduleText}</span>
                         </div>
                         <div class="actions-group">
-                            <button class="btn btn-small btn-outline" onclick="openStudentModal('${s.id}')">➕ Agregar Día / Editar</button>
+                            <button class="btn btn-small btn-outline" onclick="openStudentModal('${s.id}')">➕ Editar/Día</button>
                             <button class="btn btn-small btn-outline" onclick="togglePaymentStatusByName('${s.name}')">${s.paid ? '🔴 Marcar Pendiente' : '🟢 Marcar Pagado'}</button>
-                            <button class="btn btn-small btn-danger" onclick="deleteStudentByName('${s.name}')">🗑️ Eliminar Alumno</button>
+                            ${!s.paid ? `<button class="btn btn-small btn-whatsapp" onclick="sendWhatsAppPaymentReminder('${s.name}')">💬 WhatsApp Cobro</button>` : ''}
+                            <button class="btn btn-small btn-danger" onclick="deleteStudentByName('${s.name}')">🗑️ Eliminar</button>
                         </div>
                     </div>
                 `;
@@ -1059,7 +1097,16 @@
             if (db) db.collection("attendances").doc(record.id).set(record);
 
             renderAttendanceHistory();
-            alert("Asistencia guardada.");
+
+            if (student && student.phone) {
+                if (confirm(`Asistencia guardada. ¿Deseas enviar el reporte de asistencia ("${status}") a ${student.name} por WhatsApp?`)) {
+                    const phoneClean = student.phone.replace(/[^0-9+]/g, '');
+                    const message = encodeURIComponent(`Hola ${student.name}, te saludamos de Da Capo - Casa Musical. Te informamos que tu registro de asistencia para la clase del ${date} quedó marcado como: *${status}*. ¡Saludos! 🎶`);
+                    window.open(`https://wa.me/${phoneClean}?text=${message}`, '_blank');
+                }
+            } else {
+                alert("Asistencia guardada.");
+            }
         }
 
         function renderAttendanceHistory() {
