@@ -114,35 +114,50 @@
             color: #ffffff;
         }
 
-        /* BANNER DE ALERTAS INTELIGENTES */
-        .alert-banner {
-            background: linear-gradient(135deg, #1a1500, #2a2000);
-            border: 1px solid var(--warning);
+        /* CENTRO DE NOTIFICACIONES */
+        .notification-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
             border-radius: 12px;
-            padding: 12px 15px;
-            margin-bottom: 15px;
+            padding: 14px;
+            margin-bottom: 10px;
             display: flex;
-            align-items: center;
-            gap: 12px;
+            flex-direction: column;
+            gap: 8px;
         }
 
-        .alert-banner.danger {
-            background: linear-gradient(135deg, #1a0000, #2a0000);
-            border-color: var(--danger);
+        .notification-card.pending-alert {
+            border-left: 4px solid var(--warning);
         }
 
-        .alert-icon {
-            font-size: 1.5rem;
+        .notification-card.danger-alert {
+            border-left: 4px solid var(--danger);
         }
 
-        .alert-text {
-            font-size: 0.82rem;
-            color: #ffdf80;
-            line-height: 1.3;
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
         }
 
-        .alert-banner.danger .alert-text {
-            color: #ff9999;
+        .notification-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .notification-body {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .notification-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .toggle-resolved-section {
+            margin: 15px 0 10px 0;
         }
 
         .week-navigator {
@@ -529,8 +544,8 @@
     <div class="container">
         <!-- AGENDA -->
         <section id="tab-agenda" class="tab-content active">
-            <!-- ALERTA DE CLASES DE HOY -->
-            <div id="todayClassesAlert"></div>
+            <!-- CENTRO DE NOTIFICACIONES DE CLASES -->
+            <div id="notificationsContainer"></div>
 
             <div class="subtabs">
                 <button class="subtab-btn active">📅 Esta Semana</button>
@@ -558,7 +573,7 @@
 
         <!-- ALUMNOS Y ALERTAS DE PAGO -->
         <section id="tab-alumnos" class="tab-content">
-            <!-- ALERTA DE MENSUALIDADES PENDIENTES O VENCIDAS -->
+            <!-- CENTRO DE NOTIFICACIONES DE COBROS -->
             <div id="pendingPaymentsAlert"></div>
 
             <div class="kpi-card">
@@ -750,6 +765,7 @@
     <script>
         let students = JSON.parse(localStorage.getItem('dacapo_students')) || [];
         let attendances = JSON.parse(localStorage.getItem('dacapo_attendances')) || [];
+        let dismissedNotifications = JSON.parse(localStorage.getItem('dacapo_dismissed_notifs')) || {};
         let db = null;
 
         let currentWeekOffset = 0;
@@ -865,60 +881,94 @@
             });
         }
 
-        // SISTEMA DE ALERTAS Y NOTIFICACIONES INTELIGENTES CON FECHA DE VENCIMIENTO
+        // CENTRO DE NOTIFICACIONES CON OPCIÓN DE CONFIRMAR / DEJAR PENDIENTE
         function checkNotifications() {
             const todayIndex = new Date().getDay();
             const todayAbbr = daysMap[todayIndex];
             const todayStr = new Date().toISOString().substring(0, 10);
+            const todayKey = `class_${todayStr}`;
 
-            // 1. Clases de hoy
+            // 1. Notificaciones de Clases de Hoy
+            const alertContainer = document.getElementById('notificationsContainer');
             const todayClasses = students.filter(s => s.day === todayAbbr);
-            const alertContainer = document.getElementById('todayClassesAlert');
-            if (todayClasses.length > 0) {
-                const namesList = todayClasses.map(s => `${s.name} (${s.time})`).join(', ');
-                alertContainer.innerHTML = `
-                    <div class="alert-banner">
-                        <div class="alert-icon">🔔</div>
-                        <div class="alert-text">
-                            <strong>Clases Programadas para Hoy (${todayAbbr}):</strong><br>${namesList}
+            
+            let htmlClasses = '';
+            const isClassDismissed = dismissedNotifications[todayKey];
+
+            if (todayClasses.length > 0 && !isClassDismissed) {
+                const listText = todayClasses.map(s => `${s.name} (${s.time})`).join(', ');
+                htmlClasses += `
+                    <div class="notification-card pending-alert">
+                        <div class="notification-header">
+                            <span class="notification-title">🔔 Clases de Hoy (${todayAbbr})</span>
+                            <span style="font-size:0.7rem; color:var(--warning);">Pendiente</span>
                         </div>
-                    </div>
-                `;
-            } else {
-                alertContainer.innerHTML = `
-                    <div class="alert-banner" style="border-color: #333; background: #111;">
-                        <div class="alert-icon">📅</div>
-                        <div class="alert-text" style="color: var(--text-muted);">
-                            No hay clases programadas para hoy (${todayAbbr}).
+                        <div class="notification-body">${listText}</div>
+                        <div class="notification-actions">
+                            <button class="btn btn-small btn-outline" onclick="dismissNotification('${todayKey}')">✓ Marcar Atendida</button>
                         </div>
                     </div>
                 `;
             }
 
-            // 2. Alumnos con mensualidades vencidas o pendientes por fecha
+            // Mostrar botón para ver resueltas si hay alguna ocultada
+            if (isClassDismissed) {
+                htmlClasses += `
+                    <div class="toggle-resolved-section">
+                        <button class="btn btn-small btn-outline" style="width:100%; font-size:0.75rem;" onclick="restoreNotification('${todayKey}')">📂 Ver notificación de clases atendida</button>
+                    </div>
+                `;
+            }
+
+            alertContainer.innerHTML = htmlClasses;
+
+            // 2. Notificaciones de Cobros / Mensualidades
             const uniqueNames = [...new Set(students.map(s => s.name))];
             const uniqueList = uniqueNames.map(name => students.find(s => s.name === name));
             
             const pendingList = uniqueList.filter(s => {
                 if (s.paid) return false;
-                if (!s.dueDate) return true; // Si no tiene fecha puesta pero está pendiente, cuenta como aviso
-                return s.dueDate <= todayStr; // Si la fecha de vencimiento ya llegó o pasó
+                if (!s.dueDate) return true;
+                return s.dueDate <= todayStr;
             });
 
             const pendingAlertContainer = document.getElementById('pendingPaymentsAlert');
-            if (pendingList.length > 0) {
-                const pendingNames = pendingList.map(s => `${s.name} ${s.dueDate ? '('+s.dueDate+')' : ''}`).join(', ');
-                pendingAlertContainer.innerHTML = `
-                    <div class="alert-banner danger">
-                        <div class="alert-icon">⚠️</div>
-                        <div class="alert-text">
-                            <strong>Mensualidades Vencidas / Pendientes (${pendingList.length}):</strong><br>Requieren atención: ${pendingNames}
+            let htmlPayments = '';
+
+            pendingList.forEach(s => {
+                const notifKey = `pay_${s.name}_${s.dueDate || 'nodate'}`;
+                const isDismissed = dismissedNotifications[notifKey];
+
+                if (!isDismissed) {
+                    htmlPayments += `
+                        <div class="notification-card danger-alert">
+                            <div class="notification-header">
+                                <span class="notification-title">⚠️ Mensualidad Pendiente: ${s.name}</span>
+                                <span style="font-size:0.7rem; color:var(--danger);">Vence: ${s.dueDate || 'Sin fecha'}</span>
+                            </div>
+                            <div class="notification-body">Monto: $${(s.fee || 0).toLocaleString()} • Puedes enviarle un recordatorio directo.</div>
+                            <div class="notification-actions">
+                                <button class="btn btn-small btn-whatsapp" onclick="sendWhatsAppPaymentReminder('${s.name}')">💬 WhatsApp</button>
+                                <button class="btn btn-small btn-outline" onclick="dismissNotification('${notifKey}')">✓ Atender</button>
+                            </div>
                         </div>
-                    </div>
-                `;
-            } else {
-                pendingAlertContainer.innerHTML = ``;
-            }
+                    `;
+                }
+            });
+
+            pendingAlertContainer.innerHTML = htmlPayments;
+        }
+
+        function dismissNotification(key) {
+            dismissedNotifications[key] = true;
+            localStorage.setItem('dacapo_dismissed_notifs', JSON.stringify(dismissedNotifications));
+            checkNotifications();
+        }
+
+        function restoreNotification(key) {
+            delete dismissedNotifications[key];
+            localStorage.setItem('dacapo_dismissed_notifs', JSON.stringify(dismissedNotifications));
+            checkNotifications();
         }
 
         function changeWeek(direction) {
@@ -1306,7 +1356,8 @@
             if (confirm("¿Borrar datos locales? No borrará la nube.")) {
                 localStorage.removeItem('dacapo_students');
                 localStorage.removeItem('dacapo_attendances');
-                students = []; attendances = [];
+                localStorage.removeItem('dacapo_dismissed_notifs');
+                students = []; attendances = []; dismissedNotifications = {};
                 renderStudents(); renderWeekNavigator(); renderAttendanceHistory();
                 checkNotifications();
             }
