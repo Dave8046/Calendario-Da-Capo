@@ -114,6 +114,36 @@
             color: #ffffff;
         }
 
+        /* BANNER DE ALERTAS INTELIGENTES */
+        .alert-banner {
+            background: linear-gradient(135deg, #1a1500, #2a2000);
+            border: 1px solid var(--warning);
+            border-radius: 12px;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .alert-banner.danger {
+            background: linear-gradient(135deg, #1a0000, #2a0000);
+            border-color: var(--danger);
+        }
+
+        .alert-icon {
+            font-size: 1.5rem;
+        }
+
+        .alert-text {
+            font-size: 0.82rem;
+            color: #ffdf80;
+        }
+
+        .alert-banner.danger .alert-text {
+            color: #ff9999;
+        }
+
         .week-navigator {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -497,6 +527,9 @@
     <div class="container">
         <!-- AGENDA -->
         <section id="tab-agenda" class="tab-content active">
+            <!-- ALERTA INTELIGENTE DE CLASES DE HOY -->
+            <div id="todayClassesAlert"></div>
+
             <div class="subtabs">
                 <button class="subtab-btn active">📅 Esta Semana</button>
                 <button class="subtab-btn" onclick="switchTab('alumnos', document.querySelectorAll('.nav-btn')[1])">🔄 Clases Fijas (Base)</button>
@@ -521,8 +554,11 @@
             <div id="classesListContainer"></div>
         </section>
 
-        <!-- ALUMNOS -->
+        <!-- ALUMNOS Y ALERTAS DE PAGO -->
         <section id="tab-alumnos" class="tab-content">
+            <!-- ALERTA DE MENSUALIDADES PENDIENTES -->
+            <div id="pendingPaymentsAlert"></div>
+
             <div class="kpi-card">
                 <div class="kpi-title">TOTAL MENSUALIDADES ESTIMADO</div>
                 <div class="kpi-value" id="totalFeeDisplay">$0.00</div>
@@ -726,6 +762,7 @@
             populateAttendanceDropdown();
             populateSuggestionsList();
             renderAttendanceHistory();
+            checkNotifications();
         });
 
         function loadTemplatesToUI() {
@@ -809,6 +846,7 @@
                 renderWeekNavigator();
                 populateAttendanceDropdown();
                 populateSuggestionsList();
+                checkNotifications();
             });
 
             db.collection("attendances").onSnapshot((snapshot) => {
@@ -819,6 +857,56 @@
                 localStorage.setItem('dacapo_attendances', JSON.stringify(attendances));
                 renderAttendanceHistory();
             });
+        }
+
+        // SISTEMA DE ALERTAS Y NOTIFICACIONES
+        function checkNotifications() {
+            const todayIndex = new Date().getDay(); // 0 Dom, 1 Lun, etc.
+            const todayAbbr = daysMap[todayIndex];
+
+            // 1. Clases de hoy
+            const todayClasses = students.filter(s => s.day === todayAbbr);
+            const alertContainer = document.getElementById('todayClassesAlert');
+            if (todayClasses.length > 0) {
+                const namesList = todayClasses.map(s => `${s.name} (${s.time})`).join(', ');
+                alertContainer.innerHTML = `
+                    <div class="alert-banner">
+                        <div class="alert-icon">🔔</div>
+                        <div class="alert-text">
+                            <strong>Clases Programadas para Hoy (${todayAbbr}):</strong><br>${namesList}
+                        </div>
+                    </div>
+                `;
+            } else {
+                alertContainer.innerHTML = `
+                    <div class="alert-banner" style="border-color: #333; background: #111;">
+                        <div class="alert-icon">📅</div>
+                        <div class="alert-text" style="color: var(--text-muted);">
+                            No hay clases programadas para hoy (${todayAbbr}).
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 2. Alumnos con mensualidades pendientes
+            const uniqueNames = [...new Set(students.map(s => s.name))];
+            const uniqueList = uniqueNames.map(name => students.find(s => s.name === name));
+            const pendingList = uniqueList.filter(s => !s.paid);
+
+            const pendingAlertContainer = document.getElementById('pendingPaymentsAlert');
+            if (pendingList.length > 0) {
+                const pendingNames = pendingList.map(s => s.name).join(', ');
+                pendingAlertContainer.innerHTML = `
+                    <div class="alert-banner danger">
+                        <div class="alert-icon">⚠️</div>
+                        <div class="alert-text">
+                            <strong>Alerta de Cobros Pendientes (${pendingList.length}):</strong><br>Hay mensualidades pendientes de: ${pendingNames}
+                        </div>
+                    </div>
+                `;
+            } else {
+                pendingAlertContainer.innerHTML = ``;
+            }
         }
 
         function changeWeek(direction) {
@@ -996,6 +1084,7 @@
             populateAttendanceDropdown();
             populateSuggestionsList();
             closeStudentModal();
+            checkNotifications();
         }
 
         function togglePaymentStatusByName(studentName) {
@@ -1012,6 +1101,7 @@
                 localStorage.setItem('dacapo_students', JSON.stringify(students));
                 renderStudents();
                 renderWeekNavigator();
+                checkNotifications();
             }
         }
 
@@ -1095,6 +1185,7 @@
                 renderWeekNavigator();
                 populateAttendanceDropdown();
                 populateSuggestionsList();
+                checkNotifications();
             }
         }
 
@@ -1123,7 +1214,6 @@
             alert("Asistencia guardada correctamente.");
         }
 
-        // FUNCIÓN INDEPENDIENTE DE ENVÍO DE WHATSAPP PARA ASISTENCIA
         function sendCustomAttendanceWhatsApp() {
             const date = document.getElementById('attendanceDate').value;
             const studentId = document.getElementById('attendanceStudentSelect').value;
@@ -1199,6 +1289,7 @@
                 localStorage.removeItem('dacapo_attendances');
                 students = []; attendances = [];
                 renderStudents(); renderWeekNavigator(); renderAttendanceHistory();
+                checkNotifications();
             }
         }
     </script>
