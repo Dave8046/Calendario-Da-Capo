@@ -114,24 +114,29 @@
             color: #ffffff;
         }
 
-        /* APARTADO DE NOTIFICACIONES INDIVIDUALES */
-        .notif-section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .notif-section-header h2 {
-            font-size: 0.95rem;
-            font-weight: 700;
-        }
-
-        .notification-card {
+        /* APARTADO DE NOTIFICACIONES FIJO Y LIMPIO */
+        .notif-section {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 12px;
-            padding: 12px 14px;
+            padding: 14px;
+            margin-bottom: 15px;
+        }
+
+        .notif-section h2 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-card {
+            background: var(--card-inner);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px 12px;
             margin-bottom: 8px;
             display: flex;
             justify-content: space-between;
@@ -152,19 +157,14 @@
         }
 
         .notif-title {
-            font-size: 0.88rem;
+            font-size: 0.85rem;
             font-weight: 700;
         }
 
         .notif-sub {
-            font-size: 0.78rem;
+            font-size: 0.75rem;
             color: var(--text-muted);
             margin-top: 2px;
-        }
-
-        .notif-actions {
-            display: flex;
-            gap: 6px;
         }
 
         .week-navigator {
@@ -286,7 +286,7 @@
             color: var(--text-muted);
         }
 
-        /* CONTENEDOR DE TARJETA CON SWIPE REVELADOR DE BOTONES */
+        /* TARJETA DE CLASE CON SWIPE SEGURO E INTENCIONAL */
         .class-card-container {
             background: #1a1528;
             border: 1px solid var(--border-color);
@@ -305,7 +305,6 @@
             position: relative;
             z-index: 2;
             transition: transform 0.2s ease-out;
-            cursor: grab;
         }
 
         .class-card-swipe-menu {
@@ -527,7 +526,7 @@
             align-items: center;
             gap: 4px;
             cursor: pointer;
-            width: 25%;
+            width: 20%;
         }
 
         .nav-btn.active {
@@ -617,18 +616,15 @@
     <div class="container">
         <!-- AGENDA -->
         <section id="tab-agenda" class="tab-content active">
-            <!-- APARTADO INDEPENDIENTE DE NOTIFICACIONES -->
-            <div id="notificationsSection" style="margin-bottom: 15px;">
-                <div class="notif-section-header">
-                    <h2>🔔 Centro de Notificaciones Avisos</h2>
-                    <button class="btn btn-small btn-outline" onclick="toggleResolvedNotifsView()" id="toggleNotifBtn">📂 Atendidas</button>
-                </div>
+            <!-- CENTRO DE NOTIFICACIONES INDEPENDIENTE -->
+            <div class="notif-section">
+                <h2>🔔 Centro de Avisos</h2>
                 <div id="notificationsContainer"></div>
             </div>
 
             <div class="subtabs">
                 <button class="subtab-btn active">📅 Esta Semana</button>
-                <button class="subtab-btn" onclick="switchTab('alumnos', document.querySelectorAll('.nav-btn')[1])">🔄 Clases Fijas (Base)</button>
+                <button class="subtab-btn" onclick="switchTab('alumnos', document.querySelectorAll('.nav-btn')[1])">🔄 Clases Fijas</button>
             </div>
 
             <div class="week-navigator">
@@ -661,7 +657,7 @@
             </div>
 
             <div class="flex-between">
-                <h2>Alumnos Registrados</h2>
+                <h2>Alumnos Particulares</h2>
                 <button class="btn" style="width: auto; padding: 6px 12px; font-size: 0.8rem;" onclick="openStudentModal()">+ Alumno</button>
             </div>
 
@@ -669,6 +665,15 @@
                 <input type="text" id="searchStudent" placeholder="Buscar por nombre..." oninput="renderStudents()">
                 <div id="studentsListContainer" style="margin-top: 12px;"></div>
             </div>
+        </section>
+
+        <!-- ESCUELAS -->
+        <section id="tab-escuelas" class="tab-content">
+            <div class="flex-between">
+                <h2>Clases en Escuelas</h2>
+                <button class="btn" style="width: auto; padding: 6px 12px; font-size: 0.8rem;" onclick="openSchoolModal()">+ Escuela</button>
+            </div>
+            <div id="schoolsListContainer" style="margin-top: 15px;"></div>
         </section>
 
         <!-- ASISTENCIA -->
@@ -680,7 +685,7 @@
                     <input type="date" id="attendanceDate">
                 </div>
                 <div class="form-group">
-                    <label>Alumno y Horario</label>
+                    <label>Alumno o Escuela y Horario</label>
                     <select id="attendanceStudentSelect"></select>
                 </div>
                 <div class="form-group">
@@ -691,47 +696,30 @@
                         <option value="Justificado">Justificado</option>
                     </select>
                 </div>
-                <div style="display: flex; gap: 8px;">
-                    <button class="btn" onclick="saveAttendance()">Registrar Asistencia</button>
-                    <button class="btn btn-whatsapp" style="width: auto;" onclick="sendCustomAttendanceWhatsApp()">💬 Enviar WhatsApp</button>
-                </div>
+                <button class="btn" onclick="saveAttendance()">Registrar Asistencia</button>
             </div>
 
             <div class="card">
                 <div class="flex-between" style="margin-bottom: 8px;">
                     <h2>Historial Reciente</h2>
-                    <button class="btn btn-small btn-danger" onclick="clearOldAttendances()">🗑️ Borrar Historial</button>
+                    <button class="btn btn-small btn-danger" onclick="clearOldAttendances()">🗑️ Borrar</button>
                 </div>
                 <div id="attendanceHistoryContainer">Sin registros.</div>
             </div>
         </section>
 
-        <!-- AJUSTES Y PLANTILLAS -->
+        <!-- AJUSTES -->
         <section id="tab-ajustes" class="tab-content">
             <h2>Plantillas de WhatsApp</h2>
             <div class="card">
                 <div class="form-group">
-                    <label>Plantilla Recordatorio de Cobro</label>
-                    <textarea id="templateCobro" rows="3" oninput="saveTemplates()">Hola {nombre}, te saludamos de Da Capo - Casa Musical. Te recordamos que tienes pendiente tu mensualidad por un monto de ${monto} (Vence el {vencimiento}). ¡Muchas gracias! 🎶</textarea>
-                    <span style="font-size: 0.7rem; color: var(--text-muted);">Usa {nombre}, {monto} y {vencimiento} como variables.</span>
-                </div>
-                <div class="form-group">
-                    <label>Plantilla Aviso de Asistencia</label>
-                    <textarea id="templateAsistencia" rows="3" oninput="saveTemplates()">Hola {nombre}, te saludamos de Da Capo - Casa Musical. Te informamos que tu registro de clase del {fecha} quedó marcado como: *{estado}*. ¡Saludos! 🎵</textarea>
-                    <span style="font-size: 0.7rem; color: var(--text-muted);">Usa {nombre}, {fecha} y {estado} como variables.</span>
+                    <label>Plantilla Cobro</label>
+                    <textarea id="templateCobro" rows="3" oninput="saveTemplates()">Hola {nombre}, te recordamos tu mensualidad pendiente por ${monto} (Vence el {vencimiento}). ¡Gracias! 🎶</textarea>
                 </div>
             </div>
-
             <h2>Conexión y Nube</h2>
             <div class="card">
-                <h2>Firebase Live</h2>
-                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
-                    Sincronización automática entre múltiples dispositivos.
-                </p>
-                <button class="btn btn-outline" onclick="openCloudModal()">Configurar Credenciales</button>
-            </div>
-            <div class="card">
-                <h2>Copia de Seguridad</h2>
+                <button class="btn btn-outline" onclick="openCloudModal()" style="margin-bottom: 10px;">Configurar Firebase</button>
                 <button class="btn btn-outline" onclick="exportData()" style="margin-bottom: 10px;">Exportar Respaldo JSON</button>
                 <button class="btn btn-danger" onclick="clearLocalData()">Limpiar Datos Locales</button>
             </div>
@@ -740,19 +728,23 @@
 
     <!-- BOTONES FLOTANTES -->
     <div class="fab-container">
-        <div class="fab-button secondary" onclick="openOccasionalModal()" title="Agregar clase ocasional">⭐</div>
-        <div class="fab-button" onclick="openStudentModal()" title="Agregar alumno">+</div>
+        <div class="fab-button secondary" onclick="openOccasionalModal()" title="Clase ocasional">⭐</div>
+        <div class="fab-button" onclick="openStudentModal()" title="Agregar">+</div>
     </div>
 
     <!-- NAVEGACIÓN -->
     <nav>
         <button class="nav-btn active" onclick="switchTab('agenda', this)">
             <span style="font-size:1.1rem;">📅</span>
-            <span>Horario</span>
+            <span>Agenda</span>
         </button>
         <button class="nav-btn" onclick="switchTab('alumnos', this)">
             <span style="font-size:1.1rem;">👥</span>
-            <span>Alumnos</span>
+            <span>Particulares</span>
+        </button>
+        <button class="nav-btn" onclick="switchTab('escuelas', this)">
+            <span style="font-size:1.1rem;">🏫</span>
+            <span>Escuelas</span>
         </button>
         <button class="nav-btn" onclick="switchTab('asistencia', this)">
             <span style="font-size:1.1rem;">✔</span>
@@ -768,112 +760,85 @@
     <div class="modal" id="cloudModal">
         <div class="modal-body">
             <div class="flex-between">
-                <h2>Configurar Nube Live</h2>
+                <h2>Configurar Nube</h2>
                 <span onclick="closeCloudModal()" style="cursor:pointer; font-size: 1.2rem;">✕</span>
             </div>
-            <div class="form-group">
-                <label>API Key</label>
-                <input type="text" id="firebaseApiKey" placeholder="AIzaSy...">
-            </div>
-            <div class="form-group">
-                <label>Project ID</label>
-                <input type="text" id="firebaseProjectId" placeholder="dacapo-12345">
-            </div>
-            <div id="cloudFeedback" style="font-size: 0.8rem; margin-bottom: 10px;"></div>
-            <button class="btn" onclick="saveFirebaseConfig()">Conectar y Guardar</button>
+            <div class="form-group"><label>API Key</label><input type="text" id="firebaseApiKey"></div>
+            <div class="form-group"><label>Project ID</label><input type="text" id="firebaseProjectId"></div>
+            <button class="btn" onclick="saveFirebaseConfig()">Conectar</button>
         </div>
     </div>
 
-    <!-- MODAL CLASE FIJA -->
+    <!-- MODAL CLASE FIJA / PARTICULAR -->
     <div class="modal" id="studentModal">
         <div class="modal-body">
             <div class="flex-between">
-                <h2 id="modalStudentTitle">Agregar Clase Fija al Alumno</h2>
+                <h2 id="modalStudentTitle">Agregar Alumno Particular</h2>
                 <span onclick="closeStudentModal()" style="cursor:pointer; font-size: 1.2rem;">✕</span>
             </div>
             <input type="hidden" id="editingStudentId" value="">
-            <div class="form-group">
-                <label>Nombre del Alumno</label>
-                <input type="text" id="studentName" list="studentsSuggestions" placeholder="Ej. Eliana" oninput="suggestStudentData(this.value)">
-                <datalist id="studentsSuggestions"></datalist>
-            </div>
-            <div class="form-group">
-                <label>Teléfono / WhatsApp (ej. +52...)</label>
-                <input type="tel" id="studentPhone" placeholder="+521234567890">
-            </div>
-            <div class="form-group">
-                <label>Instrumento / Curso</label>
-                <input type="text" id="studentInstrument" placeholder="Ej. Cello, Piano, Otro">
-            </div>
-            <div class="form-group">
-                <label>Día de la Clase Fija</label>
+            <div class="form-group"><label>Nombre</label><input type="text" id="studentName"></div>
+            <div class="form-group"><label>WhatsApp</label><input type="tel" id="studentPhone"></div>
+            <div class="form-group"><label>Instrumento</label><input type="text" id="studentInstrument"></div>
+            <div class="form-group"><label>Día</label>
                 <select id="studentDay">
-                    <option value="LUN">Lunes</option>
-                    <option value="MAR">Martes</option>
-                    <option value="MIÉ">Miércoles</option>
-                    <option value="JUE">Jueves</option>
-                    <option value="VIE">Viernes</option>
-                    <option value="SÁB">Sábado</option>
-                    <option value="DOM">Domingo</option>
+                    <option value="LUN">Lunes</option><option value="MAR">Martes</option><option value="MIÉ">Miércoles</option>
+                    <option value="JUE">Jueves</option><option value="VIE">Viernes</option><option value="SÁB">Sábado</option><option value="DOM">Domingo</option>
                 </select>
             </div>
-            <div class="form-group">
-                <label>Hora de esta clase</label>
-                <input type="time" id="studentTime" value="08:00">
-            </div>
-            <div class="form-group">
-                <label>Duración (minutos)</label>
-                <input type="number" id="studentDuration" value="60">
-            </div>
-            <div class="form-group">
-                <label>Valor Mensualidad Única ($)</label>
-                <input type="number" id="studentFee" placeholder="Ej. 500">
-            </div>
-            <div class="form-group">
-                <label>Fecha de Vencimiento de Mensualidad</label>
-                <input type="date" id="studentDueDate">
-            </div>
-            <button class="btn" onclick="saveStudent()">Guardar Registro</button>
+            <div class="form-group"><label>Hora</label><input type="time" id="studentTime" value="08:00"></div>
+            <div class="form-group"><label>Valor Mensualidad ($)</label><input type="number" id="studentFee"></div>
+            <div class="form-group"><label>Fecha Vencimiento</label><input type="date" id="studentDueDate"></div>
+            <button class="btn" onclick="saveStudent()">Guardar</button>
         </div>
     </div>
 
-    <!-- MODAL CLASE OCASIONAL -->
+    <!-- MODAL ESCUELA -->
+    <div class="modal" id="schoolModal">
+        <div class="modal-body">
+            <div class="flex-between">
+                <h2 id="modalSchoolTitle">Registrar Clase en Escuela</h2>
+                <span onclick="closeSchoolModal()" style="cursor:pointer; font-size: 1.2rem;">✕</span>
+            </div>
+            <input type="hidden" id="editingSchoolId" value="">
+            <div class="form-group"><label>Nombre de la Escuela</label><input type="text" id="schoolName" placeholder="Ej. Colegio San Juan"></div>
+            <div class="form-group"><label>Día de Clase</label>
+                <select id="schoolDay">
+                    <option value="LUN">Lunes</option><option value="MAR">Martes</option><option value="MIÉ">Miércoles</option>
+                    <option value="JUE">Jueves</option><option value="VIE">Viernes</option><option value="SÁB">Sábado</option><option value="DOM">Domingo</option>
+                </select>
+            </div>
+            <div class="form-group"><label>Hora</label><input type="time" id="schoolTime" value="09:00"></div>
+            <div class="form-group"><label>Fecha de Pago / Corte</label><input type="date" id="schoolDueDate"></div>
+            <div class="form-group"><label>Monto Pagado a Registrar ($)</label><input type="number" id="schoolPaidAmount" placeholder="Ej. 1200"></div>
+            <button class="btn" onclick="saveSchool()">Guardar Escuela</button>
+        </div>
+    </div>
+
+    <!-- MODAL OCASIONAL -->
     <div class="modal" id="occasionalModal">
         <div class="modal-body">
             <div class="flex-between">
-                <h2>Agregar Clase Ocasional</h2>
+                <h2>Clase Ocasional</h2>
                 <span onclick="closeOccasionalModal()" style="cursor:pointer; font-size: 1.2rem;">✕</span>
             </div>
-            <div class="form-group">
-                <label>Nombre del Alumno</label>
-                <input type="text" id="occName" placeholder="Ej. Carlos">
-            </div>
-            <div class="form-group">
-                <label>Fecha Específica</label>
-                <input type="date" id="occDate">
-            </div>
-            <div class="form-group">
-                <label>Hora de la Clase</label>
-                <input type="time" id="occTime" value="10:00">
-            </div>
-            <div class="form-group">
-                <label>Instrumento / Nota</label>
-                <input type="text" id="occInstrument" placeholder="Ej. Violín (Clase extra)">
-            </div>
-            <button class="btn" onclick="saveOccasionalClass()">Guardar Clase Ocasional</button>
+            <div class="form-group"><label>Alumno / Nota</label><input type="text" id="occName"></div>
+            <div class="form-group"><label>Fecha</label><input type="date" id="occDate"></div>
+            <div class="form-group"><label>Hora</label><input type="time" id="occTime" value="10:00"></div>
+            <button class="btn" onclick="saveOccasionalClass()">Guardar</button>
         </div>
     </div>
 
-    <!-- SDKs FIREBASE compat -->
+    <!-- SDKs FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <script>
         let students = JSON.parse(localStorage.getItem('dacapo_students')) || [];
+        let schools = JSON.parse(localStorage.getItem('dacapo_schools')) || [];
         let occasionalClasses = JSON.parse(localStorage.getItem('dacapo_occasional')) || [];
         let attendances = JSON.parse(localStorage.getItem('dacapo_attendances')) || [];
         let dismissedNotifications = JSON.parse(localStorage.getItem('dacapo_dismissed_notifs')) || {};
-        let showResolvedNotifs = false;
         let db = null;
 
         let currentWeekOffset = 0;
@@ -887,547 +852,358 @@
             document.getElementById('attendanceDate').value = selectedDateStr;
             document.getElementById('occDate').value = selectedDateStr;
 
-            loadTemplatesToUI();
             initFirebaseFromStorage();
             renderWeekNavigator();
             renderStudents();
+            renderSchools();
             populateAttendanceDropdown();
-            populateSuggestionsList();
             renderAttendanceHistory();
             checkNotifications();
         });
 
-        function loadTemplatesToUI() {
-            const tCobro = localStorage.getItem('dacapo_tpl_cobro');
-            const tAsis = localStorage.getItem('dacapo_tpl_asis');
-            if(tCobro) document.getElementById('templateCobro').value = tCobro;
-            if(tAsis) document.getElementById('templateAsistencia').value = tAsis;
-        }
-
-        function saveTemplates() {
-            const tCobro = document.getElementById('templateCobro').value;
-            const tAsis = document.getElementById('templateAsistencia').value;
-            localStorage.setItem('dacapo_tpl_cobro', tCobro);
-            localStorage.setItem('dacapo_tpl_asis', tAsis);
-        }
-
         function initFirebaseFromStorage() {
             const apiKey = localStorage.getItem('dacapo_fb_apikey');
             const projectId = localStorage.getItem('dacapo_fb_projectid');
-
             if (apiKey && projectId) {
                 try {
-                    if (!firebase.apps.length) {
-                        firebase.initializeApp({ apiKey, projectId });
-                    }
+                    if (!firebase.apps.length) firebase.initializeApp({ apiKey, projectId });
                     db = firebase.firestore();
                     updateCloudUI(true);
                     syncWithFirestore();
-                } catch (e) {
-                    console.error(e);
-                    updateCloudUI(false);
-                }
-            } else {
-                updateCloudUI(false);
-            }
+                } catch (e) { updateCloudUI(false); }
+            } else { updateCloudUI(false); }
         }
 
         function saveFirebaseConfig() {
             const apiKey = document.getElementById('firebaseApiKey').value.trim();
             const projectId = document.getElementById('firebaseProjectId').value.trim();
-            const feedback = document.getElementById('cloudFeedback');
-
-            if (!apiKey || !projectId) {
-                feedback.style.color = "var(--danger)";
-                feedback.innerText = "Por favor completa los campos.";
-                return;
-            }
-
+            if (!apiKey || !projectId) return alert("Completa los datos");
             localStorage.setItem('dacapo_fb_apikey', apiKey);
             localStorage.setItem('dacapo_fb_projectid', projectId);
-
-            feedback.style.color = "var(--success)";
-            feedback.innerText = "Guardando credenciales...";
-
-            setTimeout(() => {
-                closeCloudModal();
-                initFirebaseFromStorage();
-            }, 800);
+            closeCloudModal();
+            initFirebaseFromStorage();
         }
 
         function updateCloudUI(online) {
             const dot = document.getElementById('cloudDot');
             const label = document.getElementById('cloudText');
-            if (online) {
-                dot.classList.add('online');
-                if(label) label.innerText = "Nube Conectada";
-            } else {
-                dot.classList.remove('online');
-                if(label) label.innerText = "Nube Disconecta";
-            }
+            if (online) { dot.classList.add('online'); label.innerText = "Nube Conectada"; }
+            else { dot.classList.remove('online'); label.innerText = "Nube Disconecta"; }
         }
 
         function syncWithFirestore() {
             if (!db) return;
-            db.collection("students").onSnapshot((snapshot) => {
-                let cloudStudents = [];
-                snapshot.forEach((doc) => { cloudStudents.push({ id: doc.id, ...doc.data() }); });
-                students = cloudStudents;
+            db.collection("students").onSnapshot(snap => {
+                students = []; snap.forEach(d => students.push({ id: d.id, ...d.data() }));
                 localStorage.setItem('dacapo_students', JSON.stringify(students));
-                renderStudents();
-                renderWeekNavigator();
-                populateAttendanceDropdown();
-                populateSuggestionsList();
-                checkNotifications();
+                renderStudents(); renderWeekNavigator(); populateAttendanceDropdown(); checkNotifications();
             });
-
-            db.collection("occasional").onSnapshot((snapshot) => {
-                let cloudOcc = [];
-                snapshot.forEach((doc) => { cloudOcc.push({ id: doc.id, ...doc.data() }); });
-                occasionalClasses = cloudOcc;
+            db.collection("schools").onSnapshot(snap => {
+                schools = []; snap.forEach(d => schools.push({ id: d.id, ...d.data() }));
+                localStorage.setItem('dacapo_schools', JSON.stringify(schools));
+                renderSchools(); renderWeekNavigator(); populateAttendanceDropdown(); checkNotifications();
+            });
+            db.collection("occasional").onSnapshot(snap => {
+                occasionalClasses = []; snap.forEach(d => occasionalClasses.push({ id: d.id, ...d.data() }));
                 localStorage.setItem('dacapo_occasional', JSON.stringify(occasionalClasses));
-                renderClassesForDay(selectedDayAbbr);
-                checkNotifications();
+                renderClassesForDay(selectedDayAbbr); checkNotifications();
             });
-
-            db.collection("attendances").onSnapshot((snapshot) => {
-                let cloudAttendances = [];
-                snapshot.forEach((doc) => { cloudAttendances.push({ id: doc.id, ...doc.data() }); });
-                cloudAttendances.sort((a,b) => b.id.localeCompare(a.id));
-                attendances = cloudAttendances;
+            db.collection("attendances").onSnapshot(snap => {
+                attendances = []; snap.forEach(d => attendances.push({ id: d.id, ...d.data() }));
+                attendances.sort((a,b) => b.id.localeCompare(a.id));
                 localStorage.setItem('dacapo_attendances', JSON.stringify(attendances));
-                renderAttendanceHistory();
-                renderStudents();
+                renderAttendanceHistory(); renderStudents(); renderSchools();
             });
         }
 
-        /* APARTADO Y LÓGICA DE NOTIFICACIONES INDIVIDUALES */
+        // NOTIFICACIONES FIJAS E INDEPENDIENTES
         function checkNotifications() {
             const container = document.getElementById('notificationsContainer');
             const todayIndex = new Date().getDay();
             const todayAbbr = daysMap[todayIndex];
             const todayStr = new Date().toISOString().substring(0, 10);
+            let html = '';
 
-            let notifs = [];
-
-            // 1. Notificaciones de Clases del Día (Individuales)
-            const todayClasses = students.filter(s => s.day === todayAbbr);
-            todayClasses.forEach(s => {
+            // Clases de hoy particulares
+            students.filter(s => s.day === todayAbbr).forEach(s => {
                 const key = `class_${todayStr}_${s.id}`;
-                notifs.push({
-                    key,
-                    type: 'class',
-                    title: `🎶 Clase Hoy: ${s.name}`,
-                    sub: `Hora: ${s.time || '08:00'} • ${s.instrument || 'Instrumento'}`,
-                    resolved: !!dismissedNotifications[key],
-                    studentName: s.name
-                });
+                if (!dismissedNotifications[key]) {
+                    html += `
+                        <div class="notification-card type-class">
+                            <div class="notif-info">
+                                <div class="notif-title">🎶 Clase de Hoy: ${s.name}</div>
+                                <div class="notif-sub">Hora: ${s.time} • Particular</div>
+                            </div>
+                            <button class="btn btn-small btn-outline" onclick="dismissNotif('${key}')">✓ Atender</button>
+                        </div>
+                    `;
+                }
             });
 
-            // Clases ocasionales de hoy
-            const todayOccasional = occasionalClasses.filter(o => o.date === todayStr);
-            todayOccasional.forEach(o => {
-                const key = `occ_${o.id}`;
-                notifs.push({
-                    key,
-                    type: 'class',
-                    title: `⭐ Clase Ocasional: ${o.name}`,
-                    sub: `Hora: ${o.time || '10:00'} • ${o.instrument || 'Extra'}`,
-                    resolved: !!dismissedNotifications[key],
-                    studentName: o.name
-                });
+            // Clases de hoy en escuelas
+            schools.filter(sc => sc.day === todayAbbr).forEach(sc => {
+                const key = `school_${todayStr}_${sc.id}`;
+                if (!dismissedNotifications[key]) {
+                    html += `
+                        <div class="notification-card type-class">
+                            <div class="notif-info">
+                                <div class="notif-title">🏫 Clase en Escuela: ${sc.name}</div>
+                                <div class="notif-sub">Hora: ${sc.time}</div>
+                            </div>
+                            <button class="btn btn-small btn-outline" onclick="dismissNotif('${key}')">✓ Atender</button>
+                        </div>
+                    `;
+                }
             });
 
-            // 2. Notificaciones de Mensualidades Pendientes (Individuales)
-            const uniqueNames = [...new Set(students.map(s => s.name))];
-            const uniqueList = uniqueNames.map(name => students.find(s => s.name === name));
-            
-            const pendingList = uniqueList.filter(s => {
-                if (s.paid) return false;
-                if (!s.dueDate) return true;
-                return s.dueDate <= todayStr;
+            // Mensualidades vencidas particulares
+            students.filter(s => !s.paid && s.dueDate && s.dueDate <= todayStr).forEach(s => {
+                const key = `pay_${s.name}_${s.dueDate}`;
+                if (!dismissedNotifications[key]) {
+                    html += `
+                        <div class="notification-card type-payment">
+                            <div class="notif-info">
+                                <div class="notif-title">⚠️ Cobro Pendiente: ${s.name}</div>
+                                <div class="notif-sub">Vence: ${s.dueDate} • $${(s.fee||0).toLocaleString()}</div>
+                            </div>
+                            <button class="btn btn-small btn-outline" onclick="dismissNotif('${key}')">✓ Atender</button>
+                        </div>
+                    `;
+                }
             });
 
-            pendingList.forEach(s => {
-                const key = `pay_${s.name}_${s.dueDate || 'nodate'}`;
-                notifs.push({
-                    key,
-                    type: 'payment',
-                    title: `⚠️ Cobro Pendiente: ${s.name}`,
-                    sub: `Monto: $${(s.fee || 0).toLocaleString()} • Vence: ${s.dueDate || 'Sin fecha'}`,
-                    resolved: !!dismissedNotifications[key],
-                    studentName: s.name
-                });
-            });
-
-            // Filtrar según la pestaña activa (Pendientes o Atendidas)
-            const visibleNotifs = notifs.filter(n => showResolvedNotifs ? n.resolved : !n.resolved);
-
-            if (visibleNotifs.length === 0) {
-                container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted); padding: 6px 0;">No hay avisos ${showResolvedNotifs ? 'atendidos' : 'pendientes'}.</p>`;
-                return;
-            }
-
-            container.innerHTML = visibleNotifs.map(n => `
-                <div class="notification-card ${n.type === 'class' ? 'type-class' : 'type-payment'}">
-                    <div class="notif-info">
-                        <div class="notif-title">${n.title}</div>
-                        <div class="notif-sub">${n.sub}</div>
-                    </div>
-                    <div class="notif-actions">
-                        ${n.type === 'payment' && !n.resolved ? `<button class="btn btn-small btn-whatsapp" onclick="sendWhatsAppPaymentReminder('${n.studentName}')">💬</button>` : ''}
-                        ${n.resolved ? 
-                            `<button class="btn btn-small btn-outline" onclick="restoreNotification('${n.key}')">↩ Restaurar</button>` :
-                            `<button class="btn btn-small btn-outline" onclick="dismissNotification('${n.key}')">✓ Listo</button>`
-                        }
-                    </div>
-                </div>
-            `).join('');
+            container.innerHTML = html || `<p style="font-size:0.78rem; color:var(--text-muted);">No hay avisos pendientes por ahora.</p>`;
         }
 
-        function toggleResolvedNotifsView() {
-            showResolvedNotifs = !showResolvedNotifs;
-            document.getElementById('toggleNotifBtn').innerText = showResolvedNotifs ? '📋 Ver Pendientes' : '📂 Atendidas';
-            checkNotifications();
-        }
-
-        function dismissNotification(key) {
+        function dismissNotif(key) {
             dismissedNotifications[key] = true;
             localStorage.setItem('dacapo_dismissed_notifs', JSON.stringify(dismissedNotifications));
             checkNotifications();
         }
 
-        function restoreNotification(key) {
-            delete dismissedNotifications[key];
-            localStorage.setItem('dacapo_dismissed_notifs', JSON.stringify(dismissedNotifications));
-            checkNotifications();
-        }
-
-        function changeWeek(direction) {
-            currentWeekOffset += direction;
-            renderWeekNavigator();
-        }
+        // NAVEGACIÓN SEMANAL Y AGENDA
+        function changeWeek(dir) { currentWeekOffset += dir; renderWeekNavigator(); }
 
         function renderWeekNavigator() {
             const curr = new Date();
             const first = curr.getDate() - curr.getDay() + (currentWeekOffset * 7);
-            
-            const startDate = new Date(curr.setDate(first));
-            const endDate = new Date(curr.setDate(first + 6));
-
-            const options = { month: 'short', day: 'numeric' };
+            const start = new Date(curr.setDate(first));
+            const end = new Date(curr.setDate(first + 6));
             document.getElementById('weekRangeDisplay').innerText = 
-                `${startDate.toLocaleDateString('es-ES', options)} – ${endDate.toLocaleDateString('es-ES', options)}`;
-
-            renderDaysCarousel(startDate);
+                `${start.toLocaleDateString('es-ES', {month:'short', day:'numeric'})} – ${end.toLocaleDateString('es-ES', {month:'short', day:'numeric'})}`;
+            renderDaysCarousel(start);
         }
 
         function renderDaysCarousel(startDate) {
             const carousel = document.getElementById('daysCarousel');
             let html = '';
-
             for (let i = 0; i < 7; i++) {
-                const dayDate = new Date(startDate);
-                dayDate.setDate(startDate.getDate() + i);
-                const dayAbbr = daysMap[dayDate.getDay()];
-                const dayNum = dayDate.getDate();
-                const dateStrFormatted = dayDate.toISOString().substring(0, 10);
-
-                const isSelected = (i === selectedDayIndex);
-
-                html += `
-                    <div class="day-chip ${isSelected ? 'active' : ''}" onclick="selectDay(${i}, '${dayAbbr}', '${dateStrFormatted}', '${dayDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}')">
-                        <span class="day-name">${dayAbbr}</span>
-                        <span class="day-num">${dayNum}</span>
-                        ${isSelected ? '<div class="day-dot"></div>' : ''}
-                    </div>
-                `;
+                const d = new Date(startDate);
+                d.setDate(startDate.getDate() + i);
+                const abbr = daysMap[d.getDay()];
+                const num = d.getDate();
+                const dStr = d.toISOString().substring(0, 10);
+                const isSel = (i === selectedDayIndex);
+                html += `<div class="day-chip ${isSel?'active':''}" onclick="selectDay(${i}, '${abbr}', '${dStr}')"><span class="day-name">${abbr}</span><span class="day-num">${num}</span></div>`;
             }
-
             carousel.innerHTML = html;
-            const targetDate = new Date(startDate);
-            targetDate.setDate(startDate.getDate() + selectedDayIndex);
-            selectDay(selectedDayIndex, daysMap[targetDate.getDay()], targetDate.toISOString().substring(0, 10), targetDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }));
+            const target = new Date(startDate);
+            target.setDate(startDate.getDate() + selectedDayIndex);
+            selectDay(selectedDayIndex, daysMap[target.getDay()], target.toISOString().substring(0, 10));
         }
 
-        function selectDay(index, dayAbbr, dateStr, fullTitle) {
-            selectedDayIndex = index;
-            selectedDateStr = dateStr;
-            selectedDayAbbr = dayAbbr;
-
-            document.querySelectorAll('.day-chip').forEach((chip, idx) => {
-                if (idx === index) chip.classList.add('active');
-                else chip.classList.remove('active');
-            });
-
-            document.getElementById('selectedDayTitle').innerText = fullTitle || `${dayAbbr}`;
-            renderClassesForDay(dayAbbr);
+        function selectDay(idx, abbr, dStr) {
+            selectedDayIndex = idx;
+            selectedDateStr = dStr;
+            selectedDayAbbr = abbr;
+            document.querySelectorAll('.day-chip').forEach((c, i) => c.classList.toggle('active', i === idx));
+            renderClassesForDay(abbr);
         }
 
-        function renderClassesForDay(dayAbbr) {
+        function renderClassesForDay(abbr) {
             const container = document.getElementById('classesListContainer');
-            const dayClasses = students.filter(s => s.day === dayAbbr);
-            const dayOccasional = occasionalClasses.filter(o => o.date === selectedDateStr);
+            const dayStudents = students.filter(s => s.day === abbr);
+            const daySchools = schools.filter(sc => sc.day === abbr);
+            const dayOcc = occasionalClasses.filter(o => o.date === selectedDateStr);
+            const total = dayStudents.length + daySchools.length + dayOcc.length;
 
-            const totalCount = dayClasses.length + dayOccasional.length;
-            document.getElementById('classesCountBadge').innerText = `${totalCount} clase(s)`;
-
-            if (totalCount === 0) {
-                container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-muted); padding: 10px 0;">No hay clases programadas para este día.</p>`;
-                return;
-            }
+            document.getElementById('classesCountBadge').innerText = `${total} clase(s)`;
+            if (total === 0) { container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-muted); padding:10px 0;">Sin clases este día.</p>`; return; }
 
             let html = '';
-
-            // Renderizar Clases Fijas con Swipe Revelador
-            html += dayClasses.map(s => `
-                <div class="class-card-container" id="container-${s.id}">
-                    <div class="class-card-swipe-menu">
-                        <button class="swipe-btn swipe-btn-present" onclick="executeSwipeAction('${s.id}', '${s.name}', 'Presente')">✓ Se hizo</button>
-                        <button class="swipe-btn swipe-btn-absent" onclick="executeSwipeAction('${s.id}', '${s.name}', 'Ausente')">✕ No fue</button>
-                    </div>
-                    <div class="class-card-content" id="card-${s.id}" 
-                         ontouchstart="handleTouchStart(event, 'card-${s.id}')" 
-                         ontouchmove="handleTouchMove(event, 'card-${s.id}')" 
-                         ontouchend="handleTouchEnd(event, 'card-${s.id}')"
-                         onmousedown="handleMouseDown(event, 'card-${s.id}')">
-                        <div class="class-icon-box">🎶</div>
-                        <div class="class-details">
-                            <div class="class-header-row">
-                                <span class="class-student-name">${s.name}</span>
-                                <span class="badge-fija">Fija • ${s.time || '08:00'}</span>
-                                ${s.paid ? '<span class="badge-paid">PAGADO</span>' : '<span class="badge-pending">PENDIENTE</span>'}
-                            </div>
-                            <div class="class-meta">
-                                <span>🕒 ${s.duration || '60'} min</span>
-                                <span>🎵 ${s.instrument || 'Otro'}</span>
-                                <span style="color:var(--accent-purple); font-weight:bold;">← Desliza →</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-
-            // Renderizar Clases Ocasionales
-            html += dayOccasional.map(o => `
-                <div class="class-card-container" id="container-occ-${o.id}">
-                    <div class="class-card-swipe-menu">
-                        <button class="swipe-btn swipe-btn-present" onclick="executeSwipeAction('${o.id}', '${o.name}', 'Presente')">✓ Se hizo</button>
-                        <button class="swipe-btn swipe-btn-absent" onclick="executeSwipeAction('${o.id}', '${o.name}', 'Ausente')">✕ No fue</button>
-                    </div>
-                    <div class="class-card-content" id="card-occ-${o.id}" 
-                         ontouchstart="handleTouchStart(event, 'card-occ-${o.id}')" 
-                         ontouchmove="handleTouchMove(event, 'card-occ-${o.id}')" 
-                         ontouchend="handleTouchEnd(event, 'card-occ-${o.id}')"
-                         onmousedown="handleMouseDown(event, 'card-occ-${o.id}')">
-                        <div class="class-icon-box" style="background:#2a2040;">⭐</div>
-                        <div class="class-details">
-                            <div class="class-header-row">
-                                <span class="class-student-name">${o.name}</span>
-                                <span class="badge-ocasional">Ocasional • ${o.time || '10:00'}</span>
-                                <button class="btn btn-small btn-danger" style="margin-left:auto; padding:2px 6px;" onclick="deleteOccasional('${o.id}')">🗑️</button>
-                            </div>
-                            <div class="class-meta">
-                                <span>🎵 ${o.instrument || 'Clase extra'}</span>
-                                <span style="color:var(--accent-purple); font-weight:bold;">← Desliza →</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-
+            dayStudents.forEach(s => {
+                html += buildSwipeCard(s.id, s.name, `Fija • ${s.time}`, `🕒 ${s.duration||60} min • 🎵 ${s.instrument||'Particular'}`, s.paid);
+            });
+            daySchools.forEach(sc => {
+                html += buildSwipeCard(sc.id, sc.name, `Escuela • ${sc.time}`, `🏫 Escuela registrada`, true);
+            });
+            dayOcc.forEach(o => {
+                html += buildSwipeCard(o.id, o.name, `Ocasional • ${o.time}`, `⭐ Clase extra`, true);
+            });
             container.innerHTML = html;
         }
 
-        /* LÓGICA DE SWIPE CON MANTENIMIENTO VISUAL DE BOTONES */
-        let startX = 0;
-        let currentTranslateX = 0;
-        let isDragging = false;
-        let activeCardElem = null;
-
-        function handleTouchStart(e, cardId) {
-            startX = e.touches[0].clientX;
-            activeCardElem = document.getElementById(cardId);
-            isDragging = true;
-            activeCardElem.style.transition = 'none';
+        // SWIPE ESTRICTO E INTENCIONAL (NO SE ACTIVA POR ERROR)
+        function buildSwipeCard(id, name, badgeText, metaText, isPaidOrSchool) {
+            return `
+                <div class="class-card-container" id="cont-${id}">
+                    <div class="class-card-swipe-menu">
+                        <button class="swipe-btn swipe-btn-present" onclick="registerAtt('${id}', '${name}', 'Presente')">✓ Se hizo</button>
+                        <button class="swipe-btn swipe-btn-absent" onclick="registerAtt('${id}', '${name}', 'Ausente')">✕ No fue</button>
+                    </div>
+                    <div class="class-card-content" id="card-${id}" 
+                         ontouchstart="swStart(event, 'card-${id}')" ontouchmove="swMove(event, 'card-${id}')" ontouchend="swEnd(event, 'card-${id}', '${id}', '${name}')">
+                        <div class="class-icon-box">🎵</div>
+                        <div class="class-details">
+                            <div class="class-header-row">
+                                <span class="class-student-name">${name}</span>
+                                <span class="badge-fija">${badgeText}</span>
+                            </div>
+                            <div class="class-meta"><span>${metaText}</span></div>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
-        function handleTouchMove(e, cardId) {
-            if (!isDragging || !activeCardElem) return;
-            const x = e.touches[0].clientX;
-            const diff = x - startX;
-
-            // Permitir deslizamiento hacia izquierda y derecha de hasta 120px
-            if (diff > -140 && diff < 140) {
-                activeCardElem.style.transform = `translateX(${diff}px)`;
-            }
+        let sX = 0, activeCard = null;
+        function swStart(e, cardId) {
+            sX = e.touches[0].clientX;
+            activeCard = document.getElementById(cardId);
+            activeCard.style.transition = 'none';
+        }
+        function swMove(e, cardId) {
+            if (!sX || !activeCard) return;
+            let diff = e.touches[0].clientX - sX;
+            if (diff > 120) diff = 120; if (diff < -120) diff = -120;
+            activeCard.style.transform = `translateX(${diff}px)`;
+        }
+        function swEnd(e, cardId, id, name) {
+            if (!sX || !activeCard) return;
+            let diff = e.changedTouches[0].clientX - sX;
+            activeCard.style.transition = 'transform 0.2s ease-out';
+            if (diff > 50) { activeCard.style.transform = 'translateX(100px)'; }
+            else if (diff < -50) { activeCard.style.transform = 'translateX(-100px)'; }
+            else { activeCard.style.transform = 'translateX(0px)'; }
+            sX = 0; activeCard = null;
         }
 
-        function handleTouchEnd(e, cardId) {
-            if (!isDragging || !activeCardElem) return;
-            isDragging = false;
-            const endX = e.changedTouches[0].clientX;
-            const diff = endX - startX;
-
-            activeCardElem.style.transition = 'transform 0.2s ease-out';
-
-            // Si el deslizamiento fue suficiente, dejar la tarjeta abierta revelando los botones
-            if (diff > 50) {
-                activeCardElem.style.transform = 'translateX(100px)'; // Revela botón izquierdo
-            } else if (diff < -50) {
-                activeCardElem.style.transform = 'translateX(-100px)'; // Revela botón derecho
-            } else {
-                activeCardElem.style.transform = 'translateX(0px)'; // Regresa a su centro
-            }
-        }
-
-        function handleMouseDown(e, cardId) {
-            startX = e.clientX;
-            activeCardElem = document.getElementById(cardId);
-            activeCardElem.style.transition = 'none';
-
-            function onMouseMove(ev) {
-                const diff = ev.clientX - startX;
-                if (diff > -140 && diff < 140) {
-                    activeCardElem.style.transform = `translateX(${diff}px)`;
-                }
-            }
-
-            function onMouseUp(ev) {
-                const diff = ev.clientX - startX;
-                activeCardElem.style.transition = 'transform 0.2s ease-out';
-                if (diff > 50) {
-                    activeCardElem.style.transform = 'translateX(100px)';
-                } else if (diff < -50) {
-                    activeCardElem.style.transform = 'translateX(-100px)';
-                } else {
-                    activeCardElem.style.transform = 'translateX(0px)';
-                }
-                window.removeEventListener('mousemove', onMouseMove);
-                window.removeEventListener('mouseup', onMouseUp);
-            }
-
-            window.addEventListener('mousemove', onMouseMove);
-            window.addEventListener('mouseup', onMouseUp);
-        }
-
-        function executeSwipeAction(id, studentName, status) {
-            // Guardar la asistencia
-            quickMarkAttendance(id, studentName, status);
-
-            // Cerrar la tarjeta deslizante
-            const card = document.getElementById(`card-${id}`) || document.getElementById(`card-occ-${id}`);
-            if (card) {
-                card.style.transition = 'transform 0.2s ease-out';
-                card.style.transform = 'translateX(0px)';
-            }
-        }
-
-        function quickMarkAttendance(studentId, studentName, status) {
-            const record = { id: Date.now().toString(), studentId, studentName: `${studentName}`, date: selectedDateStr, status };
-
-            attendances.unshift(record);
+        function registerAtt(id, name, status) {
+            const rec = { id: Date.now().toString(), studentId: id, studentName: name, date: selectedDateStr, status };
+            attendances.unshift(rec);
             localStorage.setItem('dacapo_attendances', JSON.stringify(attendances));
-
-            if (db) db.collection("attendances").doc(record.id).set(record);
-
-            renderAttendanceHistory();
-            renderStudents();
-            alert(`Asistencia registrada: ${studentName} - ${status} (${selectedDateStr})`);
+            if (db) db.collection("attendances").doc(rec.id).set(rec);
+            renderAttendanceHistory(); renderStudents(); renderSchools();
+            alert(`Registrado: ${name} - ${status}`);
         }
 
-        function switchTab(tabId, btn) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById(`tab-${tabId}`).classList.add('active');
-            btn.classList.add('active');
+        // GESTIÓN DE ESCUELAS Y PAGOS VARIABLES
+        function openSchoolModal(id = null) {
+            if (id) {
+                const sc = schools.find(item => item.id === id);
+                if (sc) {
+                    document.getElementById('modalSchoolTitle').innerText = "Editar Escuela";
+                    document.getElementById('editingSchoolId').value = sc.id;
+                    document.getElementById('schoolName').value = sc.name;
+                    document.getElementById('schoolDay').value = sc.day || 'LUN';
+                    document.getElementById('schoolTime').value = sc.time || '09:00';
+                    document.getElementById('schoolDueDate').value = sc.dueDate || '';
+                    document.getElementById('schoolPaidAmount').value = sc.lastPaidAmount || '';
+                }
+            } else {
+                document.getElementById('modalSchoolTitle').innerText = "Registrar Clase en Escuela";
+                document.getElementById('editingSchoolId').value = "";
+                document.getElementById('schoolName').value = "";
+                document.getElementById('schoolDueDate').value = new Date().toISOString().substring(0, 10);
+                document.getElementById('schoolPaidAmount').value = "";
+            }
+            document.getElementById('schoolModal').classList.add('active');
+        }
+        function closeSchoolModal() { document.getElementById('schoolModal').classList.remove('active'); }
+
+        function saveSchool() {
+            const id = document.getElementById('editingSchoolId').value;
+            const name = document.getElementById('schoolName').value.trim();
+            const day = document.getElementById('schoolDay').value;
+            const time = document.getElementById('schoolTime').value;
+            const dueDate = document.getElementById('schoolDueDate').value;
+            const lastPaidAmount = parseFloat(document.getElementById('schoolPaidAmount').value) || 0;
+
+            if (!name) return alert("Ingresa el nombre de la escuela.");
+
+            const schoolObj = { id: id || Date.now().toString(), name, day, time, dueDate, lastPaidAmount };
+            if (id) {
+                const idx = schools.findIndex(s => s.id === id);
+                if (idx !== -1) schools[idx] = schoolObj;
+            } else { schools.push(schoolObj); }
+
+            localStorage.setItem('dacapo_schools', JSON.stringify(schools));
+            if (db) db.collection("schools").doc(schoolObj.id).set(schoolObj);
+
+            renderSchools(); renderWeekNavigator(); populateAttendanceDropdown(); closeSchoolModal(); checkNotifications();
         }
 
-        function openCloudModal() { document.getElementById('cloudModal').classList.add('active'); }
-        function closeCloudModal() { document.getElementById('cloudModal').classList.remove('active'); }
-        
+        function renderSchools() {
+            const container = document.getElementById('schoolsListContainer');
+            if (schools.length === 0) { container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted);">Sin escuelas registradas.</p>`; return; }
+
+            const currMonth = new Date().toISOString().substring(0, 7);
+
+            container.innerHTML = schools.map(sc => {
+                const count = attendances.filter(a => a.studentName === sc.name && a.date && a.date.startsWith(currMonth) && a.status === 'Presente').length;
+                return `
+                    <div class="card" style="margin-bottom:12px;">
+                        <div class="flex-between">
+                            <span class="class-student-name">🏫 ${sc.name}</span>
+                            <span style="font-weight:700; color:var(--success);">$${(sc.lastPaidAmount||0).toLocaleString()} <span style="font-size:0.7rem; color:var(--text-muted); font-weight:normal;">(Pago registrado)</span></span>
+                        </div>
+                        <div class="class-meta" style="margin-top:6px;">
+                            <span>⏰ Día: ${sc.day} (${sc.time})</span>
+                            <span>📅 Próx. Pago: ${sc.dueDate || 'N/A'}</span>
+                            <span>✔ Clases este mes: <strong>${count}</strong></span>
+                        </div>
+                        <div class="actions-group" style="margin-top:10px;">
+                            <button class="btn btn-small btn-outline" onclick="openSchoolModal('${sc.id}')">✏️ Editar / Registrar Pago</button>
+                            <button class="btn btn-small btn-danger" onclick="deleteSchool('${sc.id}')">🗑️ Eliminar</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function deleteSchool(id) {
+            if (confirm("¿Eliminar esta escuela?")) {
+                schools = schools.filter(s => s.id !== id);
+                localStorage.setItem('dacapo_schools', JSON.stringify(schools));
+                if (db) db.collection("schools").doc(id).delete();
+                renderSchools(); renderWeekNavigator(); populateAttendanceDropdown(); checkNotifications();
+            }
+        }
+
+        // ALUMNOS PARTICULARES
         function openStudentModal(id = null) {
             if (id) {
                 const s = students.find(item => item.id === id);
                 if (s) {
-                    document.getElementById('modalStudentTitle').innerText = "Editar Clase Fija / Alumno";
+                    document.getElementById('modalStudentTitle').innerText = "Editar Alumno";
                     document.getElementById('editingStudentId').value = s.id;
                     document.getElementById('studentName').value = s.name;
                     document.getElementById('studentPhone').value = s.phone || '';
                     document.getElementById('studentInstrument').value = s.instrument || '';
                     document.getElementById('studentDay').value = s.day || 'LUN';
                     document.getElementById('studentTime').value = s.time || '08:00';
-                    document.getElementById('studentDuration').value = s.duration || '60';
                     document.getElementById('studentFee').value = s.fee || '';
                     document.getElementById('studentDueDate').value = s.dueDate || '';
                 }
             } else {
-                document.getElementById('modalStudentTitle').innerText = "Agregar Clase Fija al Alumno";
+                document.getElementById('modalStudentTitle').innerText = "Agregar Alumno Particular";
                 document.getElementById('editingStudentId').value = "";
                 document.getElementById('studentName').value = "";
-                document.getElementById('studentPhone').value = "";
-                document.getElementById('studentInstrument').value = "";
-                document.getElementById('studentFee').value = "";
                 document.getElementById('studentDueDate').value = new Date().toISOString().substring(0, 10);
             }
             document.getElementById('studentModal').classList.add('active');
         }
-
         function closeStudentModal() { document.getElementById('studentModal').classList.remove('active'); }
-
-        function openOccasionalModal() {
-            document.getElementById('occDate').value = selectedDateStr;
-            document.getElementById('occasionalModal').classList.add('active');
-        }
-
-        function closeOccasionalModal() { document.getElementById('occasionalModal').classList.remove('active'); }
-
-        function saveOccasionalClass() {
-            const name = document.getElementById('occName').value.trim();
-            const date = document.getElementById('occDate').value;
-            const time = document.getElementById('occTime').value;
-            const instrument = document.getElementById('occInstrument').value.trim();
-
-            if (!name || !date) return alert("Completa el nombre y la fecha de la clase ocasional.");
-
-            const newOcc = { id: Date.now().toString(), name, date, time, instrument };
-            occasionalClasses.push(newOcc);
-            localStorage.setItem('dacapo_occasional', JSON.stringify(occasionalClasses));
-
-            if (db) db.collection("occasional").doc(newOcc.id).set(newOcc);
-
-            renderClassesForDay(selectedDayAbbr);
-            checkNotifications();
-            closeOccasionalModal();
-            alert("Clase ocasional agregada exitosamente.");
-        }
-
-        function deleteOccasional(id) {
-            if (confirm("¿Deseas eliminar esta clase ocasional?")) {
-                occasionalClasses = occasionalClasses.filter(o => o.id !== id);
-                localStorage.setItem('dacapo_occasional', JSON.stringify(occasionalClasses));
-                if (db) db.collection("occasional").doc(id).delete();
-                renderClassesForDay(selectedDayAbbr);
-                checkNotifications();
-            }
-        }
-
-        function populateSuggestionsList() {
-            const datalist = document.getElementById('studentsSuggestions');
-            const uniqueNames = [...new Set(students.map(s => s.name))];
-            datalist.innerHTML = uniqueNames.map(name => `<option value="${name}">`).join('');
-        }
-
-        function suggestStudentData(nameVal) {
-            const found = students.find(s => s.name.toLowerCase() === nameVal.trim().toLowerCase());
-            if (found) {
-                document.getElementById('studentPhone').value = found.phone || '';
-                document.getElementById('studentInstrument').value = found.instrument || '';
-                document.getElementById('studentFee').value = found.fee || '';
-                document.getElementById('studentDuration').value = found.duration || '60';
-                document.getElementById('studentDueDate').value = found.dueDate || '';
-            }
-        }
 
         function saveStudent() {
             const id = document.getElementById('editingStudentId').value;
@@ -1436,256 +1212,145 @@
             const instrument = document.getElementById('studentInstrument').value.trim();
             const day = document.getElementById('studentDay').value;
             const time = document.getElementById('studentTime').value;
-            const duration = document.getElementById('studentDuration').value;
             const fee = parseFloat(document.getElementById('studentFee').value) || 0;
             const dueDate = document.getElementById('studentDueDate').value;
 
-            if (!name) return alert("Ingresa el nombre del alumno.");
-
+            if (!name) return alert("Ingresa el nombre.");
+            const studentObj = { id: id || Date.now().toString(), name, phone, instrument, day, time, fee, dueDate, paid: false };
+            
             if (id) {
                 const idx = students.findIndex(s => s.id === id);
-                if (idx !== -1) {
-                    students[idx] = { ...students[idx], name, phone, instrument, day, time, duration, fee, dueDate };
-                    if (db) db.collection("students").doc(id).set(students[idx]);
-                }
-            } else {
-                const newStudent = { id: Date.now().toString(), name, phone, instrument, day, time, duration, fee, dueDate, paid: false };
-                students.push(newStudent);
-                if (db) db.collection("students").doc(newStudent.id).set(newStudent);
-            }
+                if (idx !== -1) studentObj.paid = students[idx].paid;
+                students[idx] = studentObj;
+            } else { students.push(studentObj); }
 
             localStorage.setItem('dacapo_students', JSON.stringify(students));
+            if (db) db.collection("students").doc(studentObj.id).set(studentObj);
 
-            renderStudents();
-            renderWeekNavigator();
-            populateAttendanceDropdown();
-            populateSuggestionsList();
-            closeStudentModal();
-            checkNotifications();
-        }
-
-        function togglePaymentStatusByName(studentName) {
-            const isCurrentlyPaid = students.find(s => s.name.toLowerCase() === studentName.toLowerCase() && s.paid);
-            const newStatus = !isCurrentlyPaid;
-
-            if (confirm(`¿Deseas marcar la mensualidad de ${studentName} como ${newStatus ? 'PAGADA' : 'PENDIENTE'}?`)) {
-                students.forEach(s => {
-                    if (s.name.toLowerCase() === studentName.toLowerCase()) {
-                        s.paid = newStatus;
-                        if (db) db.collection("students").doc(s.id).update({ paid: newStatus });
-                    }
-                });
-                localStorage.setItem('dacapo_students', JSON.stringify(students));
-                renderStudents();
-                renderWeekNavigator();
-                checkNotifications();
-            }
-        }
-
-        function sendWhatsAppPaymentReminder(studentName) {
-            const student = students.find(s => s.name.toLowerCase() === studentName.toLowerCase());
-            if (!student || !student.phone) {
-                return alert("El alumno no tiene registrado un número de teléfono/WhatsApp.");
-            }
-            const phoneClean = student.phone.replace(/[^0-9+]/g, '');
-            let template = document.getElementById('templateCobro').value;
-            let messageText = template
-                .replace('{nombre}', student.name)
-                .replace('{monto}', (student.fee || 0).toLocaleString())
-                .replace('{vencimiento}', student.dueDate || 'pronto');
-
-            window.open(`https://wa.me/${phoneClean}?text=${encodeURIComponent(messageText)}`, '_blank');
+            renderStudents(); renderWeekNavigator(); populateAttendanceDropdown(); closeStudentModal(); checkNotifications();
         }
 
         function renderStudents() {
             const container = document.getElementById('studentsListContainer');
-            const query = document.getElementById('searchStudent').value.toLowerCase();
-            
-            const uniqueStudentNames = [...new Set(students.map(s => s.name))];
-            const uniqueStudentsList = uniqueStudentNames.map(name => students.find(s => s.name === name));
+            const q = document.getElementById('searchStudent').value.toLowerCase();
+            const filtered = students.filter(s => s.name.toLowerCase().includes(q));
 
-            const filtered = uniqueStudentsList.filter(s => s.name.toLowerCase().includes(query));
+            const total = students.reduce((acc, s) => acc + (parseFloat(s.fee) || 0), 0);
+            const paid = students.filter(s => s.paid).reduce((acc, s) => acc + (parseFloat(s.fee) || 0), 0);
+            document.getElementById('totalFeeDisplay').innerText = `$${total.toLocaleString()}`;
+            document.getElementById('paidSummaryDisplay').innerText = `Cobrado: $${paid.toLocaleString()} | Pendiente: $${(total-paid).toLocaleString()}`;
 
-            const totalFee = uniqueStudentsList.reduce((sum, s) => sum + (parseFloat(s.fee) || 0), 0);
-            const paidTotal = uniqueStudentsList.filter(s => s.paid).reduce((sum, s) => sum + (parseFloat(s.fee) || 0), 0);
-            const pendingTotal = totalFee - paidTotal;
+            if (filtered.length === 0) { container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted);">Sin alumnos.</p>`; return; }
 
-            document.getElementById('totalFeeDisplay').innerText = `$${totalFee.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
-            document.getElementById('paidSummaryDisplay').innerText = `Cobrado: $${paidTotal.toLocaleString()} | Pendiente: $${pendingTotal.toLocaleString()}`;
-
-            if (filtered.length === 0) {
-                container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted);">No hay alumnos registrados.</p>`;
-                return;
-            }
-
-            const currentMonthPrefix = new Date().toISOString().substring(0, 7);
+            const currMonth = new Date().toISOString().substring(0, 7);
 
             container.innerHTML = filtered.map(s => {
-                const studentClasses = students.filter(st => st.name.toLowerCase() === s.name.toLowerCase());
-                const scheduleText = studentClasses.map(sc => `${sc.day} (${sc.time})`).join(' • ');
-
-                const monthClassesCount = attendances.filter(a => {
-                    const matchesName = a.studentName && a.studentName.toLowerCase().includes(s.name.toLowerCase());
-                    const matchesMonth = a.date && a.date.startsWith(currentMonthPrefix);
-                    const isPresent = a.status === 'Presente';
-                    return matchesName && matchesMonth && isPresent;
-                }).length;
-
+                const count = attendances.filter(a => a.studentName === s.name && a.date && a.date.startsWith(currMonth) && a.status === 'Presente').length;
                 return `
                     <div class="card" style="margin-bottom:10px; padding:14px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div class="flex-between">
                             <div>
                                 <span class="class-student-name">${s.name}</span>
                                 ${s.paid ? '<span class="badge-paid" style="margin-left:6px;">PAGADO</span>' : '<span class="badge-pending" style="margin-left:6px;">PENDIENTE</span>'}
                             </div>
-                            <div style="font-weight:700; color:var(--success); font-size:1.1rem;">
-                                $${(parseFloat(s.fee) || 0).toLocaleString()} <span style="font-size:0.7rem; color:var(--text-muted); font-weight:normal;">/mes</span>
-                            </div>
+                            <span style="font-weight:700; color:var(--success);">$${(s.fee||0).toLocaleString()}</span>
                         </div>
                         <div class="class-meta" style="margin-top:6px;">
-                            <span>🎵 ${s.instrument || 'Otro'}</span>
-                            <span>📅 Vence: ${s.dueDate || 'No asignada'}</span>
-                            <span>✔ Clases este mes: <strong>${monthClassesCount}</strong></span>
-                            <span>⏰ ${scheduleText}</span>
+                            <span>🎵 ${s.instrument || 'Particular'}</span>
+                            <span>📅 Vence: ${s.dueDate || 'N/A'}</span>
+                            <span>✔ Clases este mes: <strong>${count}</strong></span>
                         </div>
-                        <div class="actions-group">
-                            <button class="btn btn-small btn-outline" onclick="openStudentModal('${s.id}')">➕ Editar/Día</button>
-                            <button class="btn btn-small btn-outline" onclick="togglePaymentStatusByName('${s.name}')">${s.paid ? '🔴 Marcar Pendiente' : '🟢 Marcar Pagado'}</button>
-                            ${!s.paid ? `<button class="btn btn-small btn-whatsapp" onclick="sendWhatsAppPaymentReminder('${s.name}')">💬 WhatsApp Cobro</button>` : ''}
-                            <button class="btn btn-small btn-danger" onclick="deleteStudentByName('${s.name}')">🗑️ Eliminar</button>
+                        <div class="actions-group" style="margin-top:8px;">
+                            <button class="btn btn-small btn-outline" onclick="openStudentModal('${s.id}')">✏️ Editar</button>
+                            <button class="btn btn-small btn-outline" onclick="togglePay('${s.id}')">${s.paid ? '🔴 Pendiente' : '🟢 Pagado'}</button>
+                            <button class="btn btn-small btn-danger" onclick="deleteStudent('${s.id}')">🗑️</button>
                         </div>
                     </div>
                 `;
             }).join('');
         }
 
-        function deleteStudentByName(name) {
-            if (confirm(`¿Deseas eliminar a ${name} y todos sus horarios de clase registrados?`)) {
-                const idsToDelete = students.filter(s => s.name.toLowerCase() === name.toLowerCase()).map(s => s.id);
-                students = students.filter(s => s.name.toLowerCase() !== name.toLowerCase());
+        function togglePay(id) {
+            const s = students.find(item => item.id === id);
+            if (s) {
+                s.paid = !s.paid;
                 localStorage.setItem('dacapo_students', JSON.stringify(students));
-                
-                if (db) {
-                    idsToDelete.forEach(id => db.collection("students").doc(id).delete());
-                }
-
-                renderStudents();
-                renderWeekNavigator();
-                populateAttendanceDropdown();
-                populateSuggestionsList();
-                checkNotifications();
+                if (db) db.collection("students").doc(id).update({ paid: s.paid });
+                renderStudents(); checkNotifications();
             }
         }
 
-        function populateAttendanceDropdown() {
-            const select = document.getElementById('attendanceStudentSelect');
-            if (students.length === 0) { select.innerHTML = `<option value="">Sin registros</option>`; return; }
-            select.innerHTML = students.map(s => `<option value="${s.id}">${s.name} (${s.day} - ${s.time})</option>`).join('');
+        function deleteStudent(id) {
+            if (confirm("¿Eliminar alumno?")) {
+                students = students.filter(s => s.id !== id);
+                localStorage.setItem('dacapo_students', JSON.stringify(students));
+                if (db) db.collection("students").doc(id).delete();
+                renderStudents(); renderWeekNavigator(); populateAttendanceDropdown(); checkNotifications();
+            }
         }
 
+        // CLASES OCASIONALES
+        function openOccasionalModal() { document.getElementById('occasionalModal').classList.add('active'); }
+        function closeOccasionalModal() { document.getElementById('occasionalModal').classList.remove('active'); }
+        function saveOccasionalClass() {
+            const name = document.getElementById('occName').value.trim();
+            const date = document.getElementById('occDate').value;
+            const time = document.getElementById('occTime').value;
+            if (!name || !date) return alert("Completa los campos");
+            const occ = { id: Date.now().toString(), name, date, time };
+            occasionalClasses.push(occ);
+            localStorage.setItem('dacapo_occasional', JSON.stringify(occasionalClasses));
+            if (db) db.collection("occasional").doc(occ.id).set(occ);
+            renderClassesForDay(selectedDayAbbr); closeOccasionalModal(); checkNotifications();
+        }
+
+        // ASISTENCIA
+        function populateAttendanceDropdown() {
+            const sel = document.getElementById('attendanceStudentSelect');
+            let opts = students.map(s => `<option value="${s.name}">Particular: ${s.name}</option>`);
+            opts = opts.concat(schools.map(sc => `<option value="${sc.name}">Escuela: ${sc.name}</option>`));
+            sel.innerHTML = opts.join('') || `<option value="">Sin registros</option>`;
+        }
         function saveAttendance() {
             const date = document.getElementById('attendanceDate').value;
-            const studentId = document.getElementById('attendanceStudentSelect').value;
+            const name = document.getElementById('attendanceStudentSelect').value;
             const status = document.getElementById('attendanceStatusSelect').value;
-
-            if (!studentId || !date) return alert("Selecciona alumno y fecha.");
-
-            const student = students.find(s => s.id === studentId);
-            const record = { id: Date.now().toString(), studentId, studentName: student ? `${student.name}` : 'Alumno', date, status };
-
-            attendances.unshift(record);
+            if (!name || !date) return alert("Selecciona datos");
+            const rec = { id: Date.now().toString(), studentName: name, date, status };
+            attendances.unshift(rec);
             localStorage.setItem('dacapo_attendances', JSON.stringify(attendances));
-
-            if (db) db.collection("attendances").doc(record.id).set(record);
-
-            renderAttendanceHistory();
-            renderStudents();
-            alert("Asistencia guardada correctamente.");
+            if (db) db.collection("attendances").doc(rec.id).set(rec);
+            renderAttendanceHistory(); renderStudents(); renderSchools(); alert("Asistencia guardada.");
         }
-
-        function sendCustomAttendanceWhatsApp() {
-            const date = document.getElementById('attendanceDate').value;
-            const studentId = document.getElementById('attendanceStudentSelect').value;
-            const status = document.getElementById('attendanceStatusSelect').value;
-
-            if (!studentId || !date) return alert("Selecciona un alumno y una fecha.");
-
-            const student = students.find(s => s.id === studentId);
-            if (!student || !student.phone) {
-                return alert("El alumno seleccionado no tiene un número de teléfono/WhatsApp registrado.");
-            }
-
-            const phoneClean = student.phone.replace(/[^0-9+]/g, '');
-            let template = document.getElementById('templateAsistencia').value;
-            let messageText = template
-                .replace('{nombre}', student.name)
-                .replace('{fecha}', date)
-                .replace('{estado}', status);
-
-            window.open(`https://wa.me/${phoneClean}?text=${encodeURIComponent(messageText)}`, '_blank');
-        }
-
         function renderAttendanceHistory() {
             const container = document.getElementById('attendanceHistoryContainer');
             if (attendances.length === 0) { container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted);">Sin asistencias.</p>`; return; }
-
             container.innerHTML = attendances.slice(0, 15).map(a => `
-                <div class="card" style="padding:10px 14px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
-                    <div class="class-details">
-                        <div class="class-student-name">${a.studentName}</div>
-                        <div class="class-meta"><span>📅 ${a.date}</span></div>
-                    </div>
-                    <div>
-                        <span class="badge-fija" style="background:#222; color:#fff; margin-right:6px;">${a.status}</span>
-                        <button class="btn btn-small btn-danger" onclick="deleteAttendance('${a.id}')">🗑️</button>
-                    </div>
+                <div class="card" style="padding:10px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+                    <div><strong>${a.studentName}</strong><div style="font-size:0.75rem; color:var(--text-muted);">${a.date}</div></div>
+                    <span class="badge-fija" style="background:#222; color:#fff;">${a.status}</span>
                 </div>
             `).join('');
         }
-
-        function deleteAttendance(id) {
-            if (confirm("¿Deseas eliminar este registro de asistencia?")) {
-                attendances = attendances.filter(a => a.id !== id);
-                localStorage.setItem('dacapo_attendances', JSON.stringify(attendances));
-                if (db) db.collection("attendances").doc(id).delete();
-                renderAttendanceHistory();
-                renderStudents();
-            }
-        }
-
         function clearOldAttendances() {
-            if (confirm("¿Estás seguro de eliminar todo el historial de asistencias antiguo?")) {
-                const idsToDelete = attendances.map(a => a.id);
-                attendances = [];
-                localStorage.removeItem('dacapo_attendances');
-                if (db) {
-                    idsToDelete.forEach(id => db.collection("attendances").doc(id).delete());
-                }
-                renderAttendanceHistory();
-                renderStudents();
-            }
+            if (confirm("¿Borrar historial?")) { attendances = []; localStorage.removeItem('dacapo_attendances'); renderAttendanceHistory(); renderStudents(); }
         }
 
+        function switchTab(id, btn) {
+            document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(e => e.classList.remove('active'));
+            document.getElementById(`tab-${id}`).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        function openCloudModal() { document.getElementById('cloudModal').classList.add('active'); }
+        function closeCloudModal() { document.getElementById('cloudModal').classList.remove('active'); }
         function exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ students, occasionalClasses, attendances }));
-            const anchor = document.createElement('a');
-            anchor.setAttribute("href", dataStr);
-            anchor.setAttribute("download", `dacapo_respaldo.json`);
-            document.body.appendChild(anchor);
-            anchor.click();
-            anchor.remove();
+            const blob = new Blob([JSON.stringify({students, schools, occasionalClasses, attendances})], {type: 'application/json'});
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'dacapo_respaldo.json'; a.click();
         }
-
         function clearLocalData() {
-            if (confirm("¿Borrar datos locales? No borrará la nube.")) {
-                localStorage.removeItem('dacapo_students');
-                localStorage.removeItem('dacapo_occasional');
-                localStorage.removeItem('dacapo_attendances');
-                localStorage.removeItem('dacapo_dismissed_notifs');
-                students = []; occasionalClasses = []; attendances = []; dismissedNotifications = {};
-                renderStudents(); renderWeekNavigator(); renderAttendanceHistory();
-                checkNotifications();
-            }
+            if (confirm("¿Limpiar datos locales?")) { localStorage.clear(); location.reload(); }
         }
     </script>
 </body>
