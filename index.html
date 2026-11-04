@@ -114,7 +114,6 @@
             color: #ffffff;
         }
 
-        /* CENTRO DE NOTIFICACIONES REORGANIZADO */
         .notification-card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -275,56 +274,56 @@
             color: var(--text-muted);
         }
 
-        /* TARJETA DE CLASE CON CONTENEDOR DESLIZABLE (SWIPE REAL) */
-        .class-card-wrapper {
-            position: relative;
-            margin-bottom: 10px;
-            border-radius: 12px;
-            overflow: hidden;
+        /* CONTENEDOR DE TARJETA CON EFECTO SWIPE / MENÚ DESLIZABLE */
+        .class-card-container {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            position: relative;
         }
 
-        .class-card-actions-bg {
+        .class-card-content {
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--card-bg);
+            position: relative;
+            z-index: 2;
+            transition: transform 0.25s ease;
+        }
+
+        /* Barra de acciones oculta que aparece al deslizar */
+        .class-card-swipe-menu {
             position: absolute;
             top: 0; bottom: 0; left: 0; right: 0;
+            background: #1a1528;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 16px;
-            background: #1a1a1a;
+            padding: 0 15px;
             z-index: 1;
         }
 
-        .bg-action-btn {
-            font-size: 0.8rem;
-            font-weight: 700;
+        .swipe-btn {
             padding: 6px 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
             border-radius: 6px;
             border: none;
             cursor: pointer;
         }
 
-        .bg-action-present {
+        .swipe-btn-present {
             background: var(--success);
             color: #000;
         }
 
-        .bg-action-absent {
+        .swipe-btn-absent {
             background: var(--danger);
             color: #fff;
-        }
-
-        .class-card {
-            background: var(--card-bg);
-            padding: 14px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            position: relative;
-            z-index: 2;
-            transition: transform 0.2s ease;
-            touch-action: pan-y;
         }
 
         .class-icon-box {
@@ -348,6 +347,7 @@
             align-items: center;
             gap: 6px;
             margin-bottom: 3px;
+            flex-wrap: wrap;
         }
 
         .class-student-name {
@@ -603,7 +603,6 @@
     <div class="container">
         <!-- AGENDA -->
         <section id="tab-agenda" class="tab-content active">
-            <!-- CENTRO DE NOTIFICACIONES MEJORADO -->
             <div id="notificationsContainer"></div>
 
             <div class="subtabs">
@@ -766,7 +765,7 @@
         </div>
     </div>
 
-    <!-- MODAL EDITAR / CREAR CLASE FIJA -->
+    <!-- MODAL CLASE FIJA -->
     <div class="modal" id="studentModal">
         <div class="modal-body">
             <div class="flex-between">
@@ -1002,7 +1001,7 @@
                 htmlClasses += `
                     <div class="notification-card pending-alert">
                         <div class="notification-header">
-                            <span class="notification-title">🔔 Clases Programadas para Hoy (${todayAbbr})</span>
+                            <span class="notification-title">🔔 Clases de Hoy (${todayAbbr})</span>
                             <span style="font-size:0.7rem; color:var(--warning);">Pendiente</span>
                         </div>
                         <div class="notification-body">${combined}</div>
@@ -1147,14 +1146,15 @@
 
             let html = '';
 
-            // Renderizar Clases Fijas
+            // Renderizar Clases Fijas con interacción Swipe Suave
             html += dayClasses.map(s => `
-                <div class="class-card-wrapper" id="card-${s.id}">
-                    <div class="class-card-actions-bg">
-                        <button class="bg-action-btn bg-action-present" onclick="quickMarkAttendance('${s.id}', '${s.name}', 'Presente')">✓ Se hizo</button>
-                        <button class="bg-action-btn bg-action-absent" onclick="quickMarkAttendance('${s.id}', '${s.name}', 'Ausente')">✕ No fue</button>
+                <div class="class-card-container" id="container-${s.id}">
+                    <div class="class-card-swipe-menu">
+                        <button class="swipe-btn swipe-btn-present" onclick="quickMarkAttendance('${s.id}', '${s.name}', 'Presente')">✓ Se hizo</button>
+                        <span style="font-size:0.75rem; color:var(--text-muted);">Desliza o presiona</span>
+                        <button class="swipe-btn swipe-btn-absent" onclick="quickMarkAttendance('${s.id}', '${s.name}', 'Ausente')">✕ No fue</button>
                     </div>
-                    <div class="class-card" onmousedown="initSwipe(event, 'card-${s.id}')" ontouchstart="initSwipe(event, 'card-${s.id}')">
+                    <div class="class-card-content" id="card-${s.id}" ontouchstart="touchStart(event, 'card-${s.id}')" ontouchmove="touchMove(event, 'card-${s.id}')" ontouchend="touchEnd(event, 'card-${s.id}', '${s.id}', '${s.name}')" onmousedown="mouseStart(event, 'card-${s.id}')">
                         <div class="class-icon-box">🎶</div>
                         <div class="class-details">
                             <div class="class-header-row">
@@ -1173,13 +1173,13 @@
 
             // Renderizar Clases Ocasionales
             html += dayOccasional.map(o => `
-                <div class="class-card-wrapper" id="card-occ-${o.id}">
-                    <div class="class-card-actions-bg">
-                        <button class="bg-action-btn bg-action-present" onclick="quickMarkAttendance('${o.id}', '${o.name}', 'Presente')">✓ Se hizo</button>
-                        <button class="bg-action-btn bg-action-absent" onclick="quickMarkAttendance('${o.id}', '${o.name}', 'Ausente')">✕ No fue</button>
-                        <button class="bg-action-btn" style="background:#ff4444; color:#fff;" onclick="deleteOccasional('${o.id}')">🗑️</button>
+                <div class="class-card-container" id="container-occ-${o.id}">
+                    <div class="class-card-swipe-menu">
+                        <button class="swipe-btn swipe-btn-present" onclick="quickMarkAttendance('${o.id}', '${o.name}', 'Presente')">✓ Se hizo</button>
+                        <button class="swipe-btn swipe-btn-absent" onclick="quickMarkAttendance('${o.id}', '${o.name}', 'Ausente')">✕ No fue</button>
+                        <button class="swipe-btn btn-danger" onclick="deleteOccasional('${o.id}')">🗑️ Borrar</button>
                     </div>
-                    <div class="class-card" onmousedown="initSwipe(event, 'card-occ-${o.id}')" ontouchstart="initSwipe(event, 'card-occ-${o.id}')">
+                    <div class="class-card-content" id="card-occ-${o.id}" ontouchstart="touchStart(event, 'card-occ-${o.id}')" ontouchmove="touchMove(event, 'card-occ-${o.id}')" ontouchend="touchEnd(event, 'card-occ-${o.id}', '${o.id}', '${o.name}')" onmousedown="mouseStart(event, 'card-occ-${o.id}')">
                         <div class="class-icon-box" style="background:#2a2040;">⭐</div>
                         <div class="class-details">
                             <div class="class-header-row">
@@ -1197,35 +1197,75 @@
             container.innerHTML = html;
         }
 
-        // CONTROL DE DESLIZAMIENTO LATERAL (SWIPE REAL)
-        function initSwipe(e, cardId) {
-            const cardElem = document.querySelector(`#${cardId} .class-card`);
-            const startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
-            let currentX = startX;
+        /* CONTROLADOR TÁCTIL Y MOUSE PARA DESLIZAMIENTO FLUIDO (SWIPE) */
+        let touchStartX = 0;
+        let activeCardId = null;
 
-            function onMove(ev) {
-                const clientX = ev.type.includes('mouse') ? ev.clientX : ev.touches[0].clientX;
-                const diff = clientX - startX;
-                if (Math.abs(diff) > 10) {
-                    cardElem.style.transform = `translateX(${diff}px)`;
-                }
+        function touchStart(e, cardId) {
+            touchStartX = e.touches[0].clientX;
+            activeCardId = cardId;
+        }
+
+        function touchMove(e, cardId) {
+            if (!touchStartX || activeCardId !== cardId) return;
+            let currentX = e.touches[0].clientX;
+            let diff = currentX - touchStartX;
+            
+            // Limitar el arrastre visual entre -110px y 110px
+            if (diff > 110) diff = 110;
+            if (diff < -110) diff = -110;
+
+            const card = document.getElementById(cardId);
+            card.style.transform = `translateX(${diff}px)`;
+        }
+
+        function touchEnd(e, cardId, studentId, studentName) {
+            if (!touchStartX || activeCardId !== cardId) return;
+            let endX = e.changedTouches[0].clientX;
+            let diff = endX - touchStartX;
+            const card = document.getElementById(cardId);
+
+            if (diff > 60) {
+                // Deslizó hacia la derecha -> Presente
+                quickMarkAttendance(studentId, studentName, 'Presente');
+            } else if (diff < -60) {
+                // Deslizó hacia la izquierda -> Ausente
+                quickMarkAttendance(studentId, studentName, 'Ausente');
             }
 
-            function onEnd(ev) {
-                const clientX = ev.type.includes('mouse') ? ev.clientX : (ev.changedTouches ? ev.changedTouches[0].clientX : startX);
-                const diff = clientX - startX;
-                cardElem.style.transform = 'translateX(0px)';
-                
-                window.removeEventListener('mousemove', onMove);
-                window.removeEventListener('mouseup', onEnd);
-                window.removeEventListener('touchmove', onMove);
-                window.removeEventListener('touchend', onEnd);
+            // Regresar la tarjeta a su posición original con animación
+            card.style.transition = 'transform 0.3s ease';
+            card.style.transform = 'translateX(0px)';
+            setTimeout(() => { card.style.transition = ''; }, 300);
+
+            touchStartX = 0;
+            activeCardId = null;
+        }
+
+        function mouseStart(e, cardId) {
+            // Soporte alternativo para hacer clic o arrastrar con mouse en PC
+            const card = document.getElementById(cardId);
+            let startX = e.clientX;
+
+            function onMouseMove(ev) {
+                let diff = ev.clientX - startX;
+                if (diff > 100) diff = 100;
+                if (diff < -100) diff = -100;
+                card.style.transform = `translateX(${diff}px)`;
             }
 
-            window.addEventListener('mousemove', onMove);
-            window.addEventListener('mouseup', onEnd);
-            window.addEventListener('touchmove', onMove);
-            window.addEventListener('touchend', onEnd);
+            function onMouseUp(ev) {
+                let diff = ev.clientX - startX;
+                card.style.transition = 'transform 0.3s ease';
+                card.style.transform = 'translateX(0px)';
+                setTimeout(() => { card.style.transition = ''; }, 300);
+
+                window.removeEventListener('mousemove', onMouseMove);
+                window.removeEventListener('mouseup', onMouseUp);
+            }
+
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('mouseup', onMouseUp);
         }
 
         function quickMarkAttendance(studentId, studentName, status) {
@@ -1437,7 +1477,7 @@
                 }).length;
 
                 return `
-                    <div class="class-card" style="flex-direction:column; align-items:stretch;">
+                    <div class="class-card-content" style="flex-direction:column; align-items:stretch; border:1px solid var(--border-color); border-radius:12px; margin-bottom:10px;">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <div>
                                 <span class="class-student-name">${s.name}</span>
@@ -1535,7 +1575,7 @@
             if (attendances.length === 0) { container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted);">Sin asistencias.</p>`; return; }
 
             container.innerHTML = attendances.slice(0, 15).map(a => `
-                <div class="class-card" style="padding:10px 14px;">
+                <div class="class-card-content" style="padding:10px 14px; border:1px solid var(--border-color); border-radius:10px; margin-bottom:8px;">
                     <div class="class-details">
                         <div class="class-student-name">${a.studentName}</div>
                         <div class="class-meta"><span>📅 ${a.date}</span></div>
