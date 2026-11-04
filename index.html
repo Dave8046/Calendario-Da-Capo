@@ -608,7 +608,7 @@
         <div class="logo">DA CAPO</div>
         <div class="cloud-status" onclick="openCloudModal()">
             <div class="status-dot" id="cloudDot"></div>
-            <span id="cloudText">Nube Disconecta</span>
+            <span id="cloudText">Nube Desconectada</span>
         </div>
     </header>
 
@@ -919,13 +919,17 @@
             document.getElementById('occDate').value = selectedDateStr;
 
             loadTemplatesToUI();
-            initFirebaseFromStorage();
+            
+            // Inicializar renderizado local primero para que el calendario pinte de inmediato
             renderWeekNavigator();
             renderStudents();
             renderSchools();
             populateAttendanceDropdown();
             renderAttendanceHistory();
             checkNotifications();
+
+            // Intentar conectar automáticamente con Firebase si hay credenciales guardadas
+            initFirebaseFromStorage();
         });
 
         function loadTemplatesToUI() {
@@ -951,12 +955,18 @@
             const projectId = localStorage.getItem('dacapo_fb_projectid');
             if (apiKey && projectId) {
                 try {
-                    if (!firebase.apps.length) firebase.initializeApp({ apiKey, projectId });
+                    if (!firebase.apps.length) {
+                        firebase.initializeApp({ apiKey, projectId });
+                    }
                     db = firebase.firestore();
                     updateCloudUI(true);
                     syncWithFirestore();
-                } catch (e) { updateCloudUI(false); }
-            } else { updateCloudUI(false); }
+                } catch (e) { 
+                    updateCloudUI(false); 
+                }
+            } else { 
+                updateCloudUI(false); 
+            }
         }
 
         function saveFirebaseConfig() {
@@ -972,32 +982,62 @@
         function updateCloudUI(online) {
             const dot = document.getElementById('cloudDot');
             const label = document.getElementById('cloudText');
-            if (online) { dot.classList.add('online'); label.innerText = "Nube Conectada"; }
-            else { dot.classList.remove('online'); label.innerText = "Nube Disconecta"; }
+            if (online) { 
+                dot.classList.add('online'); 
+                label.innerText = "Nube Conectada"; 
+            } else { 
+                dot.classList.remove('online'); 
+                label.innerText = "Nube Desconectada"; 
+            }
         }
 
         function syncWithFirestore() {
             if (!db) return;
+            
             db.collection("students").onSnapshot(snap => {
-                students = []; snap.forEach(d => students.push({ id: d.id, ...d.data() }));
+                students = []; 
+                snap.forEach(d => students.push({ id: d.id, ...d.data() }));
                 localStorage.setItem('dacapo_students', JSON.stringify(students));
-                renderStudents(); renderWeekNavigator(); populateAttendanceDropdown(); checkNotifications();
+                renderStudents(); 
+                renderWeekNavigator(); 
+                populateAttendanceDropdown(); 
+                checkNotifications();
+            }, err => {
+                console.error("Error sincronizando students:", err);
             });
+
             db.collection("schools").onSnapshot(snap => {
-                schools = []; snap.forEach(d => schools.push({ id: d.id, ...d.data() }));
+                schools = []; 
+                snap.forEach(d => schools.push({ id: d.id, ...d.data() }));
                 localStorage.setItem('dacapo_schools', JSON.stringify(schools));
-                renderSchools(); renderWeekNavigator(); populateAttendanceDropdown(); checkNotifications();
+                renderSchools(); 
+                renderWeekNavigator(); 
+                populateAttendanceDropdown(); 
+                checkNotifications();
+            }, err => {
+                console.error("Error sincronizando schools:", err);
             });
+
             db.collection("occasional").onSnapshot(snap => {
-                occasionalClasses = []; snap.forEach(d => occasionalClasses.push({ id: d.id, ...d.data() }));
+                occasionalClasses = []; 
+                snap.forEach(d => occasionalClasses.push({ id: d.id, ...d.data() }));
                 localStorage.setItem('dacapo_occasional', JSON.stringify(occasionalClasses));
-                renderClassesForDay(selectedDayAbbr); checkNotifications();
+                renderClassesForDay(selectedDayAbbr); 
+                checkNotifications();
+            }, err => {
+                console.error("Error sincronizando occasional:", err);
             });
+
             db.collection("attendances").onSnapshot(snap => {
-                attendances = []; snap.forEach(d => attendances.push({ id: d.id, ...d.data() }));
+                attendances = []; 
+                snap.forEach(d => attendances.push({ id: d.id, ...d.data() }));
                 attendances.sort((a,b) => b.id.localeCompare(a.id));
                 localStorage.setItem('dacapo_attendances', JSON.stringify(attendances));
-                renderAttendanceHistory(); renderStudents(); renderSchools();
+                renderAttendanceHistory(); 
+                renderStudents(); 
+                renderSchools();
+            }, err => {
+                console.error("Error sincronizando attendances:", err);
             });
         }
 
@@ -1421,13 +1461,17 @@
 
         function renderStudents() {
             const container = document.getElementById('studentsListContainer');
-            const q = document.getElementById('searchStudent').value.toLowerCase();
+            const searchInput = document.getElementById('searchStudent');
+            const q = searchInput ? searchInput.value.toLowerCase() : '';
             const filtered = students.filter(s => s.name.toLowerCase().includes(q));
 
             const total = students.reduce((acc, s) => acc + (parseFloat(s.fee) || 0), 0);
             const paid = students.filter(s => s.paid).reduce((acc, s) => acc + (parseFloat(s.fee) || 0), 0);
-            document.getElementById('totalFeeDisplay').innerText = `$${total.toLocaleString()}`;
-            document.getElementById('paidSummaryDisplay').innerText = `Cobrado: $${paid.toLocaleString()} | Pendiente: $${(total-paid).toLocaleString()}`;
+            
+            const totalDisplay = document.getElementById('totalFeeDisplay');
+            const paidSummary = document.getElementById('paidSummaryDisplay');
+            if (totalDisplay) totalDisplay.innerText = `$${total.toLocaleString()}`;
+            if (paidSummary) paidSummary.innerText = `Cobrado: $${paid.toLocaleString()} | Pendiente: $${(total-paid).toLocaleString()}`;
 
             if (filtered.length === 0) { container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted);">Sin alumnos.</p>`; return; }
 
@@ -1500,6 +1544,7 @@
 
         function populateAttendanceDropdown() {
             const sel = document.getElementById('attendanceStudentSelect');
+            if (!sel) return;
             let opts = [];
             students.forEach(s => {
                 opts.push(`<option value="${s.id}_0|${s.name} (${s.day1})|${s.phone || ''}">Particular: ${s.name} (${s.day1} ${s.time1})</option>`);
@@ -1547,6 +1592,7 @@
 
         function renderAttendanceHistory() {
             const container = document.getElementById('attendanceHistoryContainer');
+            if (!container) return;
             if (attendances.length === 0) { container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted);">Sin asistencias registradas.</p>`; return; }
             container.innerHTML = attendances.slice(0, 20).map(a => `
                 <div class="card" style="padding:10px 14px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
