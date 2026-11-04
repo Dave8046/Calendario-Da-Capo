@@ -114,7 +114,7 @@
             color: #ffffff;
         }
 
-        /* CENTRO DE NOTIFICACIONES */
+        /* CENTRO DE NOTIFICACIONES REORGANIZADO */
         .notification-card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -154,10 +154,6 @@
             display: flex;
             gap: 8px;
             margin-top: 4px;
-        }
-
-        .toggle-resolved-section {
-            margin: 15px 0 10px 0;
         }
 
         .week-navigator {
@@ -279,18 +275,56 @@
             color: var(--text-muted);
         }
 
-        /* TARJETA DE CLASE CON ACCIONES LATERALES (SWIPE SIMULADO / BOTONES RÁPIDOS) */
-        .class-card {
+        /* TARJETA DE CLASE CON CONTENEDOR DESLIZABLE (SWIPE REAL) */
+        .class-card-wrapper {
+            position: relative;
+            margin-bottom: 10px;
+            border-radius: 12px;
+            overflow: hidden;
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 12px 14px;
+        }
+
+        .class-card-actions-bg {
+            position: absolute;
+            top: 0; bottom: 0; left: 0; right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 16px;
+            background: #1a1a1a;
+            z-index: 1;
+        }
+
+        .bg-action-btn {
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .bg-action-present {
+            background: var(--success);
+            color: #000;
+        }
+
+        .bg-action-absent {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .class-card {
+            background: var(--card-bg);
+            padding: 14px;
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 10px;
-            overflow: hidden;
             position: relative;
+            z-index: 2;
+            transition: transform 0.2s ease;
+            touch-action: pan-y;
         }
 
         .class-icon-box {
@@ -330,6 +364,15 @@
             border-radius: 4px;
         }
 
+        .badge-ocasional {
+            background: rgba(99, 91, 255, 0.2);
+            color: #9990ff;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
         .badge-paid {
             background: rgba(0, 200, 83, 0.15);
             color: var(--success);
@@ -354,33 +397,6 @@
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
-        }
-
-        .swipe-actions {
-            display: flex;
-            gap: 4px;
-            flex-shrink: 0;
-        }
-
-        .btn-swipe {
-            padding: 6px 10px;
-            font-size: 0.7rem;
-            border-radius: 6px;
-            font-weight: 700;
-            border: none;
-            cursor: pointer;
-        }
-
-        .btn-swipe-present {
-            background: rgba(0, 200, 83, 0.2);
-            color: var(--success);
-            border: 1px solid var(--success);
-        }
-
-        .btn-swipe-absent {
-            background: rgba(255, 68, 68, 0.2);
-            color: var(--danger);
-            border: 1px solid var(--danger);
         }
 
         .kpi-card {
@@ -505,10 +521,17 @@
             font-weight: 700;
         }
 
-        .fab-button {
+        .fab-container {
             position: fixed;
             bottom: 75px;
             right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 99;
+        }
+
+        .fab-button {
             width: 52px;
             height: 52px;
             background: var(--accent-purple);
@@ -520,7 +543,12 @@
             color: #fff;
             box-shadow: 0 4px 12px rgba(99, 91, 255, 0.4);
             cursor: pointer;
-            z-index: 99;
+        }
+
+        .fab-button.secondary {
+            background: #222;
+            border: 1px solid var(--border-color);
+            font-size: 18px;
         }
 
         .modal {
@@ -575,7 +603,7 @@
     <div class="container">
         <!-- AGENDA -->
         <section id="tab-agenda" class="tab-content active">
-            <!-- CENTRO DE NOTIFICACIONES DE CLASES -->
+            <!-- CENTRO DE NOTIFICACIONES MEJORADO -->
             <div id="notificationsContainer"></div>
 
             <div class="subtabs">
@@ -604,7 +632,6 @@
 
         <!-- ALUMNOS Y ALERTAS DE PAGO -->
         <section id="tab-alumnos" class="tab-content">
-            <!-- CENTRO DE NOTIFICACIONES DE COBROS -->
             <div id="pendingPaymentsAlert"></div>
 
             <div class="kpi-card">
@@ -693,8 +720,11 @@
         </section>
     </div>
 
-    <!-- BOTON FLOTANTE -->
-    <div class="fab-button" onclick="openStudentModal()">+</div>
+    <!-- BOTONES FLOTANTES -->
+    <div class="fab-container">
+        <div class="fab-button secondary" onclick="openOccasionalModal()" title="Agregar clase ocasional">⭐</div>
+        <div class="fab-button" onclick="openStudentModal()" title="Agregar alumno">+</div>
+    </div>
 
     <!-- NAVEGACIÓN -->
     <nav>
@@ -736,11 +766,11 @@
         </div>
     </div>
 
-    <!-- MODAL EDITAR / CREAR CLASE -->
+    <!-- MODAL EDITAR / CREAR CLASE FIJA -->
     <div class="modal" id="studentModal">
         <div class="modal-body">
             <div class="flex-between">
-                <h2 id="modalStudentTitle">Agregar Día de Clase al Alumno</h2>
+                <h2 id="modalStudentTitle">Agregar Clase Fija al Alumno</h2>
                 <span onclick="closeStudentModal()" style="cursor:pointer; font-size: 1.2rem;">✕</span>
             </div>
             <input type="hidden" id="editingStudentId" value="">
@@ -758,7 +788,7 @@
                 <input type="text" id="studentInstrument" placeholder="Ej. Cello, Piano, Otro">
             </div>
             <div class="form-group">
-                <label>Día de la Clase</label>
+                <label>Día de la Clase Fija</label>
                 <select id="studentDay">
                     <option value="LUN">Lunes</option>
                     <option value="MAR">Martes</option>
@@ -789,12 +819,40 @@
         </div>
     </div>
 
+    <!-- MODAL CLASE OCASIONAL -->
+    <div class="modal" id="occasionalModal">
+        <div class="modal-body">
+            <div class="flex-between">
+                <h2>Agregar Clase Ocasional</h2>
+                <span onclick="closeOccasionalModal()" style="cursor:pointer; font-size: 1.2rem;">✕</span>
+            </div>
+            <div class="form-group">
+                <label>Nombre del Alumno</label>
+                <input type="text" id="occName" placeholder="Ej. Carlos">
+            </div>
+            <div class="form-group">
+                <label>Fecha Específica</label>
+                <input type="date" id="occDate">
+            </div>
+            <div class="form-group">
+                <label>Hora de la Clase</label>
+                <input type="time" id="occTime" value="10:00">
+            </div>
+            <div class="form-group">
+                <label>Instrumento / Nota</label>
+                <input type="text" id="occInstrument" placeholder="Ej. Violín (Clase extra)">
+            </div>
+            <button class="btn" onclick="saveOccasionalClass()">Guardar Clase Ocasional</button>
+        </div>
+    </div>
+
     <!-- SDKs FIREBASE compat -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <script>
         let students = JSON.parse(localStorage.getItem('dacapo_students')) || [];
+        let occasionalClasses = JSON.parse(localStorage.getItem('dacapo_occasional')) || [];
         let attendances = JSON.parse(localStorage.getItem('dacapo_attendances')) || [];
         let dismissedNotifications = JSON.parse(localStorage.getItem('dacapo_dismissed_notifs')) || {};
         let db = null;
@@ -802,11 +860,13 @@
         let currentWeekOffset = 0;
         let selectedDayIndex = 5;
         let selectedDateStr = new Date().toISOString().substring(0, 10);
+        let selectedDayAbbr = "SÁB";
 
         const daysMap = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
 
         document.addEventListener("DOMContentLoaded", () => {
             document.getElementById('attendanceDate').value = selectedDateStr;
+            document.getElementById('occDate').value = selectedDateStr;
 
             loadTemplatesToUI();
             initFirebaseFromStorage();
@@ -902,6 +962,14 @@
                 checkNotifications();
             });
 
+            db.collection("occasional").onSnapshot((snapshot) => {
+                let cloudOcc = [];
+                snapshot.forEach((doc) => { cloudOcc.push({ id: doc.id, ...doc.data() }); });
+                occasionalClasses = cloudOcc;
+                localStorage.setItem('dacapo_occasional', JSON.stringify(occasionalClasses));
+                renderClassesForDay(selectedDayAbbr);
+            });
+
             db.collection("attendances").onSnapshot((snapshot) => {
                 let cloudAttendances = [];
                 snapshot.forEach((doc) => { cloudAttendances.push({ id: doc.id, ...doc.data() }); });
@@ -921,19 +989,23 @@
 
             const alertContainer = document.getElementById('notificationsContainer');
             const todayClasses = students.filter(s => s.day === todayAbbr);
+            const todayOccasional = occasionalClasses.filter(o => o.date === todayStr);
             
             let htmlClasses = '';
             const isClassDismissed = dismissedNotifications[todayKey];
 
-            if (todayClasses.length > 0 && !isClassDismissed) {
-                const listText = todayClasses.map(s => `${s.name} (${s.time})`).join(', ');
+            if ((todayClasses.length > 0 || todayOccasional.length > 0) && !isClassDismissed) {
+                const listFijas = todayClasses.map(s => `${s.name} (${s.time})`).join(', ');
+                const listOcc = todayOccasional.map(o => `${o.name} - Ocasional (${o.time})`).join(', ');
+                const combined = [listFijas, listOcc].filter(Boolean).join(' | ');
+
                 htmlClasses += `
                     <div class="notification-card pending-alert">
                         <div class="notification-header">
-                            <span class="notification-title">🔔 Clases de Hoy (${todayAbbr})</span>
+                            <span class="notification-title">🔔 Clases Programadas para Hoy (${todayAbbr})</span>
                             <span style="font-size:0.7rem; color:var(--warning);">Pendiente</span>
                         </div>
-                        <div class="notification-body">${listText}</div>
+                        <div class="notification-body">${combined}</div>
                         <div class="notification-actions">
                             <button class="btn btn-small btn-outline" onclick="dismissNotification('${todayKey}')">✓ Marcar Atendida</button>
                         </div>
@@ -943,7 +1015,7 @@
 
             if (isClassDismissed) {
                 htmlClasses += `
-                    <div class="toggle-resolved-section">
+                    <div style="margin: 10px 0;">
                         <button class="btn btn-small btn-outline" style="width:100%; font-size:0.75rem;" onclick="restoreNotification('${todayKey}')">📂 Ver notificación de clases atendida</button>
                     </div>
                 `;
@@ -974,7 +1046,7 @@
                                 <span class="notification-title">⚠️ Mensualidad Pendiente: ${s.name}</span>
                                 <span style="font-size:0.7rem; color:var(--danger);">Vence: ${s.dueDate || 'Sin fecha'}</span>
                             </div>
-                            <div class="notification-body">Monto: $${(s.fee || 0).toLocaleString()} • Puedes enviarle un recordatorio directo.</div>
+                            <div class="notification-body">Monto: $${(s.fee || 0).toLocaleString()} • Recordatorio disponible.</div>
                             <div class="notification-actions">
                                 <button class="btn btn-small btn-whatsapp" onclick="sendWhatsAppPaymentReminder('${s.name}')">💬 WhatsApp</button>
                                 <button class="btn btn-small btn-outline" onclick="dismissNotification('${notifKey}')">✓ Atender</button>
@@ -1049,6 +1121,8 @@
         function selectDay(index, dayAbbr, dateStr, fullTitle) {
             selectedDayIndex = index;
             selectedDateStr = dateStr;
+            selectedDayAbbr = dayAbbr;
+
             document.querySelectorAll('.day-chip').forEach((chip, idx) => {
                 if (idx === index) chip.classList.add('active');
                 else chip.classList.remove('active');
@@ -1061,37 +1135,99 @@
         function renderClassesForDay(dayAbbr) {
             const container = document.getElementById('classesListContainer');
             const dayClasses = students.filter(s => s.day === dayAbbr);
+            const dayOccasional = occasionalClasses.filter(o => o.date === selectedDateStr);
 
-            document.getElementById('classesCountBadge').innerText = `${dayClasses.length} clase(s)`;
+            const totalCount = dayClasses.length + dayOccasional.length;
+            document.getElementById('classesCountBadge').innerText = `${totalCount} clase(s)`;
 
-            if (dayClasses.length === 0) {
+            if (totalCount === 0) {
                 container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-muted); padding: 10px 0;">No hay clases programadas para este día.</p>`;
                 return;
             }
 
-            container.innerHTML = dayClasses.map(s => `
-                <div class="class-card">
-                    <div class="class-icon-box">🎶</div>
-                    <div class="class-details">
-                        <div class="class-header-row">
-                            <span class="class-student-name">${s.name}</span>
-                            <span class="badge-fija">${s.day} • ${s.time || '08:00'}</span>
-                            ${s.paid ? '<span class="badge-paid">PAGADO</span>' : '<span class="badge-pending">PENDIENTE</span>'}
-                        </div>
-                        <div class="class-meta">
-                            <span>🕒 ${s.duration || '60'} min</span>
-                            <span>🎵 ${s.instrument || 'Otro'}</span>
-                        </div>
+            let html = '';
+
+            // Renderizar Clases Fijas
+            html += dayClasses.map(s => `
+                <div class="class-card-wrapper" id="card-${s.id}">
+                    <div class="class-card-actions-bg">
+                        <button class="bg-action-btn bg-action-present" onclick="quickMarkAttendance('${s.id}', '${s.name}', 'Presente')">✓ Se hizo</button>
+                        <button class="bg-action-btn bg-action-absent" onclick="quickMarkAttendance('${s.id}', '${s.name}', 'Ausente')">✕ No fue</button>
                     </div>
-                    <div class="swipe-actions">
-                        <button class="btn-swipe btn-swipe-present" onclick="quickMarkAttendance('${s.id}', '${s.name}', 'Presente')">✓ Se hizo</button>
-                        <button class="btn-swipe btn-swipe-absent" onclick="quickMarkAttendance('${s.id}', '${s.name}', 'Ausente')">✕ No fue</button>
+                    <div class="class-card" onmousedown="initSwipe(event, 'card-${s.id}')" ontouchstart="initSwipe(event, 'card-${s.id}')">
+                        <div class="class-icon-box">🎶</div>
+                        <div class="class-details">
+                            <div class="class-header-row">
+                                <span class="class-student-name">${s.name}</span>
+                                <span class="badge-fija">Fija • ${s.time || '08:00'}</span>
+                                ${s.paid ? '<span class="badge-paid">PAGADO</span>' : '<span class="badge-pending">PENDIENTE</span>'}
+                            </div>
+                            <div class="class-meta">
+                                <span>🕒 ${s.duration || '60'} min</span>
+                                <span>🎵 ${s.instrument || 'Otro'}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `).join('');
+
+            // Renderizar Clases Ocasionales
+            html += dayOccasional.map(o => `
+                <div class="class-card-wrapper" id="card-occ-${o.id}">
+                    <div class="class-card-actions-bg">
+                        <button class="bg-action-btn bg-action-present" onclick="quickMarkAttendance('${o.id}', '${o.name}', 'Presente')">✓ Se hizo</button>
+                        <button class="bg-action-btn bg-action-absent" onclick="quickMarkAttendance('${o.id}', '${o.name}', 'Ausente')">✕ No fue</button>
+                        <button class="bg-action-btn" style="background:#ff4444; color:#fff;" onclick="deleteOccasional('${o.id}')">🗑️</button>
+                    </div>
+                    <div class="class-card" onmousedown="initSwipe(event, 'card-occ-${o.id}')" ontouchstart="initSwipe(event, 'card-occ-${o.id}')">
+                        <div class="class-icon-box" style="background:#2a2040;">⭐</div>
+                        <div class="class-details">
+                            <div class="class-header-row">
+                                <span class="class-student-name">${o.name}</span>
+                                <span class="badge-ocasional">Ocasional • ${o.time || '10:00'}</span>
+                            </div>
+                            <div class="class-meta">
+                                <span>🎵 ${o.instrument || 'Clase extra'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = html;
         }
 
-        // ACCIÓN RÁPIDA DESDE LAS TARJETAS DE LA AGENDA
+        // CONTROL DE DESLIZAMIENTO LATERAL (SWIPE REAL)
+        function initSwipe(e, cardId) {
+            const cardElem = document.querySelector(`#${cardId} .class-card`);
+            const startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            let currentX = startX;
+
+            function onMove(ev) {
+                const clientX = ev.type.includes('mouse') ? ev.clientX : ev.touches[0].clientX;
+                const diff = clientX - startX;
+                if (Math.abs(diff) > 10) {
+                    cardElem.style.transform = `translateX(${diff}px)`;
+                }
+            }
+
+            function onEnd(ev) {
+                const clientX = ev.type.includes('mouse') ? ev.clientX : (ev.changedTouches ? ev.changedTouches[0].clientX : startX);
+                const diff = clientX - startX;
+                cardElem.style.transform = 'translateX(0px)';
+                
+                window.removeEventListener('mousemove', onMove);
+                window.removeEventListener('mouseup', onEnd);
+                window.removeEventListener('touchmove', onMove);
+                window.removeEventListener('touchend', onEnd);
+            }
+
+            window.addEventListener('mousemove', onMove);
+            window.addEventListener('mouseup', onEnd);
+            window.addEventListener('touchmove', onMove);
+            window.addEventListener('touchend', onEnd);
+        }
+
         function quickMarkAttendance(studentId, studentName, status) {
             const record = { id: Date.now().toString(), studentId, studentName: `${studentName}`, date: selectedDateStr, status };
 
@@ -1119,7 +1255,7 @@
             if (id) {
                 const s = students.find(item => item.id === id);
                 if (s) {
-                    document.getElementById('modalStudentTitle').innerText = "Editar Clase / Alumno";
+                    document.getElementById('modalStudentTitle').innerText = "Editar Clase Fija / Alumno";
                     document.getElementById('editingStudentId').value = s.id;
                     document.getElementById('studentName').value = s.name;
                     document.getElementById('studentPhone').value = s.phone || '';
@@ -1131,7 +1267,7 @@
                     document.getElementById('studentDueDate').value = s.dueDate || '';
                 }
             } else {
-                document.getElementById('modalStudentTitle').innerText = "Agregar Día de Clase al Alumno";
+                document.getElementById('modalStudentTitle').innerText = "Agregar Clase Fija al Alumno";
                 document.getElementById('editingStudentId').value = "";
                 document.getElementById('studentName').value = "";
                 document.getElementById('studentPhone').value = "";
@@ -1143,6 +1279,43 @@
         }
 
         function closeStudentModal() { document.getElementById('studentModal').classList.remove('active'); }
+
+        function openOccasionalModal() {
+            document.getElementById('occDate').value = selectedDateStr;
+            document.getElementById('occasionalModal').classList.add('active');
+        }
+
+        function closeOccasionalModal() { document.getElementById('occasionalModal').classList.remove('active'); }
+
+        function saveOccasionalClass() {
+            const name = document.getElementById('occName').value.trim();
+            const date = document.getElementById('occDate').value;
+            const time = document.getElementById('occTime').value;
+            const instrument = document.getElementById('occInstrument').value.trim();
+
+            if (!name || !date) return alert("Completa el nombre y la fecha de la clase ocasional.");
+
+            const newOcc = { id: Date.now().toString(), name, date, time, instrument };
+            occasionalClasses.push(newOcc);
+            localStorage.setItem('dacapo_occasional', JSON.stringify(occasionalClasses));
+
+            if (db) db.collection("occasional").doc(newOcc.id).set(newOcc);
+
+            renderClassesForDay(selectedDayAbbr);
+            checkNotifications();
+            closeOccasionalModal();
+            alert("Clase ocasional agregada exitosamente.");
+        }
+
+        function deleteOccasional(id) {
+            if (confirm("¿Deseas eliminar esta clase ocasional?")) {
+                occasionalClasses = occasionalClasses.filter(o => o.id !== id);
+                localStorage.setItem('dacapo_occasional', JSON.stringify(occasionalClasses));
+                if (db) db.collection("occasional").doc(id).delete();
+                renderClassesForDay(selectedDayAbbr);
+                checkNotifications();
+            }
+        }
 
         function populateSuggestionsList() {
             const datalist = document.getElementById('studentsSuggestions');
@@ -1173,13 +1346,6 @@
             const dueDate = document.getElementById('studentDueDate').value;
 
             if (!name) return alert("Ingresa el nombre del alumno.");
-
-            const duplicate = students.find(s => s.name.toLowerCase() === name.toLowerCase() && s.day === day && s.time === time && s.id !== id);
-            if (duplicate) {
-                if (!confirm(`⚠️ Atención: ${name} ya tiene registrada otra clase el día ${day} a las ${time}. ¿Deseas agregar este bloque de todas formas?`)) {
-                    return;
-                }
-            }
 
             if (id) {
                 const idx = students.findIndex(s => s.id === id);
@@ -1241,9 +1407,7 @@
             const query = document.getElementById('searchStudent').value.toLowerCase();
             
             const uniqueStudentNames = [...new Set(students.map(s => s.name))];
-            const uniqueStudentsList = uniqueStudentNames.map(name => {
-                return students.find(s => s.name === name);
-            });
+            const uniqueStudentsList = uniqueStudentNames.map(name => students.find(s => s.name === name));
 
             const filtered = uniqueStudentsList.filter(s => s.name.toLowerCase().includes(query));
 
@@ -1259,13 +1423,12 @@
                 return;
             }
 
-            const currentMonthPrefix = new Date().toISOString().substring(0, 7); // "YYYY-MM"
+            const currentMonthPrefix = new Date().toISOString().substring(0, 7);
 
             container.innerHTML = filtered.map(s => {
                 const studentClasses = students.filter(st => st.name.toLowerCase() === s.name.toLowerCase());
                 const scheduleText = studentClasses.map(sc => `${sc.day} (${sc.time})`).join(' • ');
 
-                // CONTADOR DE CLASES RECIBIDAS EN EL MES
                 const monthClassesCount = attendances.filter(a => {
                     const matchesName = a.studentName && a.studentName.toLowerCase().includes(s.name.toLowerCase());
                     const matchesMonth = a.date && a.date.startsWith(currentMonthPrefix);
@@ -1407,7 +1570,7 @@
         }
 
         function exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ students, attendances }));
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ students, occasionalClasses, attendances }));
             const anchor = document.createElement('a');
             anchor.setAttribute("href", dataStr);
             anchor.setAttribute("download", `dacapo_respaldo.json`);
@@ -1419,9 +1582,10 @@
         function clearLocalData() {
             if (confirm("¿Borrar datos locales? No borrará la nube.")) {
                 localStorage.removeItem('dacapo_students');
+                localStorage.removeItem('dacapo_occasional');
                 localStorage.removeItem('dacapo_attendances');
                 localStorage.removeItem('dacapo_dismissed_notifs');
-                students = []; attendances = []; dismissedNotifications = {};
+                students = []; occasionalClasses = []; attendances = []; dismissedNotifications = {};
                 renderStudents(); renderWeekNavigator(); renderAttendanceHistory();
                 checkNotifications();
             }
