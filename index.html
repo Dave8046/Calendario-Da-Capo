@@ -700,6 +700,11 @@
                     <span style="font-size: 0.7rem; color: var(--text-muted);">Usa {nombre}, {monto} y {vencimiento} como variables.</span>
                 </div>
                 <div class="form-group">
+                    <label>Plantilla Comprobante de Pago</label>
+                    <textarea id="templateComprobante" rows="3" oninput="saveTemplates()">🎵 *DA CAPO - CASA MUSICAL* 🎵\n\nEstimado/a *{nombre}*, le confirmamos que hemos recibido su pago por concepto de mensualidad.\n\n💰 *Monto recibido:* ${monto}\n📅 *Fecha de pago:* {fecha}\n✨ ¡Muchas gracias por su puntualidad y confianza!</textarea>
+                    <span style="font-size: 0.7rem; color: var(--text-muted);">Usa {nombre}, {monto} y {fecha} como variables.</span>
+                </div>
+                <div class="form-group">
                     <label>Plantilla Aviso de Asistencia</label>
                     <textarea id="templateAsistencia" rows="3" oninput="saveTemplates()">Hola {nombre}, te saludamos de Da Capo - Casa Musical. Te informamos que tu registro de clase del {fecha} quedó marcado como: *{estado}*. ¡Saludos! 🎵</textarea>
                     <span style="font-size: 0.7rem; color: var(--text-muted);">Usa {nombre}, {fecha} y {estado} como variables.</span>
@@ -755,6 +760,30 @@
             <div class="form-group"><label>API Key</label><input type="text" id="firebaseApiKey"></div>
             <div class="form-group"><label>Project ID</label><input type="text" id="firebaseProjectId"></div>
             <button class="btn" onclick="saveFirebaseConfig()">Conectar</button>
+        </div>
+    </div>
+
+    <!-- MODAL COMPROBANTE DE PAGO -->
+    <div class="modal" id="receiptModal">
+        <div class="modal-body">
+            <div class="flex-between">
+                <h2>Enviar Comprobante de Pago</h2>
+                <span onclick="closeReceiptModal()" style="cursor:pointer; font-size: 1.2rem;">✕</span>
+            </div>
+            <input type="hidden" id="receiptStudentId">
+            <div class="form-group">
+                <label>Alumno</label>
+                <input type="text" id="receiptStudentName" readonly style="color: var(--text-muted);">
+            </div>
+            <div class="form-group">
+                <label>Monto Pagado ($)</label>
+                <input type="number" id="receiptAmount">
+            </div>
+            <div class="form-group">
+                <label>Fecha de Pago</label>
+                <input type="date" id="receiptDate">
+            </div>
+            <button class="btn btn-whatsapp" onclick="sendWhatsAppReceipt()">💬 Enviar Comprobante por WhatsApp</button>
         </div>
     </div>
 
@@ -878,15 +907,19 @@
 
         function loadTemplatesToUI() {
             const tCobro = localStorage.getItem('dacapo_tpl_cobro');
+            const tComp = localStorage.getItem('dacapo_tpl_comp');
             const tAsis = localStorage.getItem('dacapo_tpl_asis');
             if(tCobro) document.getElementById('templateCobro').value = tCobro;
+            if(tComp) document.getElementById('templateComprobante').value = tComp;
             if(tAsis) document.getElementById('templateAsistencia').value = tAsis;
         }
 
         function saveTemplates() {
             const tCobro = document.getElementById('templateCobro').value;
+            const tComp = document.getElementById('templateComprobante').value;
             const tAsis = document.getElementById('templateAsistencia').value;
             localStorage.setItem('dacapo_tpl_cobro', tCobro);
+            localStorage.setItem('dacapo_tpl_comp', tComp);
             localStorage.setItem('dacapo_tpl_asis', tAsis);
         }
 
@@ -1151,6 +1184,37 @@
             window.open(`https://wa.me/${phoneClean}?text=${encodeURIComponent(text)}`, '_blank');
         }
 
+        // FUNCIONES DE COMPROBANTE DE PAGO
+        function openReceiptModal(studentId) {
+            const student = students.find(s => s.id === studentId);
+            if (!student) return;
+            document.getElementById('receiptStudentId').value = student.id;
+            document.getElementById('receiptStudentName').value = student.name;
+            document.getElementById('receiptAmount').value = student.fee || 0;
+            document.getElementById('receiptDate').value = new Date().toISOString().substring(0, 10);
+            document.getElementById('receiptModal').classList.add('active');
+        }
+
+        function closeReceiptModal() {
+            document.getElementById('receiptModal').classList.remove('active');
+        }
+
+        function sendWhatsAppReceipt() {
+            const studentId = document.getElementById('receiptStudentId').value;
+            const student = students.find(s => s.id === studentId);
+            if (!student || !student.phone) return alert("El alumno no tiene número de teléfono registrado.");
+
+            const amount = parseFloat(document.getElementById('receiptAmount').value) || 0;
+            const date = document.getElementById('receiptDate').value;
+            const phoneClean = student.phone.replace(/[^0-9+]/g, '');
+
+            let template = document.getElementById('templateComprobante').value;
+            let text = template.replace('{nombre}', student.name).replace('{monto}', amount.toLocaleString()).replace('{fecha}', date);
+
+            window.open(`https://wa.me/${phoneClean}?text=${encodeURIComponent(text)}`, '_blank');
+            closeReceiptModal();
+        }
+
         function openSchoolModal(id = null) {
             if (id) {
                 const sc = schools.find(item => item.id === id);
@@ -1339,7 +1403,8 @@
                         <div class="actions-group" style="margin-top:8px;">
                             <button class="btn btn-small btn-outline" onclick="openStudentModal('${s.id}')">✏️ Editar</button>
                             <button class="btn btn-small btn-outline" onclick="togglePay('${s.id}')">${s.paid ? '🔴 Pendiente' : '🟢 Pagado'}</button>
-                            ${s.phone ? `<button class="btn btn-small btn-whatsapp" onclick="sendWhatsAppPaymentReminder('${s.id}')">💬 WhatsApp</button>` : ''}
+                            ${s.phone ? `<button class="btn btn-small btn-whatsapp" onclick="sendWhatsAppPaymentReminder('${s.id}')">💬 Cobro</button>` : ''}
+                            ${s.phone ? `<button class="btn btn-small btn-whatsapp" onclick="openReceiptModal('${s.id}')">💳 Comprobante</button>` : ''}
                             <button class="btn btn-small btn-danger" onclick="deleteStudent('${s.id}')">🗑️</button>
                         </div>
                     </div>
