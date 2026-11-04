@@ -895,7 +895,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // Cargar datos de respaldo local inmediatamente
+        // Variables de datos globales respaldadas con caché local inmediata
         let students = JSON.parse(localStorage.getItem('dacapo_students')) || [];
         let schools = JSON.parse(localStorage.getItem('dacapo_schools')) || [];
         let occasionalClasses = JSON.parse(localStorage.getItem('dacapo_occasional')) || [];
@@ -915,13 +915,16 @@
             return daysMap[d.getDay()];
         }
 
+        // Inicialización instantánea al cargar el DOM
         document.addEventListener("DOMContentLoaded", () => {
-            document.getElementById('attendanceDate').value = selectedDateStr;
-            document.getElementById('occDate').value = selectedDateStr;
+            const attDate = document.getElementById('attendanceDate');
+            const occDate = document.getElementById('occDate');
+            if (attDate) attDate.value = selectedDateStr;
+            if (occDate) occDate.value = selectedDateStr;
 
             loadTemplatesToUI();
             
-            // 1. Renderizar la interfaz con los datos locales disponibles al instante
+            // Renderizar interfaz local de inmediato para mostrar los horarios registrados
             renderWeekNavigator();
             renderStudents();
             renderSchools();
@@ -929,7 +932,7 @@
             renderAttendanceHistory();
             checkNotifications();
 
-            // 2. Intentar inicializar Firebase en segundo plano de manera persistente
+            // Intentar conectar con la nube en segundo plano
             initFirebaseFromStorage();
         });
 
@@ -937,15 +940,15 @@
             const tCobro = localStorage.getItem('dacapo_tpl_cobro');
             const tComp = localStorage.getItem('dacapo_tpl_comp');
             const tAsis = localStorage.getItem('dacapo_tpl_asis');
-            if(tCobro) document.getElementById('templateCobro').value = tCobro;
-            if(tComp) document.getElementById('templateComprobante').value = tComp;
-            if(tAsis) document.getElementById('templateAsistencia').value = tAsis;
+            if(tCobro && document.getElementById('templateCobro')) document.getElementById('templateCobro').value = tCobro;
+            if(tComp && document.getElementById('templateComprobante')) document.getElementById('templateComprobante').value = tComp;
+            if(tAsis && document.getElementById('templateAsistencia')) document.getElementById('templateAsistencia').value = tAsis;
         }
 
         function saveTemplates() {
-            const tCobro = document.getElementById('templateCobro').value;
-            const tComp = document.getElementById('templateComprobante').value;
-            const tAsis = document.getElementById('templateAsistencia').value;
+            const tCobro = document.getElementById('templateCobro') ? document.getElementById('templateCobro').value : '';
+            const tComp = document.getElementById('templateComprobante') ? document.getElementById('templateComprobante').value : '';
+            const tAsis = document.getElementById('templateAsistencia') ? document.getElementById('templateAsistencia').value : '';
             localStorage.setItem('dacapo_tpl_cobro', tCobro);
             localStorage.setItem('dacapo_tpl_comp', tComp);
             localStorage.setItem('dacapo_tpl_asis', tAsis);
@@ -960,8 +963,6 @@
                         firebase.initializeApp({ apiKey, projectId });
                     }
                     db = firebase.firestore();
-                    // Habilitar persistencia offline de Firestore para mayor estabilidad
-                    db.enablePersistence().catch(() => {});
                     updateCloudUI(true);
                     syncWithFirestore();
                 } catch (e) { 
@@ -985,6 +986,7 @@
         function updateCloudUI(online) {
             const dot = document.getElementById('cloudDot');
             const label = document.getElementById('cloudText');
+            if (!dot || !label) return;
             if (online) { 
                 dot.classList.add('online'); 
                 label.innerText = "Conectada"; 
@@ -998,23 +1000,23 @@
             if (!db) return;
             
             db.collection("students").onSnapshot(snap => {
-                if (!snap.empty || students.length === 0) {
-                    students = []; 
-                    snap.forEach(d => students.push({ id: d.id, ...d.data() }));
+                let remoteStudents = [];
+                snap.forEach(d => remoteStudents.push({ id: d.id, ...d.data() }));
+                if (remoteStudents.length > 0 || students.length === 0) {
+                    students = remoteStudents;
                     localStorage.setItem('dacapo_students', JSON.stringify(students));
                     renderStudents(); 
                     renderWeekNavigator(); 
                     populateAttendanceDropdown(); 
                     checkNotifications();
                 }
-            }, err => {
-                console.warn("Sincronización en segundo plano con Firestore usando caché local:", err);
-            });
+            }, err => console.warn("Usando caché local para estudiantes"));
 
             db.collection("schools").onSnapshot(snap => {
-                if (!snap.empty || schools.length === 0) {
-                    schools = []; 
-                    snap.forEach(d => schools.push({ id: d.id, ...d.data() }));
+                let remoteSchools = [];
+                snap.forEach(d => remoteSchools.push({ id: d.id, ...d.data() }));
+                if (remoteSchools.length > 0 || schools.length === 0) {
+                    schools = remoteSchools;
                     localStorage.setItem('dacapo_schools', JSON.stringify(schools));
                     renderSchools(); 
                     renderWeekNavigator(); 
@@ -1024,9 +1026,10 @@
             }, err => {});
 
             db.collection("occasional").onSnapshot(snap => {
-                if (!snap.empty || occasionalClasses.length === 0) {
-                    occasionalClasses = []; 
-                    snap.forEach(d => occasionalClasses.push({ id: d.id, ...d.data() }));
+                let remoteOcc = [];
+                snap.forEach(d => remoteOcc.push({ id: d.id, ...d.data() }));
+                if (remoteOcc.length > 0 || occasionalClasses.length === 0) {
+                    occasionalClasses = remoteOcc;
                     localStorage.setItem('dacapo_occasional', JSON.stringify(occasionalClasses));
                     renderClassesForDay(selectedDayAbbr); 
                     checkNotifications();
@@ -1034,9 +1037,10 @@
             }, err => {});
 
             db.collection("attendances").onSnapshot(snap => {
-                if (!snap.empty || attendances.length === 0) {
-                    attendances = []; 
-                    snap.forEach(d => attendances.push({ id: d.id, ...d.data() }));
+                let remoteAtt = [];
+                snap.forEach(d => remoteAtt.push({ id: d.id, ...d.data() }));
+                if (remoteAtt.length > 0 || attendances.length === 0) {
+                    attendances = remoteAtt;
                     attendances.sort((a,b) => b.id.localeCompare(a.id));
                     localStorage.setItem('dacapo_attendances', JSON.stringify(attendances));
                     renderAttendanceHistory(); 
@@ -1090,24 +1094,6 @@
                 }
             });
 
-            students.filter(s => !s.paid && s.dueDate && s.dueDate <= todayStr).forEach(s => {
-                const key = `pay_${s.id}_${s.dueDate}`;
-                if (!dismissedNotifications[key]) {
-                    html += `
-                        <div class="notification-card type-payment">
-                            <div class="notif-info">
-                                <div class="notif-title">⚠️ Cobro Pendiente: ${s.name}</div>
-                                <div class="notif-sub">Vence: ${s.dueDate} • $${(s.fee||0).toLocaleString()}</div>
-                            </div>
-                            <div style="display:flex; gap:4px;">
-                                <button class="btn btn-small btn-whatsapp" onclick="sendWhatsAppPaymentReminder('${s.id}')">💬</button>
-                                <button class="btn btn-small btn-outline" onclick="dismissNotif('${key}')">✓</button>
-                            </div>
-                        </div>
-                    `;
-                }
-            });
-
             container.innerHTML = html || `<p style="font-size:0.78rem; color:var(--text-muted);">No hay avisos pendientes por ahora.</p>`;
         }
 
@@ -1151,7 +1137,7 @@
                 const dStr = d.toISOString().substring(0, 10);
                 const isToday = (dStr === todayStr);
                 
-                if (currentWeekOffset === 0 && isToday && selectedDayAbbr !== abbr && !window._initializedToday) {
+                if (currentWeekOffset === 0 && isToday && !window._initializedToday) {
                     selectedDayIndex = i;
                     selectedDateStr = dStr;
                     selectedDayAbbr = abbr;
@@ -1279,45 +1265,6 @@
             if (db) db.collection("attendances").doc(rec.id).set(rec);
             renderAttendanceHistory(); renderStudents(); renderSchools();
             alert(`Registrado: ${name} - ${status}`);
-        }
-
-        function sendWhatsAppPaymentReminder(studentId) {
-            const student = students.find(s => s.id === studentId);
-            if (!student || !student.phone) return alert("El alumno no tiene número de WhatsApp registrado.");
-            const phoneClean = student.phone.replace(/[^0-9+]/g, '');
-            let template = document.getElementById('templateCobro').value;
-            let text = template.replace('{nombre}', student.name).replace('{monto}', (student.fee||0).toLocaleString()).replace('{vencimiento}', student.dueDate||'pronto');
-            window.open(`https://wa.me/${phoneClean}?text=${encodeURIComponent(text)}`, '_blank');
-        }
-
-        function openReceiptModal(studentId) {
-            const student = students.find(s => s.id === studentId);
-            if (!student) return;
-            document.getElementById('receiptStudentId').value = student.id;
-            document.getElementById('receiptStudentName').value = student.name;
-            document.getElementById('receiptAmount').value = student.fee || 0;
-            document.getElementById('receiptDate').value = new Date().toISOString().substring(0, 10);
-            document.getElementById('receiptModal').classList.add('active');
-        }
-
-        function closeReceiptModal() {
-            document.getElementById('receiptModal').classList.remove('active');
-        }
-
-        function sendWhatsAppReceipt() {
-            const studentId = document.getElementById('receiptStudentId').value;
-            const student = students.find(s => s.id === studentId);
-            if (!student || !student.phone) return alert("El alumno no tiene número de teléfono registrado.");
-
-            const amount = parseFloat(document.getElementById('receiptAmount').value) || 0;
-            const date = document.getElementById('receiptDate').value;
-            const phoneClean = student.phone.replace(/[^0-9+]/g, '');
-
-            let template = document.getElementById('templateComprobante').value;
-            let text = template.replace('{nombre}', student.name).replace('{monto}', amount.toLocaleString()).replace('{fecha}', date);
-
-            window.open(`https://wa.me/${phoneClean}?text=${encodeURIComponent(text)}`, '_blank');
-            closeReceiptModal();
         }
 
         function openSchoolModal(id = null) {
@@ -1514,8 +1461,6 @@
                         <div class="actions-group" style="margin-top:10px;">
                             <button class="btn btn-small btn-outline" onclick="openStudentModal('${s.id}')">✏️ Editar</button>
                             <button class="btn btn-small btn-outline" onclick="togglePay('${s.id}')">${s.paid ? '🔴 Pendiente' : '🟢 Pagado'}</button>
-                            ${s.phone ? `<button class="btn btn-small btn-whatsapp" onclick="sendWhatsAppPaymentReminder('${s.id}')">💬 Cobro</button>` : ''}
-                            ${s.phone ? `<button class="btn btn-small btn-whatsapp" onclick="openReceiptModal('${s.id}')">💳 Recibo</button>` : ''}
                             <button class="btn btn-small btn-danger" onclick="deleteStudent('${s.id}')">🗑️</button>
                         </div>
                     </div>
@@ -1584,24 +1529,6 @@
             localStorage.setItem('dacapo_attendances', JSON.stringify(attendances));
             if (db) db.collection("attendances").doc(rec.id).set(rec);
             renderAttendanceHistory(); renderStudents(); renderSchools(); alert("Asistencia guardada.");
-        }
-
-        function sendCustomAttendanceWhatsApp() {
-            const date = document.getElementById('attendanceDate').value;
-            const val = document.getElementById('attendanceStudentSelect').value;
-            const status = document.getElementById('attendanceStatusSelect').value;
-            if (!val || !date) return alert("Selecciona alumno/escuela y fecha.");
-
-            const parts = val.split('|');
-            const studentName = parts[1];
-            const phone = parts[2];
-
-            if (!phone) return alert("El alumno/escuela seleccionado no tiene número de teléfono registrado.");
-
-            let template = document.getElementById('templateAsistencia').value;
-            let text = template.replace('{nombre}', studentName).replace('{fecha}', date).replace('{estado}', status);
-            const phoneClean = phone.replace(/[^0-9+]/g, '');
-            window.open(`https://wa.me/${phoneClean}?text=${encodeURIComponent(text)}`, '_blank');
         }
 
         function renderAttendanceHistory() {
