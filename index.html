@@ -637,7 +637,7 @@
             <div class="days-carousel" id="daysCarousel"></div>
 
             <div class="day-section-header">
-                <h2 id="selectedDayTitle">Lunes</h2>
+                <h2 id="selectedDayTitle">Hoy</h2>
                 <span class="classes-count-badge" id="classesCountBadge">0 clase(s)</span>
             </div>
 
@@ -711,7 +711,7 @@
 
         <!-- AJUSTES -->
         <section id="tab-ajustes" class="tab-content">
-            <h2>Plantillas de WhatsApp (Con Emojis)</h2>
+            <h2>Plantillas de WhatsApp</h2>
             <div class="card">
                 <div class="form-group">
                     <label>Plantilla Recordatorio de Cobro</label>
@@ -903,12 +903,16 @@
         let db = null;
 
         let currentWeekOffset = 0;
-        let selectedDayIndex = 5;
+        let selectedDayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1; // Ajuste para índice de Lunes a Domingo
         let selectedDateStr = new Date().toISOString().substring(0, 10);
-        let selectedDayAbbr = "SÁB";
+        let selectedDayAbbr = daysMapFromDate(new Date());
 
         const daysMap = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
         const daysFullMap = { "DOM": "Domingo", "LUN": "Lunes", "MAR": "Martes", "MIÉ": "Miércoles", "JUE": "Jueves", "VIE": "Viernes", "SÁB": "Sábado" };
+
+        function daysMapFromDate(d) {
+            return daysMap[d.getDay()];
+        }
 
         document.addEventListener("DOMContentLoaded", () => {
             document.getElementById('attendanceDate').value = selectedDateStr;
@@ -1071,30 +1075,55 @@
 
         function renderWeekNavigator() {
             const curr = new Date();
-            const first = curr.getDate() - curr.getDay() + (currentWeekOffset * 7);
+            // Ajustar para iniciar la semana en Lunes (getDay(): 0 es domingo, 1 es lunes...)
+            const dayOfWeek = curr.getDay() === 0 ? 6 : curr.getDay() - 1;
+            const first = curr.getDate() - dayOfWeek + (currentWeekOffset * 7);
             const start = new Date(curr.setDate(first));
             const end = new Date(curr.setDate(first + 6));
+            
             document.getElementById('weekRangeDisplay').innerText = 
                 `${start.toLocaleDateString('es-ES', {month:'short', day:'numeric'})} – ${end.toLocaleDateString('es-ES', {month:'short', day:'numeric'})}`;
+            
             renderDaysCarousel(start);
         }
 
         function renderDaysCarousel(startDate) {
             const carousel = document.getElementById('daysCarousel');
             let html = '';
-            for (let i = 0; i < 7; i++) {
+            // Ordenar de Lunes (0) a Domingo (6)
+            const orderedDaysIndices = [1, 2, 3, 4, 5, 6, 0];
+            const todayStr = new Date().toISOString().substring(0, 10);
+
+            orderedDaysIndices.forEach((dayOffset, i) => {
                 const d = new Date(startDate);
-                d.setDate(startDate.getDate() + i);
+                // Ajustar fecha base al lunes de esa semana
+                const currentDayOfWeek = d.getDay() === 0 ? 6 : d.getDay() - 1;
+                d.setDate(d.getDate() - currentDayOfWeek + dayOffset);
+
                 const abbr = daysMap[d.getDay()];
                 const num = d.getDate();
                 const dStr = d.toISOString().substring(0, 10);
+                const isToday = (dStr === todayStr);
+                
+                // Seleccionar por defecto el día actual si estamos en la semana 0
+                if (currentWeekOffset === 0 && isToday && selectedDayAbbr !== abbr && !window._initializedToday) {
+                    selectedDayIndex = i;
+                    selectedDateStr = dStr;
+                    selectedDayAbbr = abbr;
+                    window._initializedToday = true;
+                }
+
                 const isSel = (i === selectedDayIndex);
                 html += `<div class="day-chip ${isSel?'active':''}" onclick="selectDay(${i}, '${abbr}', '${dStr}')"><span class="day-name">${abbr}</span><span class="day-num">${num}</span></div>`;
-            }
+            });
+
             carousel.innerHTML = html;
-            const target = new Date(startDate);
-            target.setDate(startDate.getDate() + selectedDayIndex);
-            selectDay(selectedDayIndex, daysMap[target.getDay()], target.toISOString().substring(0, 10));
+            
+            // Renderizar el día activo correspondiente
+            const activeDate = new Date(startDate);
+            const activeDayOfWeek = activeDate.getDay() === 0 ? 6 : activeDate.getDay() - 1;
+            activeDate.setDate(activeDate.getDate() - activeDayOfWeek + orderedDaysIndices[selectedDayIndex]);
+            selectDay(selectedDayIndex, daysMap[activeDate.getDay()], activeDate.toISOString().substring(0, 10));
         }
 
         function selectDay(idx, abbr, dStr) {
@@ -1108,9 +1137,9 @@
 
         function renderClassesForDay(abbr) {
             const container = document.getElementById('classesListContainer');
-            let dayStudentsCount = 0;
-            let html = '';
+            let classItems = [];
 
+            // 1. Recolectar Clases Fijas de Particulares
             students.forEach(s => {
                 const slots = [
                     { day: s.day1, time: s.time1 },
@@ -1119,26 +1148,41 @@
                 ];
                 slots.forEach((slot, idx) => {
                     if (slot.day === abbr) {
-                        dayStudentsCount++;
-                        html += buildSwipeCard(`${s.id}_${idx}`, s.name, `Fija • ${slot.time || '08:00'}`, `🎵 ${s.instrument||'Particular'}`);
+                        classItems.push({
+                            time: slot.time || '08:00',
+                            html: buildSwipeCard(`${s.id}_${idx}`, s.name, `Fija • ${slot.time || '08:00'}`, `🎵 ${s.instrument||'Particular'}`)
+                        });
                     }
                 });
             });
 
-            const daySchools = schools.filter(sc => sc.day === abbr);
-            const dayOcc = occasionalClasses.filter(o => o.date === selectedDateStr);
-            const total = dayStudentsCount + daySchools.length + dayOcc.length;
-
-            document.getElementById('classesCountBadge').innerText = `${total} clase(s)`;
-            if (total === 0) { container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-muted); padding:10px 0;">Sin clases este día.</p>`; return; }
-
-            daySchools.forEach(sc => {
-                html += buildSwipeCard(sc.id, sc.name, `Escuela • ${sc.time}`, `🏫 Escuela registrada`);
+            // 2. Recolectar Clases en Escuelas
+            schools.filter(sc => sc.day === abbr).forEach(sc => {
+                classItems.push({
+                    time: sc.time || '09:00',
+                    html: buildSwipeCard(sc.id, sc.name, `Escuela • ${sc.time}`, `🏫 Escuela registrada`)
+                });
             });
-            dayOcc.forEach(o => {
-                html += buildSwipeCard(o.id, o.name, `Ocasional • ${o.time}`, `⭐ Clase extra`);
+
+            // 3. Recolectar Clases Ocasionales para la fecha exacta
+            occasionalClasses.filter(o => o.date === selectedDateStr).forEach(o => {
+                classItems.push({
+                    time: o.time || '10:00',
+                    html: buildSwipeCard(o.id, o.name, `Ocasional • ${o.time}`, `⭐ Clase extra`)
+                });
             });
-            container.innerHTML = html;
+
+            // Ordenar cronológicamente por la hora (de mañana a noche)
+            classItems.sort((a, b) => a.time.localeCompare(b.time));
+
+            document.getElementById('classesCountBadge').innerText = `${classItems.length} clase(s)`;
+            
+            if (classItems.length === 0) { 
+                container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-muted); padding:10px 0;">Sin clases este día.</p>`; 
+                return; 
+            }
+
+            container.innerHTML = classItems.map(item => item.html).join('');
         }
 
         let sX = 0, activeCard = null;
