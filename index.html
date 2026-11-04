@@ -608,7 +608,7 @@
         <div class="logo">DA CAPO</div>
         <div class="cloud-status" onclick="openCloudModal()">
             <div class="status-dot" id="cloudDot"></div>
-            <span id="cloudText">Nube Disconecta</span>
+            <span id="cloudText">Desconectada</span>
         </div>
     </header>
 
@@ -895,6 +895,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <script>
+        // Cargar datos de respaldo local inmediatamente
         let students = JSON.parse(localStorage.getItem('dacapo_students')) || [];
         let schools = JSON.parse(localStorage.getItem('dacapo_schools')) || [];
         let occasionalClasses = JSON.parse(localStorage.getItem('dacapo_occasional')) || [];
@@ -903,7 +904,7 @@
         let db = null;
 
         let currentWeekOffset = 0;
-        let selectedDayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1; // Ajuste para índice de Lunes a Domingo
+        let selectedDayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
         let selectedDateStr = new Date().toISOString().substring(0, 10);
         let selectedDayAbbr = daysMapFromDate(new Date());
 
@@ -919,13 +920,17 @@
             document.getElementById('occDate').value = selectedDateStr;
 
             loadTemplatesToUI();
-            initFirebaseFromStorage();
+            
+            // 1. Renderizar la interfaz con los datos locales disponibles al instante
             renderWeekNavigator();
             renderStudents();
             renderSchools();
             populateAttendanceDropdown();
             renderAttendanceHistory();
             checkNotifications();
+
+            // 2. Intentar inicializar Firebase en segundo plano de manera persistente
+            initFirebaseFromStorage();
         });
 
         function loadTemplatesToUI() {
@@ -951,12 +956,20 @@
             const projectId = localStorage.getItem('dacapo_fb_projectid');
             if (apiKey && projectId) {
                 try {
-                    if (!firebase.apps.length) firebase.initializeApp({ apiKey, projectId });
+                    if (!firebase.apps.length) {
+                        firebase.initializeApp({ apiKey, projectId });
+                    }
                     db = firebase.firestore();
+                    // Habilitar persistencia offline de Firestore para mayor estabilidad
+                    db.enablePersistence().catch(() => {});
                     updateCloudUI(true);
                     syncWithFirestore();
-                } catch (e) { updateCloudUI(false); }
-            } else { updateCloudUI(false); }
+                } catch (e) { 
+                    updateCloudUI(false); 
+                }
+            } else { 
+                updateCloudUI(false); 
+            }
         }
 
         function saveFirebaseConfig() {
@@ -972,37 +985,70 @@
         function updateCloudUI(online) {
             const dot = document.getElementById('cloudDot');
             const label = document.getElementById('cloudText');
-            if (online) { dot.classList.add('online'); label.innerText = "Nube Conectada"; }
-            else { dot.classList.remove('online'); label.innerText = "Nube Disconecta"; }
+            if (online) { 
+                dot.classList.add('online'); 
+                label.innerText = "Conectada"; 
+            } else { 
+                dot.classList.remove('online'); 
+                label.innerText = "Desconectada"; 
+            }
         }
 
         function syncWithFirestore() {
             if (!db) return;
+            
             db.collection("students").onSnapshot(snap => {
-                students = []; snap.forEach(d => students.push({ id: d.id, ...d.data() }));
-                localStorage.setItem('dacapo_students', JSON.stringify(students));
-                renderStudents(); renderWeekNavigator(); populateAttendanceDropdown(); checkNotifications();
+                if (!snap.empty || students.length === 0) {
+                    students = []; 
+                    snap.forEach(d => students.push({ id: d.id, ...d.data() }));
+                    localStorage.setItem('dacapo_students', JSON.stringify(students));
+                    renderStudents(); 
+                    renderWeekNavigator(); 
+                    populateAttendanceDropdown(); 
+                    checkNotifications();
+                }
+            }, err => {
+                console.warn("Sincronización en segundo plano con Firestore usando caché local:", err);
             });
+
             db.collection("schools").onSnapshot(snap => {
-                schools = []; snap.forEach(d => schools.push({ id: d.id, ...d.data() }));
-                localStorage.setItem('dacapo_schools', JSON.stringify(schools));
-                renderSchools(); renderWeekNavigator(); populateAttendanceDropdown(); checkNotifications();
-            });
+                if (!snap.empty || schools.length === 0) {
+                    schools = []; 
+                    snap.forEach(d => schools.push({ id: d.id, ...d.data() }));
+                    localStorage.setItem('dacapo_schools', JSON.stringify(schools));
+                    renderSchools(); 
+                    renderWeekNavigator(); 
+                    populateAttendanceDropdown(); 
+                    checkNotifications();
+                }
+            }, err => {});
+
             db.collection("occasional").onSnapshot(snap => {
-                occasionalClasses = []; snap.forEach(d => occasionalClasses.push({ id: d.id, ...d.data() }));
-                localStorage.setItem('dacapo_occasional', JSON.stringify(occasionalClasses));
-                renderClassesForDay(selectedDayAbbr); checkNotifications();
-            });
+                if (!snap.empty || occasionalClasses.length === 0) {
+                    occasionalClasses = []; 
+                    snap.forEach(d => occasionalClasses.push({ id: d.id, ...d.data() }));
+                    localStorage.setItem('dacapo_occasional', JSON.stringify(occasionalClasses));
+                    renderClassesForDay(selectedDayAbbr); 
+                    checkNotifications();
+                }
+            }, err => {});
+
             db.collection("attendances").onSnapshot(snap => {
-                attendances = []; snap.forEach(d => attendances.push({ id: d.id, ...d.data() }));
-                attendances.sort((a,b) => b.id.localeCompare(a.id));
-                localStorage.setItem('dacapo_attendances', JSON.stringify(attendances));
-                renderAttendanceHistory(); renderStudents(); renderSchools();
-            });
+                if (!snap.empty || attendances.length === 0) {
+                    attendances = []; 
+                    snap.forEach(d => attendances.push({ id: d.id, ...d.data() }));
+                    attendances.sort((a,b) => b.id.localeCompare(a.id));
+                    localStorage.setItem('dacapo_attendances', JSON.stringify(attendances));
+                    renderAttendanceHistory(); 
+                    renderStudents(); 
+                    renderSchools();
+                }
+            }, err => {});
         }
 
         function checkNotifications() {
             const container = document.getElementById('notificationsContainer');
+            if (!container) return;
             const todayIndex = new Date().getDay();
             const todayAbbr = daysMap[todayIndex];
             const todayStr = new Date().toISOString().substring(0, 10);
@@ -1075,28 +1121,28 @@
 
         function renderWeekNavigator() {
             const curr = new Date();
-            // Ajustar para iniciar la semana en Lunes (getDay(): 0 es domingo, 1 es lunes...)
             const dayOfWeek = curr.getDay() === 0 ? 6 : curr.getDay() - 1;
             const first = curr.getDate() - dayOfWeek + (currentWeekOffset * 7);
             const start = new Date(curr.setDate(first));
             const end = new Date(curr.setDate(first + 6));
             
-            document.getElementById('weekRangeDisplay').innerText = 
-                `${start.toLocaleDateString('es-ES', {month:'short', day:'numeric'})} – ${end.toLocaleDateString('es-ES', {month:'short', day:'numeric'})}`;
+            const rangeDisplay = document.getElementById('weekRangeDisplay');
+            if (rangeDisplay) {
+                rangeDisplay.innerText = `${start.toLocaleDateString('es-ES', {month:'short', day:'numeric'})} – ${end.toLocaleDateString('es-ES', {month:'short', day:'numeric'})}`;
+            }
             
             renderDaysCarousel(start);
         }
 
         function renderDaysCarousel(startDate) {
             const carousel = document.getElementById('daysCarousel');
+            if (!carousel) return;
             let html = '';
-            // Ordenar de Lunes (0) a Domingo (6)
             const orderedDaysIndices = [1, 2, 3, 4, 5, 6, 0];
             const todayStr = new Date().toISOString().substring(0, 10);
 
             orderedDaysIndices.forEach((dayOffset, i) => {
                 const d = new Date(startDate);
-                // Ajustar fecha base al lunes de esa semana
                 const currentDayOfWeek = d.getDay() === 0 ? 6 : d.getDay() - 1;
                 d.setDate(d.getDate() - currentDayOfWeek + dayOffset);
 
@@ -1105,7 +1151,6 @@
                 const dStr = d.toISOString().substring(0, 10);
                 const isToday = (dStr === todayStr);
                 
-                // Seleccionar por defecto el día actual si estamos en la semana 0
                 if (currentWeekOffset === 0 && isToday && selectedDayAbbr !== abbr && !window._initializedToday) {
                     selectedDayIndex = i;
                     selectedDateStr = dStr;
@@ -1119,7 +1164,6 @@
 
             carousel.innerHTML = html;
             
-            // Renderizar el día activo correspondiente
             const activeDate = new Date(startDate);
             const activeDayOfWeek = activeDate.getDay() === 0 ? 6 : activeDate.getDay() - 1;
             activeDate.setDate(activeDate.getDate() - activeDayOfWeek + orderedDaysIndices[selectedDayIndex]);
@@ -1130,16 +1174,17 @@
             selectedDayIndex = idx;
             selectedDateStr = dStr;
             selectedDayAbbr = abbr;
-            document.getElementById('selectedDayTitle').innerText = daysFullMap[abbr] || abbr;
+            const dayTitle = document.getElementById('selectedDayTitle');
+            if (dayTitle) dayTitle.innerText = daysFullMap[abbr] || abbr;
             document.querySelectorAll('.day-chip').forEach((c, i) => c.classList.toggle('active', i === idx));
             renderClassesForDay(abbr);
         }
 
         function renderClassesForDay(abbr) {
             const container = document.getElementById('classesListContainer');
+            if (!container) return;
             let classItems = [];
 
-            // 1. Recolectar Clases Fijas de Particulares
             students.forEach(s => {
                 const slots = [
                     { day: s.day1, time: s.time1 },
@@ -1156,7 +1201,6 @@
                 });
             });
 
-            // 2. Recolectar Clases en Escuelas
             schools.filter(sc => sc.day === abbr).forEach(sc => {
                 classItems.push({
                     time: sc.time || '09:00',
@@ -1164,7 +1208,6 @@
                 });
             });
 
-            // 3. Recolectar Clases Ocasionales para la fecha exacta
             occasionalClasses.filter(o => o.date === selectedDateStr).forEach(o => {
                 classItems.push({
                     time: o.time || '10:00',
@@ -1172,10 +1215,10 @@
                 });
             });
 
-            // Ordenar cronológicamente por la hora (de mañana a noche)
             classItems.sort((a, b) => a.time.localeCompare(b.time));
 
-            document.getElementById('classesCountBadge').innerText = `${classItems.length} clase(s)`;
+            const badge = document.getElementById('classesCountBadge');
+            if (badge) badge.innerText = `${classItems.length} clase(s)`;
             
             if (classItems.length === 0) { 
                 container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-muted); padding:10px 0;">Sin clases este día.</p>`; 
@@ -1189,7 +1232,7 @@
         function swStart(e, cardId) {
             sX = e.touches[0].clientX;
             activeCard = document.getElementById(cardId);
-            activeCard.style.transition = 'none';
+            if (activeCard) activeCard.style.transition = 'none';
         }
         function swMove(e, cardId) {
             if (!sX || !activeCard) return;
@@ -1327,6 +1370,7 @@
 
         function renderSchools() {
             const container = document.getElementById('schoolsListContainer');
+            if (!container) return;
             if (schools.length === 0) { container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted);">Sin escuelas registradas.</p>`; return; }
 
             const currMonth = new Date().toISOString().substring(0, 7);
@@ -1430,13 +1474,18 @@
 
         function renderStudents() {
             const container = document.getElementById('studentsListContainer');
-            const q = document.getElementById('searchStudent').value.toLowerCase();
+            if (!container) return;
+            const searchInput = document.getElementById('searchStudent');
+            const q = searchInput ? searchInput.value.toLowerCase() : '';
             const filtered = students.filter(s => s.name.toLowerCase().includes(q));
 
             const total = students.reduce((acc, s) => acc + (parseFloat(s.fee) || 0), 0);
             const paid = students.filter(s => s.paid).reduce((acc, s) => acc + (parseFloat(s.fee) || 0), 0);
-            document.getElementById('totalFeeDisplay').innerText = `$${total.toLocaleString()}`;
-            document.getElementById('paidSummaryDisplay').innerText = `Cobrado: $${paid.toLocaleString()} | Pendiente: $${(total-paid).toLocaleString()}`;
+            
+            const totalDisplay = document.getElementById('totalFeeDisplay');
+            const paidSummary = document.getElementById('paidSummaryDisplay');
+            if (totalDisplay) totalDisplay.innerText = `$${total.toLocaleString()}`;
+            if (paidSummary) paidSummary.innerText = `Cobrado: $${paid.toLocaleString()} | Pendiente: $${(total-paid).toLocaleString()}`;
 
             if (filtered.length === 0) { container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted);">Sin alumnos.</p>`; return; }
 
@@ -1509,6 +1558,7 @@
 
         function populateAttendanceDropdown() {
             const sel = document.getElementById('attendanceStudentSelect');
+            if (!sel) return;
             let opts = [];
             students.forEach(s => {
                 opts.push(`<option value="${s.id}_0|${s.name} (${s.day1})|${s.phone || ''}">Particular: ${s.name} (${s.day1} ${s.time1})</option>`);
@@ -1556,6 +1606,7 @@
 
         function renderAttendanceHistory() {
             const container = document.getElementById('attendanceHistoryContainer');
+            if (!container) return;
             if (attendances.length === 0) { container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted);">Sin asistencias registradas.</p>`; return; }
             container.innerHTML = attendances.slice(0, 20).map(a => `
                 <div class="card" style="padding:10px 14px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
@@ -1593,7 +1644,7 @@
             document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(e => e.classList.remove('active'));
             document.getElementById(`tab-${id}`).classList.add('active');
-            btn.classList.add('active');
+            if (btn) btn.classList.add('active');
         }
 
         function openCloudModal() { document.getElementById('cloudModal').classList.add('active'); }
