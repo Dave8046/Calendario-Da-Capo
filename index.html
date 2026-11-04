@@ -114,7 +114,6 @@
             color: #ffffff;
         }
 
-        /* APARTADO DE NOTIFICACIONES FIJO Y LIMPIO */
         .notif-section {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -255,15 +254,6 @@
             color: #ffffff;
         }
 
-        .day-dot {
-            width: 4px;
-            height: 4px;
-            background: #ffffff;
-            border-radius: 50%;
-            position: absolute;
-            bottom: 6px;
-        }
-
         .day-section-header {
             display: flex;
             justify-content: space-between;
@@ -286,7 +276,6 @@
             color: var(--text-muted);
         }
 
-        /* TARJETA DE CLASE CON SWIPE SEGURO E INTENCIONAL */
         .class-card-container {
             background: #1a1528;
             border: 1px solid var(--border-color);
@@ -371,15 +360,6 @@
         .badge-fija {
             background: #222;
             color: var(--text-muted);
-            font-size: 0.65rem;
-            font-weight: 700;
-            padding: 2px 6px;
-            border-radius: 4px;
-        }
-
-        .badge-ocasional {
-            background: rgba(99, 91, 255, 0.2);
-            color: #9990ff;
             font-size: 0.65rem;
             font-weight: 700;
             padding: 2px 6px;
@@ -616,7 +596,6 @@
     <div class="container">
         <!-- AGENDA -->
         <section id="tab-agenda" class="tab-content active">
-            <!-- CENTRO DE NOTIFICACIONES INDEPENDIENTE -->
             <div class="notif-section">
                 <h2>🔔 Centro de Avisos</h2>
                 <div id="notificationsContainer"></div>
@@ -702,7 +681,7 @@
             <div class="card">
                 <div class="flex-between" style="margin-bottom: 8px;">
                     <h2>Historial Reciente</h2>
-                    <button class="btn btn-small btn-danger" onclick="clearOldAttendances()">🗑️ Borrar</button>
+                    <button class="btn btn-small btn-danger" onclick="clearOldAttendances()">🗑️ Borrar Historial</button>
                 </div>
                 <div id="attendanceHistoryContainer">Sin registros.</div>
             </div>
@@ -916,7 +895,6 @@
             });
         }
 
-        // NOTIFICACIONES FIJAS E INDEPENDIENTES
         function checkNotifications() {
             const container = document.getElementById('notificationsContainer');
             const todayIndex = new Date().getDay();
@@ -924,7 +902,6 @@
             const todayStr = new Date().toISOString().substring(0, 10);
             let html = '';
 
-            // Clases de hoy particulares
             students.filter(s => s.day === todayAbbr).forEach(s => {
                 const key = `class_${todayStr}_${s.id}`;
                 if (!dismissedNotifications[key]) {
@@ -940,7 +917,6 @@
                 }
             });
 
-            // Clases de hoy en escuelas
             schools.filter(sc => sc.day === todayAbbr).forEach(sc => {
                 const key = `school_${todayStr}_${sc.id}`;
                 if (!dismissedNotifications[key]) {
@@ -956,9 +932,8 @@
                 }
             });
 
-            // Mensualidades vencidas particulares
             students.filter(s => !s.paid && s.dueDate && s.dueDate <= todayStr).forEach(s => {
-                const key = `pay_${s.name}_${s.dueDate}`;
+                const key = `pay_${s.id}_${s.dueDate}`;
                 if (!dismissedNotifications[key]) {
                     html += `
                         <div class="notification-card type-payment">
@@ -981,7 +956,6 @@
             checkNotifications();
         }
 
-        // NAVEGACIÓN SEMANAL Y AGENDA
         function changeWeek(dir) { currentWeekOffset += dir; renderWeekNavigator(); }
 
         function renderWeekNavigator() {
@@ -1032,38 +1006,15 @@
 
             let html = '';
             dayStudents.forEach(s => {
-                html += buildSwipeCard(s.id, s.name, `Fija • ${s.time}`, `🕒 ${s.duration||60} min • 🎵 ${s.instrument||'Particular'}`, s.paid);
+                html += buildSwipeCard(s.id, s.name, `Fija • ${s.time}`, `🕒 ${s.duration||60} min • 🎵 ${s.instrument||'Particular'}`);
             });
             daySchools.forEach(sc => {
-                html += buildSwipeCard(sc.id, sc.name, `Escuela • ${sc.time}`, `🏫 Escuela registrada`, true);
+                html += buildSwipeCard(sc.id, sc.name, `Escuela • ${sc.time}`, `🏫 Escuela registrada`);
             });
             dayOcc.forEach(o => {
-                html += buildSwipeCard(o.id, o.name, `Ocasional • ${o.time}`, `⭐ Clase extra`, true);
+                html += buildSwipeCard(o.id, o.name, `Ocasional • ${o.time}`, `⭐ Clase extra`);
             });
             container.innerHTML = html;
-        }
-
-        // SWIPE ESTRICTO E INTENCIONAL (NO SE ACTIVA POR ERROR)
-        function buildSwipeCard(id, name, badgeText, metaText, isPaidOrSchool) {
-            return `
-                <div class="class-card-container" id="cont-${id}">
-                    <div class="class-card-swipe-menu">
-                        <button class="swipe-btn swipe-btn-present" onclick="registerAtt('${id}', '${name}', 'Presente')">✓ Se hizo</button>
-                        <button class="swipe-btn swipe-btn-absent" onclick="registerAtt('${id}', '${name}', 'Ausente')">✕ No fue</button>
-                    </div>
-                    <div class="class-card-content" id="card-${id}" 
-                         ontouchstart="swStart(event, 'card-${id}')" ontouchmove="swMove(event, 'card-${id}')" ontouchend="swEnd(event, 'card-${id}', '${id}', '${name}')">
-                        <div class="class-icon-box">🎵</div>
-                        <div class="class-details">
-                            <div class="class-header-row">
-                                <span class="class-student-name">${name}</span>
-                                <span class="badge-fija">${badgeText}</span>
-                            </div>
-                            <div class="class-meta"><span>${metaText}</span></div>
-                        </div>
-                    </div>
-                </div>
-            `;
         }
 
         let sX = 0, activeCard = null;
@@ -1088,6 +1039,28 @@
             sX = 0; activeCard = null;
         }
 
+        function buildSwipeCard(id, name, badgeText, metaText) {
+            return `
+                <div class="class-card-container" id="cont-${id}">
+                    <div class="class-card-swipe-menu">
+                        <button class="swipe-btn swipe-btn-present" onclick="registerAtt('${id}', '${name}', 'Presente')">✓ Se hizo</button>
+                        <button class="swipe-btn swipe-btn-absent" onclick="registerAtt('${id}', '${name}', 'Ausente')">✕ No fue</button>
+                    </div>
+                    <div class="class-card-content" id="card-${id}" 
+                         ontouchstart="swStart(event, 'card-${id}')" ontouchmove="swMove(event, 'card-${id}')" ontouchend="swEnd(event, 'card-${id}', '${id}', '${name}')">
+                        <div class="class-icon-box">🎵</div>
+                        <div class="class-details">
+                            <div class="class-header-row">
+                                <span class="class-student-name">${name}</span>
+                                <span class="badge-fija">${badgeText}</span>
+                            </div>
+                            <div class="class-meta"><span>${metaText}</span></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
         function registerAtt(id, name, status) {
             const rec = { id: Date.now().toString(), studentId: id, studentName: name, date: selectedDateStr, status };
             attendances.unshift(rec);
@@ -1097,7 +1070,7 @@
             alert(`Registrado: ${name} - ${status}`);
         }
 
-        // GESTIÓN DE ESCUELAS Y PAGOS VARIABLES
+        // GESTIÓN DE ESCUELAS
         function openSchoolModal(id = null) {
             if (id) {
                 const sc = schools.find(item => item.id === id);
@@ -1150,12 +1123,12 @@
             const currMonth = new Date().toISOString().substring(0, 7);
 
             container.innerHTML = schools.map(sc => {
-                const count = attendances.filter(a => a.studentName === sc.name && a.date && a.date.startsWith(currMonth) && a.status === 'Presente').length;
+                const count = attendances.filter(a => a.studentId === sc.id && a.date && a.date.startsWith(currMonth) && a.status === 'Presente').length;
                 return `
                     <div class="card" style="margin-bottom:12px;">
                         <div class="flex-between">
                             <span class="class-student-name">🏫 ${sc.name}</span>
-                            <span style="font-weight:700; color:var(--success);">$${(sc.lastPaidAmount||0).toLocaleString()} <span style="font-size:0.7rem; color:var(--text-muted); font-weight:normal;">(Pago registrado)</span></span>
+                            <span style="font-weight:700; color:var(--success);">$${(sc.lastPaidAmount||0).toLocaleString()} <span style="font-size:0.7rem; color:var(--text-muted); font-weight:normal;">(Pago)</span></span>
                         </div>
                         <div class="class-meta" style="margin-top:6px;">
                             <span>⏰ Día: ${sc.day} (${sc.time})</span>
@@ -1180,7 +1153,7 @@
             }
         }
 
-        // ALUMNOS PARTICULARES
+        // ALUMNOS PARTICULARES (CÁLCULO EXACTO SIN DUPLICADOS)
         function openStudentModal(id = null) {
             if (id) {
                 const s = students.find(item => item.id === id);
@@ -1235,6 +1208,7 @@
             const q = document.getElementById('searchStudent').value.toLowerCase();
             const filtered = students.filter(s => s.name.toLowerCase().includes(q));
 
+            // Suma exacta basada en registros únicos por ID de alumno (evita duplicaciones de mensualidad)
             const total = students.reduce((acc, s) => acc + (parseFloat(s.fee) || 0), 0);
             const paid = students.filter(s => s.paid).reduce((acc, s) => acc + (parseFloat(s.fee) || 0), 0);
             document.getElementById('totalFeeDisplay').innerText = `$${total.toLocaleString()}`;
@@ -1245,7 +1219,7 @@
             const currMonth = new Date().toISOString().substring(0, 7);
 
             container.innerHTML = filtered.map(s => {
-                const count = attendances.filter(a => a.studentName === s.name && a.date && a.date.startsWith(currMonth) && a.status === 'Presente').length;
+                const count = attendances.filter(a => a.studentId === s.id && a.date && a.date.startsWith(currMonth) && a.status === 'Presente').length;
                 return `
                     <div class="card" style="margin-bottom:10px; padding:14px;">
                         <div class="flex-between">
@@ -1289,7 +1263,6 @@
             }
         }
 
-        // CLASES OCASIONALES
         function openOccasionalModal() { document.getElementById('occasionalModal').classList.add('active'); }
         function closeOccasionalModal() { document.getElementById('occasionalModal').classList.remove('active'); }
         function saveOccasionalClass() {
@@ -1304,36 +1277,67 @@
             renderClassesForDay(selectedDayAbbr); closeOccasionalModal(); checkNotifications();
         }
 
-        // ASISTENCIA
+        // CONTROL DE ASISTENCIA RESTAURADO
         function populateAttendanceDropdown() {
             const sel = document.getElementById('attendanceStudentSelect');
-            let opts = students.map(s => `<option value="${s.name}">Particular: ${s.name}</option>`);
-            opts = opts.concat(schools.map(sc => `<option value="${sc.name}">Escuela: ${sc.name}</option>`));
+            let opts = students.map(s => `<option value="${s.id}|${s.name}">Particular: ${s.name}</option>`);
+            opts = opts.concat(schools.map(sc => `<option value="${sc.id}|${sc.name}">Escuela: ${sc.name}</option>`));
             sel.innerHTML = opts.join('') || `<option value="">Sin registros</option>`;
         }
+
         function saveAttendance() {
             const date = document.getElementById('attendanceDate').value;
-            const name = document.getElementById('attendanceStudentSelect').value;
+            const val = document.getElementById('attendanceStudentSelect').value;
             const status = document.getElementById('attendanceStatusSelect').value;
-            if (!name || !date) return alert("Selecciona datos");
-            const rec = { id: Date.now().toString(), studentName: name, date, status };
+            if (!val || !date) return alert("Selecciona datos");
+
+            const parts = val.split('|');
+            const studentId = parts[0];
+            const studentName = parts[1];
+
+            const rec = { id: Date.now().toString(), studentId, studentName, date, status };
             attendances.unshift(rec);
             localStorage.setItem('dacapo_attendances', JSON.stringify(attendances));
             if (db) db.collection("attendances").doc(rec.id).set(rec);
             renderAttendanceHistory(); renderStudents(); renderSchools(); alert("Asistencia guardada.");
         }
+
         function renderAttendanceHistory() {
             const container = document.getElementById('attendanceHistoryContainer');
-            if (attendances.length === 0) { container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted);">Sin asistencias.</p>`; return; }
-            container.innerHTML = attendances.slice(0, 15).map(a => `
-                <div class="card" style="padding:10px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
-                    <div><strong>${a.studentName}</strong><div style="font-size:0.75rem; color:var(--text-muted);">${a.date}</div></div>
-                    <span class="badge-fija" style="background:#222; color:#fff;">${a.status}</span>
+            if (attendances.length === 0) { container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted);">Sin asistencias registradas.</p>`; return; }
+            container.innerHTML = attendances.slice(0, 20).map(a => `
+                <div class="card" style="padding:10px 14px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <strong>${a.studentName}</strong>
+                        <div style="font-size:0.75rem; color:var(--text-muted);">📅 ${a.date}</div>
+                    </div>
+                    <div>
+                        <span class="badge-fija" style="background:#222; color:#fff; margin-right:6px;">${a.status}</span>
+                        <button class="btn btn-small btn-danger" onclick="deleteAttendance('${a.id}')">🗑️</button>
+                    </div>
                 </div>
             `).join('');
         }
+
+        function deleteAttendance(id) {
+            if (confirm("¿Deseas eliminar este registro de asistencia?")) {
+                attendances = attendances.filter(a => a.id !== id);
+                localStorage.setItem('dacapo_attendances', JSON.stringify(attendances));
+                if (db) db.collection("attendances").doc(id).delete();
+                renderAttendanceHistory(); renderStudents(); renderSchools();
+            }
+        }
+
         function clearOldAttendances() {
-            if (confirm("¿Borrar historial?")) { attendances = []; localStorage.removeItem('dacapo_attendances'); renderAttendanceHistory(); renderStudents(); }
+            if (confirm("¿Estás seguro de eliminar todo el historial de asistencias?")) {
+                const idsToDelete = attendances.map(a => a.id);
+                attendances = [];
+                localStorage.removeItem('dacapo_attendances');
+                if (db) {
+                    idsToDelete.forEach(id => db.collection("attendances").doc(id).delete());
+                }
+                renderAttendanceHistory(); renderStudents(); renderSchools();
+            }
         }
 
         function switchTab(id, btn) {
