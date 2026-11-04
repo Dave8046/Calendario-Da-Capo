@@ -124,6 +124,50 @@
             margin-bottom: 16px;
         }
 
+        .notif-section h2 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-card {
+            background: var(--card-inner);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .notification-card.type-class {
+            border-left: 4px solid var(--warning);
+        }
+
+        .notification-card.type-payment {
+            border-left: 4px solid var(--danger);
+        }
+
+        .notif-info {
+            flex: 1;
+        }
+
+        .notif-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .notif-sub {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 3px;
+        }
+
         .week-navigator {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -158,6 +202,7 @@
             color: var(--text-muted);
             display: block;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .week-info span {
@@ -189,7 +234,9 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
+            position: relative;
             flex-shrink: 0;
+            transition: all 0.2s;
         }
 
         .day-chip .day-name {
@@ -207,6 +254,7 @@
         .day-chip.active {
             background: var(--accent-purple);
             border-color: var(--accent-purple);
+            box-shadow: 0 4px 12px rgba(99, 91, 255, 0.3);
         }
 
         .day-chip.active .day-name, .day-chip.active .day-num {
@@ -220,6 +268,12 @@
             margin-bottom: 12px;
         }
 
+        .day-section-header h2 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-color);
+        }
+
         .classes-count-badge {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -227,6 +281,7 @@
             border-radius: 20px;
             font-size: 0.75rem;
             color: var(--text-muted);
+            font-weight: 600;
         }
 
         .class-card-container {
@@ -246,6 +301,39 @@
             background: var(--card-bg);
             position: relative;
             z-index: 2;
+            transition: transform 0.2s ease-out;
+        }
+
+        .class-card-swipe-menu {
+            position: absolute;
+            top: 0; bottom: 0; left: 0; right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 14px;
+            z-index: 1;
+        }
+
+        .swipe-btn {
+            padding: 8px 14px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .swipe-btn-present {
+            background: var(--success);
+            color: #050505;
+        }
+
+        .swipe-btn-absent {
+            background: var(--danger);
+            color: #fff;
         }
 
         .class-icon-box {
@@ -270,6 +358,7 @@
             align-items: center;
             gap: 8px;
             margin-bottom: 4px;
+            flex-wrap: wrap;
         }
 
         .class-student-name {
@@ -282,6 +371,7 @@
             border: 1px solid var(--border-color);
             color: var(--text-muted);
             font-size: 0.65rem;
+            font-weight: 700;
             padding: 3px 8px;
             border-radius: 6px;
         }
@@ -290,6 +380,7 @@
             background: rgba(46, 213, 115, 0.15);
             color: var(--success);
             font-size: 0.65rem;
+            font-weight: 700;
             padding: 3px 8px;
             border-radius: 6px;
         }
@@ -298,6 +389,7 @@
             background: rgba(255, 165, 2, 0.15);
             color: var(--warning);
             font-size: 0.65rem;
+            font-weight: 700;
             padding: 3px 8px;
             border-radius: 6px;
         }
@@ -307,6 +399,7 @@
             color: var(--text-muted);
             display: flex;
             gap: 10px;
+            flex-wrap: wrap;
         }
 
         .kpi-card {
@@ -362,6 +455,11 @@
             font-size: 0.92rem;
         }
 
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-purple);
+        }
+
         .btn {
             width: 100%;
             padding: 12px;
@@ -370,12 +468,19 @@
             border: none;
             border-radius: 10px;
             font-weight: 800;
+            font-size: 0.92rem;
             cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn:active {
+            opacity: 0.85;
         }
 
         .btn-small {
             padding: 7px 12px;
             font-size: 0.76rem;
+            border-radius: 8px;
             width: auto;
         }
 
@@ -389,6 +494,7 @@
             background: var(--whatsapp-green);
             color: #000;
             font-weight: 800;
+            border: none;
         }
 
         .btn-danger {
@@ -418,6 +524,7 @@
             gap: 5px;
             cursor: pointer;
             width: 20%;
+            font-weight: 600;
         }
 
         .nav-btn.active {
@@ -445,6 +552,7 @@
             justify-content: center;
             font-size: 22px;
             color: #fff;
+            box-shadow: 0 6px 16px rgba(99, 91, 255, 0.4);
             cursor: pointer;
         }
 
@@ -463,6 +571,7 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
+            backdrop-filter: blur(4px);
         }
 
         .modal.active { display: flex; }
@@ -499,7 +608,7 @@
         <div class="logo">DA CAPO</div>
         <div class="cloud-status" onclick="openCloudModal()">
             <div class="status-dot" id="cloudDot"></div>
-            <span id="cloudText">Nube Desconectada</span>
+            <span id="cloudText">Nube Disconecta</span>
         </div>
     </header>
 
@@ -528,7 +637,7 @@
             <div class="days-carousel" id="daysCarousel"></div>
 
             <div class="day-section-header">
-                <h2 id="selectedDayTitle">Hoy</h2>
+                <h2 id="selectedDayTitle">Lunes</h2>
                 <span class="classes-count-badge" id="classesCountBadge">0 clase(s)</span>
             </div>
 
@@ -602,19 +711,22 @@
 
         <!-- AJUSTES -->
         <section id="tab-ajustes" class="tab-content">
-            <h2>Plantillas de WhatsApp</h2>
+            <h2>Plantillas de WhatsApp (Con Emojis)</h2>
             <div class="card">
                 <div class="form-group">
                     <label>Plantilla Recordatorio de Cobro</label>
                     <textarea id="templateCobro" rows="3" oninput="saveTemplates()">Hola {nombre}, te saludamos de Da Capo - Casa Musical 🎶. Te recordamos que tienes pendiente tu mensualidad por un monto de ${monto} (Vence el {vencimiento}). ¡Muchas gracias! ✨</textarea>
+                    <span style="font-size: 0.7rem; color: var(--text-muted);">Variables: {nombre}, {monto}, {vencimiento}</span>
                 </div>
                 <div class="form-group">
                     <label>Plantilla Comprobante de Pago</label>
-                    <textarea id="templateComprobante" rows="3" oninput="saveTemplates()">🎵 *DA CAPO - CASA MUSICAL* 🎵\n\nEstimado/a *{nombre}*, le confirmamos que hemos recibido su pago con éxito.\n\n💰 *Monto recibido:* ${monto}\n📅 *Fecha de pago:* {fecha}</textarea>
+                    <textarea id="templateComprobante" rows="3" oninput="saveTemplates()">🎵 *DA CAPO - CASA MUSICAL* 🎵\n\nEstimado/a *{nombre}*, le confirmamos que hemos recibido su pago con éxito.\n\n💰 *Monto recibido:* ${monto}\n📅 *Fecha de pago:* {fecha}\n✨ ¡Muchas gracias por su puntualidad y confianza!</textarea>
+                    <span style="font-size: 0.7rem; color: var(--text-muted);">Variables: {nombre}, {monto}, {fecha}</span>
                 </div>
                 <div class="form-group">
                     <label>Plantilla Aviso de Asistencia</label>
-                    <textarea id="templateAsistencia" rows="3" oninput="saveTemplates()">Hola {nombre}, te saludamos de Da Capo - Casa Musical 🎶. Te informamos que tu registro de clase del {fecha} quedó marcado como: *{estado}*.</textarea>
+                    <textarea id="templateAsistencia" rows="3" oninput="saveTemplates()">Hola {nombre}, te saludamos de Da Capo - Casa Musical 🎶. Te informamos que tu registro de clase del {fecha} quedó marcado como: *{estado}*. ¡Saludos! ✨</textarea>
+                    <span style="font-size: 0.7rem; color: var(--text-muted);">Variables: {nombre}, {fecha}, {estado}</span>
                 </div>
             </div>
 
@@ -678,14 +790,23 @@
                 <span onclick="closeReceiptModal()" style="cursor:pointer; font-size: 1.2rem;">✕</span>
             </div>
             <input type="hidden" id="receiptStudentId">
-            <div class="form-group"><label>Alumno</label><input type="text" id="receiptStudentName" readonly style="color: var(--text-muted);"></div>
-            <div class="form-group"><label>Monto Pagado ($)</label><input type="number" id="receiptAmount"></div>
-            <div class="form-group"><label>Fecha de Pago</label><input type="date" id="receiptDate"></div>
+            <div class="form-group">
+                <label>Alumno</label>
+                <input type="text" id="receiptStudentName" readonly style="color: var(--text-muted);">
+            </div>
+            <div class="form-group">
+                <label>Monto Pagado ($)</label>
+                <input type="number" id="receiptAmount">
+            </div>
+            <div class="form-group">
+                <label>Fecha de Pago</label>
+                <input type="date" id="receiptDate">
+            </div>
             <button class="btn btn-whatsapp" onclick="sendWhatsAppReceipt()">💬 Enviar Comprobante por WhatsApp</button>
         </div>
     </div>
 
-    <!-- MODAL ALUMNO -->
+    <!-- MODAL CLASE FIJA / PARTICULAR -->
     <div class="modal" id="studentModal">
         <div class="modal-body">
             <div class="flex-between">
@@ -694,10 +815,11 @@
             </div>
             <input type="hidden" id="editingStudentId" value="">
             <div class="form-group"><label>Nombre</label><input type="text" id="studentName"></div>
-            <div class="form-group"><label>WhatsApp</label><input type="tel" id="studentPhone"></div>
+            <div class="form-group"><label>WhatsApp (ej. +57...)</label><input type="tel" id="studentPhone"></div>
             <div class="form-group"><label>Instrumento</label><input type="text" id="studentInstrument"></div>
             
-            <div class="form-group"><label>Día Clase 1</label>
+            <div class="form-group">
+                <label>Día Clase 1</label>
                 <select id="studentDay1">
                     <option value="LUN">Lunes</option><option value="MAR">Martes</option><option value="MIÉ">Miércoles</option>
                     <option value="JUE">Jueves</option><option value="VIE">Viernes</option><option value="SÁB">Sábado</option><option value="DOM">Domingo</option>
@@ -705,7 +827,8 @@
             </div>
             <div class="form-group"><label>Hora Clase 1</label><input type="time" id="studentTime1" value="08:00"></div>
 
-            <div class="form-group"><label>Día Clase 2 (Opcional)</label>
+            <div class="form-group">
+                <label>Día Clase 2 (Opcional)</label>
                 <select id="studentDay2">
                     <option value="">Ninguno</option>
                     <option value="LUN">Lunes</option><option value="MAR">Martes</option><option value="MIÉ">Miércoles</option>
@@ -714,7 +837,17 @@
             </div>
             <div class="form-group"><label>Hora Clase 2</label><input type="time" id="studentTime2" value="09:00"></div>
 
-            <div class="form-group"><label>Valor Mensualidad ($)</label><input type="number" id="studentFee"></div>
+            <div class="form-group">
+                <label>Día Clase 3 (Opcional)</label>
+                <select id="studentDay3">
+                    <option value="">Ninguno</option>
+                    <option value="LUN">Lunes</option><option value="MAR">Martes</option><option value="MIÉ">Miércoles</option>
+                    <option value="JUE">Jueves</option><option value="VIE">Viernes</option><option value="SÁB">Sábado</option><option value="DOM">Domingo</option>
+                </select>
+            </div>
+            <div class="form-group"><label>Hora Clase 3</label><input type="time" id="studentTime3" value="10:00"></div>
+
+            <div class="form-group"><label>Valor Mensualidad Única ($)</label><input type="number" id="studentFee"></div>
             <div class="form-group"><label>Fecha Vencimiento</label><input type="date" id="studentDueDate"></div>
             <button class="btn" onclick="saveStudent()">Guardar Alumno</button>
         </div>
@@ -728,8 +861,8 @@
                 <span onclick="closeSchoolModal()" style="cursor:pointer; font-size: 1.2rem;">✕</span>
             </div>
             <input type="hidden" id="editingSchoolId" value="">
-            <div class="form-group"><label>Nombre de la Escuela</label><input type="text" id="schoolName"></div>
-            <div class="form-group"><label>WhatsApp</label><input type="tel" id="schoolPhone"></div>
+            <div class="form-group"><label>Nombre de la Escuela</label><input type="text" id="schoolName" placeholder="Ej. Colegio San Juan"></div>
+            <div class="form-group"><label>WhatsApp de Contacto (Opcional)</label><input type="tel" id="schoolPhone" placeholder="+57..."></div>
             <div class="form-group"><label>Día de Clase</label>
                 <select id="schoolDay">
                     <option value="LUN">Lunes</option><option value="MAR">Martes</option><option value="MIÉ">Miércoles</option>
@@ -738,7 +871,7 @@
             </div>
             <div class="form-group"><label>Hora</label><input type="time" id="schoolTime" value="09:00"></div>
             <div class="form-group"><label>Fecha de Pago / Corte</label><input type="date" id="schoolDueDate"></div>
-            <div class="form-group"><label>Monto Pagado ($)</label><input type="number" id="schoolPaidAmount"></div>
+            <div class="form-group"><label>Monto Pagado a Registrar ($)</label><input type="number" id="schoolPaidAmount" placeholder="Ej. 1200"></div>
             <button class="btn" onclick="saveSchool()">Guardar Escuela</button>
         </div>
     </div>
@@ -770,29 +903,25 @@
         let db = null;
 
         let currentWeekOffset = 0;
-        let selectedDayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
+        let selectedDayIndex = 5;
         let selectedDateStr = new Date().toISOString().substring(0, 10);
-        let selectedDayAbbr = daysMapFromDate(new Date());
+        let selectedDayAbbr = "SÁB";
 
         const daysMap = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
         const daysFullMap = { "DOM": "Domingo", "LUN": "Lunes", "MAR": "Martes", "MIÉ": "Miércoles", "JUE": "Jueves", "VIE": "Viernes", "SÁB": "Sábado" };
 
-        function daysMapFromDate(d) {
-            return daysMap[d.getDay()];
-        }
-
         document.addEventListener("DOMContentLoaded", () => {
             document.getElementById('attendanceDate').value = selectedDateStr;
             document.getElementById('occDate').value = selectedDateStr;
+
             loadTemplatesToUI();
-            
+            initFirebaseFromStorage();
             renderWeekNavigator();
             renderStudents();
             renderSchools();
             populateAttendanceDropdown();
             renderAttendanceHistory();
             checkNotifications();
-            initFirebaseFromStorage();
         });
 
         function loadTemplatesToUI() {
@@ -805,9 +934,12 @@
         }
 
         function saveTemplates() {
-            localStorage.setItem('dacapo_tpl_cobro', document.getElementById('templateCobro').value);
-            localStorage.setItem('dacapo_tpl_comp', document.getElementById('templateComprobante').value);
-            localStorage.setItem('dacapo_tpl_asis', document.getElementById('templateAsistencia').value);
+            const tCobro = document.getElementById('templateCobro').value;
+            const tComp = document.getElementById('templateComprobante').value;
+            const tAsis = document.getElementById('templateAsistencia').value;
+            localStorage.setItem('dacapo_tpl_cobro', tCobro);
+            localStorage.setItem('dacapo_tpl_comp', tComp);
+            localStorage.setItem('dacapo_tpl_asis', tAsis);
         }
 
         function initFirebaseFromStorage() {
@@ -836,9 +968,8 @@
         function updateCloudUI(online) {
             const dot = document.getElementById('cloudDot');
             const label = document.getElementById('cloudText');
-            if (!dot || !label) return;
             if (online) { dot.classList.add('online'); label.innerText = "Nube Conectada"; }
-            else { dot.classList.remove('online'); label.innerText = "Nube Desconectada"; }
+            else { dot.classList.remove('online'); label.innerText = "Nube Disconecta"; }
         }
 
         function syncWithFirestore() {
@@ -856,7 +987,7 @@
             db.collection("occasional").onSnapshot(snap => {
                 occasionalClasses = []; snap.forEach(d => occasionalClasses.push({ id: d.id, ...d.data() }));
                 localStorage.setItem('dacapo_occasional', JSON.stringify(occasionalClasses));
-                renderClassesForDay(selectedDayAbbr);
+                renderClassesForDay(selectedDayAbbr); checkNotifications();
             });
             db.collection("attendances").onSnapshot(snap => {
                 attendances = []; snap.forEach(d => attendances.push({ id: d.id, ...d.data() }));
@@ -868,26 +999,66 @@
 
         function checkNotifications() {
             const container = document.getElementById('notificationsContainer');
-            if (!container) return;
-            const todayAbbr = daysMap[new Date().getDay()];
+            const todayIndex = new Date().getDay();
+            const todayAbbr = daysMap[todayIndex];
             const todayStr = new Date().toISOString().substring(0, 10);
             let html = '';
 
             students.forEach(s => {
-                const slots = [{day: s.day1, time: s.time1, idx: 0}, {day: s.day2, time: s.time2, idx: 1}];
-                slots.forEach(slot => {
-                    if (slot.day === todayAbbr) {
-                        const key = `class_${todayStr}_${s.id}_${slot.idx}`;
+                const days = [s.day1, s.day2, s.day3];
+                const times = [s.time1, s.time2, s.time3];
+                days.forEach((d, idx) => {
+                    if (d === todayAbbr) {
+                        const key = `class_${todayStr}_${s.id}_${idx}`;
                         if (!dismissedNotifications[key]) {
-                            html += `<div class="card" style="padding:10px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
-                                <div><strong>🎶 Clase Hoy: ${s.name}</strong><div style="font-size:0.75rem; color:var(--text-muted)">${slot.time || '08:00'}</div></div>
-                                <button class="btn btn-small btn-outline" onclick="dismissNotif('${key}')">✓ Atender</button>
-                            </div>`;
+                            html += `
+                                <div class="notification-card type-class">
+                                    <div class="notif-info">
+                                        <div class="notif-title">🎶 Clase Hoy: ${s.name}</div>
+                                        <div class="notif-sub">Hora: ${times[idx] || '08:00'} • Particular</div>
+                                    </div>
+                                    <button class="btn btn-small btn-outline" onclick="dismissNotif('${key}')">✓ Atender</button>
+                                </div>
+                            `;
                         }
                     }
                 });
             });
-            container.innerHTML = html || `<p style="font-size:0.78rem; color:var(--text-muted);">No hay avisos pendientes.</p>`;
+
+            schools.filter(sc => sc.day === todayAbbr).forEach(sc => {
+                const key = `school_${todayStr}_${sc.id}`;
+                if (!dismissedNotifications[key]) {
+                    html += `
+                        <div class="notification-card type-class">
+                            <div class="notif-info">
+                                <div class="notif-title">🏫 Clase Escuela: ${sc.name}</div>
+                                <div class="notif-sub">Hora: ${sc.time}</div>
+                            </div>
+                            <button class="btn btn-small btn-outline" onclick="dismissNotif('${key}')">✓ Atender</button>
+                        </div>
+                    `;
+                }
+            });
+
+            students.filter(s => !s.paid && s.dueDate && s.dueDate <= todayStr).forEach(s => {
+                const key = `pay_${s.id}_${s.dueDate}`;
+                if (!dismissedNotifications[key]) {
+                    html += `
+                        <div class="notification-card type-payment">
+                            <div class="notif-info">
+                                <div class="notif-title">⚠️ Cobro Pendiente: ${s.name}</div>
+                                <div class="notif-sub">Vence: ${s.dueDate} • $${(s.fee||0).toLocaleString()}</div>
+                            </div>
+                            <div style="display:flex; gap:4px;">
+                                <button class="btn btn-small btn-whatsapp" onclick="sendWhatsAppPaymentReminder('${s.id}')">💬</button>
+                                <button class="btn btn-small btn-outline" onclick="dismissNotif('${key}')">✓</button>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            container.innerHTML = html || `<p style="font-size:0.78rem; color:var(--text-muted);">No hay avisos pendientes por ahora.</p>`;
         }
 
         function dismissNotif(key) {
@@ -900,46 +1071,30 @@
 
         function renderWeekNavigator() {
             const curr = new Date();
-            const dayOfWeek = curr.getDay() === 0 ? 6 : curr.getDay() - 1;
-            const first = curr.getDate() - dayOfWeek + (currentWeekOffset * 7);
+            const first = curr.getDate() - curr.getDay() + (currentWeekOffset * 7);
             const start = new Date(curr.setDate(first));
             const end = new Date(curr.setDate(first + 6));
-            
             document.getElementById('weekRangeDisplay').innerText = 
                 `${start.toLocaleDateString('es-ES', {month:'short', day:'numeric'})} – ${end.toLocaleDateString('es-ES', {month:'short', day:'numeric'})}`;
-            
             renderDaysCarousel(start);
         }
 
         function renderDaysCarousel(startDate) {
             const carousel = document.getElementById('daysCarousel');
             let html = '';
-            const orderedDaysIndices = [1, 2, 3, 4, 5, 6, 0];
-            const todayStr = new Date().toISOString().substring(0, 10);
-
-            orderedDaysIndices.forEach((dayOffset, i) => {
+            for (let i = 0; i < 7; i++) {
                 const d = new Date(startDate);
-                const currentDayOfWeek = d.getDay() === 0 ? 6 : d.getDay() - 1;
-                d.setDate(d.getDate() - currentDayOfWeek + dayOffset);
-
+                d.setDate(startDate.getDate() + i);
                 const abbr = daysMap[d.getDay()];
                 const num = d.getDate();
                 const dStr = d.toISOString().substring(0, 10);
-                const isToday = (dStr === todayStr);
-                
-                if (currentWeekOffset === 0 && isToday && !window._initializedToday) {
-                    selectedDayIndex = i;
-                    selectedDateStr = dStr;
-                    selectedDayAbbr = abbr;
-                    window._initializedToday = true;
-                }
-
                 const isSel = (i === selectedDayIndex);
                 html += `<div class="day-chip ${isSel?'active':''}" onclick="selectDay(${i}, '${abbr}', '${dStr}')"><span class="day-name">${abbr}</span><span class="day-num">${num}</span></div>`;
-            });
-
+            }
             carousel.innerHTML = html;
-            selectDay(selectedDayIndex, selectedDayAbbr, selectedDateStr);
+            const target = new Date(startDate);
+            target.setDate(startDate.getDate() + selectedDayIndex);
+            selectDay(selectedDayIndex, daysMap[target.getDay()], target.toISOString().substring(0, 10));
         }
 
         function selectDay(idx, abbr, dStr) {
@@ -953,90 +1108,214 @@
 
         function renderClassesForDay(abbr) {
             const container = document.getElementById('classesListContainer');
-            let classItems = [];
+            let dayStudentsCount = 0;
+            let html = '';
 
             students.forEach(s => {
-                const slots = [{day: s.day1, time: s.time1}, {day: s.day2, time: s.time2}];
-                slots.forEach(slot => {
+                const slots = [
+                    { day: s.day1, time: s.time1 },
+                    { day: s.day2, time: s.time2 },
+                    { day: s.day3, time: s.time3 }
+                ];
+                slots.forEach((slot, idx) => {
                     if (slot.day === abbr) {
-                        classItems.push({
-                            time: slot.time || '08:00',
-                            html: `<div class="class-card-container"><div class="class-card-content"><div class="class-icon-box">🎵</div><div class="class-details"><div class="class-header-row"><span class="class-student-name">${s.name}</span><span class="badge-fija">Particular • ${slot.time || '08:00'}</span></div><div class="class-meta"><span>🎵 ${s.instrument || 'Música'}</span></div></div></div></div>`
-                        });
+                        dayStudentsCount++;
+                        html += buildSwipeCard(`${s.id}_${idx}`, s.name, `Fija • ${slot.time || '08:00'}`, `🎵 ${s.instrument||'Particular'}`);
                     }
                 });
             });
 
-            schools.filter(sc => sc.day === abbr).forEach(sc => {
-                classItems.push({
-                    time: sc.time || '09:00',
-                    html: `<div class="class-card-container"><div class="class-card-content"><div class="class-icon-box">🏫</div><div class="class-details"><div class="class-header-row"><span class="class-student-name">${sc.name}</span><span class="badge-fija">Escuela • ${sc.time}</span></div></div></div></div>`
-                });
-            });
+            const daySchools = schools.filter(sc => sc.day === abbr);
+            const dayOcc = occasionalClasses.filter(o => o.date === selectedDateStr);
+            const total = dayStudentsCount + daySchools.length + dayOcc.length;
 
-            occasionalClasses.filter(o => o.date === selectedDateStr).forEach(o => {
-                classItems.push({
-                    time: o.time || '10:00',
-                    html: `<div class="class-card-container"><div class="class-card-content"><div class="class-icon-box">⭐</div><div class="class-details"><div class="class-header-row"><span class="class-student-name">${o.name}</span><span class="badge-fija">Ocasional • ${o.time}</span></div></div></div></div>`
-                });
-            });
+            document.getElementById('classesCountBadge').innerText = `${total} clase(s)`;
+            if (total === 0) { container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-muted); padding:10px 0;">Sin clases este día.</p>`; return; }
 
-            classItems.sort((a, b) => a.time.localeCompare(b.time));
-            document.getElementById('classesCountBadge').innerText = `${classItems.length} clase(s)`;
-            container.innerHTML = classItems.map(item => item.html).join('') || `<p style="font-size:0.85rem; color:var(--text-muted); padding:10px 0;">Sin clases este día.</p>`;
+            daySchools.forEach(sc => {
+                html += buildSwipeCard(sc.id, sc.name, `Escuela • ${sc.time}`, `🏫 Escuela registrada`);
+            });
+            dayOcc.forEach(o => {
+                html += buildSwipeCard(o.id, o.name, `Ocasional • ${o.time}`, `⭐ Clase extra`);
+            });
+            container.innerHTML = html;
         }
 
-        function renderStudents() {
-            const container = document.getElementById('studentsListContainer');
-            const total = students.reduce((acc, s) => acc + (parseFloat(s.fee) || 0), 0);
-            const paid = students.filter(s => s.paid).reduce((acc, s) => acc + (parseFloat(s.fee) || 0), 0);
-            document.getElementById('totalFeeDisplay').innerText = `$${total.toLocaleString()}`;
-            document.getElementById('paidSummaryDisplay').innerText = `Cobrado: $${paid.toLocaleString()} | Pendiente: $${(total-paid).toLocaleString()}`;
+        let sX = 0, activeCard = null;
+        function swStart(e, cardId) {
+            sX = e.touches[0].clientX;
+            activeCard = document.getElementById(cardId);
+            activeCard.style.transition = 'none';
+        }
+        function swMove(e, cardId) {
+            if (!sX || !activeCard) return;
+            let diff = e.touches[0].clientX - sX;
+            if (diff > 120) diff = 120; if (diff < -120) diff = -120;
+            activeCard.style.transform = `translateX(${diff}px)`;
+        }
+        function swEnd(e, cardId, id, name) {
+            if (!sX || !activeCard) return;
+            let diff = e.changedTouches[0].clientX - sX;
+            activeCard.style.transition = 'transform 0.2s ease-out';
+            if (diff > 50) { activeCard.style.transform = 'translateX(100px)'; }
+            else if (diff < -50) { activeCard.style.transform = 'translateX(-100px)'; }
+            else { activeCard.style.transform = 'translateX(0px)'; }
+            sX = 0; activeCard = null;
+        }
 
-            if (students.length === 0) { container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted);">Sin alumnos.</p>`; return; }
-            container.innerHTML = students.map(s => `
-                <div class="card" style="margin-bottom:12px; padding:14px;">
-                    <div class="flex-between">
-                        <div><span class="class-student-name">${s.name}</span> ${s.paid ? '<span class="badge-paid">PAGADO</span>' : '<span class="badge-pending">PENDIENTE</span>'}</div>
-                        <span style="font-weight:800; color:var(--success);">$${(s.fee||0).toLocaleString()}</span>
+        function buildSwipeCard(id, name, badgeText, metaText) {
+            return `
+                <div class="class-card-container" id="cont-${id}">
+                    <div class="class-card-swipe-menu">
+                        <button class="swipe-btn swipe-btn-present" onclick="registerAtt('${id}', '${name}', 'Presente')">✓ Se hizo</button>
+                        <button class="swipe-btn swipe-btn-absent" onclick="registerAtt('${id}', '${name}', 'Ausente')">✕ No fue</button>
                     </div>
-                    <div class="class-meta" style="margin-top:6px;">
-                        <span>🎵 ${s.instrument || 'Particular'} • ⏰ ${s.day1} (${s.time1}) ${s.day2 ? ', ' + s.day2 + ' (' + s.time2 + ')' : ''}</span>
-                    </div>
-                    <div class="actions-group" style="margin-top:10px;">
-                        <button class="btn btn-small btn-outline" onclick="openStudentModal('${s.id}')">✏️ Editar</button>
-                        <button class="btn btn-small btn-outline" onclick="togglePay('${s.id}')">${s.paid ? '🔴 Pendiente' : '🟢 Pagado'}</button>
-                        ${s.phone ? `<button class="btn btn-small btn-whatsapp" onclick="sendWhatsAppPaymentReminder('${s.id}')">💬 Cobro</button>` : ''}
-                        ${s.phone ? `<button class="btn btn-small btn-whatsapp" onclick="openReceiptModal('${s.id}')">💳 Recibo</button>` : ''}
-                        <button class="btn btn-small btn-danger" onclick="deleteStudent('${s.id}')">🗑️</button>
+                    <div class="class-card-content" id="card-${id}" 
+                         ontouchstart="swStart(event, 'card-${id}')" ontouchmove="swMove(event, 'card-${id}')" ontouchend="swEnd(event, 'card-${id}', '${id}', '${name}')">
+                        <div class="class-icon-box">🎵</div>
+                        <div class="class-details">
+                            <div class="class-header-row">
+                                <span class="class-student-name">${name}</span>
+                                <span class="badge-fija">${badgeText}</span>
+                            </div>
+                            <div class="class-meta"><span>${metaText}</span></div>
+                        </div>
                     </div>
                 </div>
-            `).join('');
+            `;
         }
 
-        function togglePay(id) {
-            const s = students.find(item => item.id === id);
-            if (s) {
-                s.paid = !s.paid;
-                localStorage.setItem('dacapo_students', JSON.stringify(students));
-                if (db) db.collection("students").doc(id).update({ paid: s.paid });
-                renderStudents();
+        function registerAtt(id, name, status) {
+            const rec = { id: Date.now().toString(), studentId: id, studentName: name, date: selectedDateStr, status };
+            attendances.unshift(rec);
+            localStorage.setItem('dacapo_attendances', JSON.stringify(attendances));
+            if (db) db.collection("attendances").doc(rec.id).set(rec);
+            renderAttendanceHistory(); renderStudents(); renderSchools();
+            alert(`Registrado: ${name} - ${status}`);
+        }
+
+        function sendWhatsAppPaymentReminder(studentId) {
+            const student = students.find(s => s.id === studentId);
+            if (!student || !student.phone) return alert("El alumno no tiene número de WhatsApp registrado.");
+            const phoneClean = student.phone.replace(/[^0-9+]/g, '');
+            let template = document.getElementById('templateCobro').value;
+            let text = template.replace('{nombre}', student.name).replace('{monto}', (student.fee||0).toLocaleString()).replace('{vencimiento}', student.dueDate||'pronto');
+            window.open(`https://wa.me/${phoneClean}?text=${encodeURIComponent(text)}`, '_blank');
+        }
+
+        function openReceiptModal(studentId) {
+            const student = students.find(s => s.id === studentId);
+            if (!student) return;
+            document.getElementById('receiptStudentId').value = student.id;
+            document.getElementById('receiptStudentName').value = student.name;
+            document.getElementById('receiptAmount').value = student.fee || 0;
+            document.getElementById('receiptDate').value = new Date().toISOString().substring(0, 10);
+            document.getElementById('receiptModal').classList.add('active');
+        }
+
+        function closeReceiptModal() {
+            document.getElementById('receiptModal').classList.remove('active');
+        }
+
+        function sendWhatsAppReceipt() {
+            const studentId = document.getElementById('receiptStudentId').value;
+            const student = students.find(s => s.id === studentId);
+            if (!student || !student.phone) return alert("El alumno no tiene número de teléfono registrado.");
+
+            const amount = parseFloat(document.getElementById('receiptAmount').value) || 0;
+            const date = document.getElementById('receiptDate').value;
+            const phoneClean = student.phone.replace(/[^0-9+]/g, '');
+
+            let template = document.getElementById('templateComprobante').value;
+            let text = template.replace('{nombre}', student.name).replace('{monto}', amount.toLocaleString()).replace('{fecha}', date);
+
+            window.open(`https://wa.me/${phoneClean}?text=${encodeURIComponent(text)}`, '_blank');
+            closeReceiptModal();
+        }
+
+        function openSchoolModal(id = null) {
+            if (id) {
+                const sc = schools.find(item => item.id === id);
+                if (sc) {
+                    document.getElementById('modalSchoolTitle').innerText = "Editar Escuela";
+                    document.getElementById('editingSchoolId').value = sc.id;
+                    document.getElementById('schoolName').value = sc.name;
+                    document.getElementById('schoolPhone').value = sc.phone || '';
+                    document.getElementById('schoolDay').value = sc.day || 'LUN';
+                    document.getElementById('schoolTime').value = sc.time || '09:00';
+                    document.getElementById('schoolDueDate').value = sc.dueDate || '';
+                    document.getElementById('schoolPaidAmount').value = sc.lastPaidAmount || '';
+                }
+            } else {
+                document.getElementById('modalSchoolTitle').innerText = "Registrar Clase en Escuela";
+                document.getElementById('editingSchoolId').value = "";
+                document.getElementById('schoolName').value = "";
+                document.getElementById('schoolPhone').value = "";
+                document.getElementById('schoolDueDate').value = new Date().toISOString().substring(0, 10);
+                document.getElementById('schoolPaidAmount').value = "";
             }
+            document.getElementById('schoolModal').classList.add('active');
+        }
+        function closeSchoolModal() { document.getElementById('schoolModal').classList.remove('active'); }
+
+        function saveSchool() {
+            const id = document.getElementById('editingSchoolId').value;
+            const name = document.getElementById('schoolName').value.trim();
+            const phone = document.getElementById('schoolPhone').value.trim();
+            const day = document.getElementById('schoolDay').value;
+            const time = document.getElementById('schoolTime').value;
+            const dueDate = document.getElementById('schoolDueDate').value;
+            const lastPaidAmount = parseFloat(document.getElementById('schoolPaidAmount').value) || 0;
+
+            if (!name) return alert("Ingresa el nombre de la escuela.");
+
+            const schoolObj = { id: id || Date.now().toString(), name, phone, day, time, dueDate, lastPaidAmount };
+            if (id) {
+                const idx = schools.findIndex(s => s.id === id);
+                if (idx !== -1) schools[idx] = schoolObj;
+            } else { schools.push(schoolObj); }
+
+            localStorage.setItem('dacapo_schools', JSON.stringify(schools));
+            if (db) db.collection("schools").doc(schoolObj.id).set(schoolObj);
+
+            renderSchools(); renderWeekNavigator(); populateAttendanceDropdown(); closeSchoolModal(); checkNotifications();
         }
 
         function renderSchools() {
             const container = document.getElementById('schoolsListContainer');
-            if (!container) return;
             if (schools.length === 0) { container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted);">Sin escuelas registradas.</p>`; return; }
-            container.innerHTML = schools.map(sc => `
-                <div class="card" style="margin-bottom:12px;">
-                    <div class="flex-between"><span class="class-student-name">🏫 ${sc.name}</span><span style="font-weight:700; color:var(--success);">$${(sc.lastPaidAmount||0).toLocaleString()}</span></div>
-                    <div class="class-meta" style="margin-top:6px;"><span>⏰ ${sc.day} (${sc.time})</span></div>
-                    <div class="actions-group" style="margin-top:10px;">
-                        <button class="btn btn-small btn-danger" onclick="deleteSchool('${sc.id}')">🗑️ Eliminar</button>
+
+            const currMonth = new Date().toISOString().substring(0, 7);
+
+            container.innerHTML = schools.map(sc => {
+                const count = attendances.filter(a => a.studentId === sc.id && a.date && a.date.startsWith(currMonth) && a.status === 'Presente').length;
+                return `
+                    <div class="card" style="margin-bottom:12px;">
+                        <div class="flex-between">
+                            <span class="class-student-name">🏫 ${sc.name}</span>
+                            <span style="font-weight:700; color:var(--success);">$${(sc.lastPaidAmount||0).toLocaleString()}</span>
+                        </div>
+                        <div class="class-meta" style="margin-top:6px;">
+                            <span>⏰ ${sc.day} (${sc.time})</span>
+                            <span>📅 Próx. Pago: ${sc.dueDate || 'N/A'}</span>
+                            <span>✔ Clases este mes: <strong>${count}</strong></span>
+                        </div>
+                        <div class="actions-group" style="margin-top:10px;">
+                            <button class="btn btn-small btn-outline" onclick="openSchoolModal('${sc.id}')">✏️ Editar</button>
+                            <button class="btn btn-small btn-danger" onclick="deleteSchool('${sc.id}')">🗑️</button>
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
+        }
+
+        function deleteSchool(id) {
+            if (confirm("¿Eliminar esta escuela?")) {
+                schools = schools.filter(s => s.id !== id);
+                localStorage.setItem('dacapo_schools', JSON.stringify(schools));
+                if (db) db.collection("schools").doc(id).delete();
+                renderSchools(); renderWeekNavigator(); populateAttendanceDropdown(); checkNotifications();
+            }
         }
 
         function openStudentModal(id = null) {
@@ -1052,6 +1331,8 @@
                     document.getElementById('studentTime1').value = s.time1 || '08:00';
                     document.getElementById('studentDay2').value = s.day2 || '';
                     document.getElementById('studentTime2').value = s.time2 || '09:00';
+                    document.getElementById('studentDay3').value = s.day3 || '';
+                    document.getElementById('studentTime3').value = s.time3 || '10:00';
                     document.getElementById('studentFee').value = s.fee || '';
                     document.getElementById('studentDueDate').value = s.dueDate || '';
                 }
@@ -1065,12 +1346,13 @@
                 document.getElementById('studentTime1').value = "08:00";
                 document.getElementById('studentDay2').value = "";
                 document.getElementById('studentTime2').value = "09:00";
+                document.getElementById('studentDay3').value = "";
+                document.getElementById('studentTime3').value = "10:00";
                 document.getElementById('studentFee').value = "";
                 document.getElementById('studentDueDate').value = new Date().toISOString().substring(0, 10);
             }
             document.getElementById('studentModal').classList.add('active');
         }
-
         function closeStudentModal() { document.getElementById('studentModal').classList.remove('active'); }
 
         function saveStudent() {
@@ -1082,11 +1364,13 @@
             const time1 = document.getElementById('studentTime1').value;
             const day2 = document.getElementById('studentDay2').value;
             const time2 = document.getElementById('studentTime2').value;
+            const day3 = document.getElementById('studentDay3').value;
+            const time3 = document.getElementById('studentTime3').value;
             const fee = parseFloat(document.getElementById('studentFee').value) || 0;
             const dueDate = document.getElementById('studentDueDate').value;
 
             if (!name) return alert("Ingresa el nombre.");
-            const studentObj = { id: id || Date.now().toString(), name, phone, instrument, day1, time1, day2, time2, fee, dueDate, paid: false };
+            const studentObj = { id: id || Date.now().toString(), name, phone, instrument, day1, time1, day2, time2, day3, time3, fee, dueDate, paid: false };
             
             if (id) {
                 const idx = students.findIndex(s => s.id === id);
@@ -1097,7 +1381,63 @@
             localStorage.setItem('dacapo_students', JSON.stringify(students));
             if (db) db.collection("students").doc(studentObj.id).set(studentObj);
 
-            renderStudents(); renderWeekNavigator(); populateAttendanceDropdown(); closeStudentModal();
+            renderStudents(); renderWeekNavigator(); populateAttendanceDropdown(); closeStudentModal(); checkNotifications();
+        }
+
+        function renderStudents() {
+            const container = document.getElementById('studentsListContainer');
+            const q = document.getElementById('searchStudent').value.toLowerCase();
+            const filtered = students.filter(s => s.name.toLowerCase().includes(q));
+
+            const total = students.reduce((acc, s) => acc + (parseFloat(s.fee) || 0), 0);
+            const paid = students.filter(s => s.paid).reduce((acc, s) => acc + (parseFloat(s.fee) || 0), 0);
+            document.getElementById('totalFeeDisplay').innerText = `$${total.toLocaleString()}`;
+            document.getElementById('paidSummaryDisplay').innerText = `Cobrado: $${paid.toLocaleString()} | Pendiente: $${(total-paid).toLocaleString()}`;
+
+            if (filtered.length === 0) { container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted);">Sin alumnos.</p>`; return; }
+
+            const currMonth = new Date().toISOString().substring(0, 7);
+
+            container.innerHTML = filtered.map(s => {
+                const count = attendances.filter(a => a.studentId && a.studentId.startsWith(s.id) && a.date && a.date.startsWith(currMonth) && a.status === 'Presente').length;
+                let daysSummary = `${s.day1} (${s.time1})`;
+                if (s.day2) daysSummary += `, ${s.day2} (${s.time2})`;
+                if (s.day3) daysSummary += `, ${s.day3} (${s.time3})`;
+
+                return `
+                    <div class="card" style="margin-bottom:12px; padding:14px;">
+                        <div class="flex-between">
+                            <div>
+                                <span class="class-student-name">${s.name}</span>
+                                ${s.paid ? '<span class="badge-paid" style="margin-left:6px;">PAGADO</span>' : '<span class="badge-pending" style="margin-left:6px;">PENDIENTE</span>'}
+                            </div>
+                            <span style="font-weight:800; color:var(--success);">$${(s.fee||0).toLocaleString()}</span>
+                        </div>
+                        <div class="class-meta" style="margin-top:6px; flex-direction:column; gap:3px;">
+                            <span>🎵 ${s.instrument || 'Particular'} • 📅 Vence: ${s.dueDate || 'N/A'}</span>
+                            <span>⏰ Horarios: ${daysSummary}</span>
+                            <span>✔ Clases asistidas este mes: <strong>${count}</strong></span>
+                        </div>
+                        <div class="actions-group" style="margin-top:10px;">
+                            <button class="btn btn-small btn-outline" onclick="openStudentModal('${s.id}')">✏️ Editar</button>
+                            <button class="btn btn-small btn-outline" onclick="togglePay('${s.id}')">${s.paid ? '🔴 Pendiente' : '🟢 Pagado'}</button>
+                            ${s.phone ? `<button class="btn btn-small btn-whatsapp" onclick="sendWhatsAppPaymentReminder('${s.id}')">💬 Cobro</button>` : ''}
+                            ${s.phone ? `<button class="btn btn-small btn-whatsapp" onclick="openReceiptModal('${s.id}')">💳 Recibo</button>` : ''}
+                            <button class="btn btn-small btn-danger" onclick="deleteStudent('${s.id}')">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function togglePay(id) {
+            const s = students.find(item => item.id === id);
+            if (s) {
+                s.paid = !s.paid;
+                localStorage.setItem('dacapo_students', JSON.stringify(students));
+                if (db) db.collection("students").doc(id).update({ paid: s.paid });
+                renderStudents(); checkNotifications();
+            }
         }
 
         function deleteStudent(id) {
@@ -1105,43 +1445,12 @@
                 students = students.filter(s => s.id !== id);
                 localStorage.setItem('dacapo_students', JSON.stringify(students));
                 if (db) db.collection("students").doc(id).delete();
-                renderStudents(); renderWeekNavigator(); populateAttendanceDropdown();
-            }
-        }
-
-        function openSchoolModal() { document.getElementById('schoolModal').classList.add('active'); }
-        function closeSchoolModal() { document.getElementById('schoolModal').classList.remove('active'); }
-
-        function saveSchool() {
-            const name = document.getElementById('schoolName').value.trim();
-            const phone = document.getElementById('schoolPhone').value.trim();
-            const day = document.getElementById('schoolDay').value;
-            const time = document.getElementById('schoolTime').value;
-            const dueDate = document.getElementById('schoolDueDate').value;
-            const lastPaidAmount = parseFloat(document.getElementById('schoolPaidAmount').value) || 0;
-
-            if (!name) return alert("Ingresa el nombre de la escuela.");
-            const schoolObj = { id: Date.now().toString(), name, phone, day, time, dueDate, lastPaidAmount };
-            schools.push(schoolObj);
-
-            localStorage.setItem('dacapo_schools', JSON.stringify(schools));
-            if (db) db.collection("schools").doc(schoolObj.id).set(schoolObj);
-
-            renderSchools(); renderWeekNavigator(); populateAttendanceDropdown(); closeSchoolModal();
-        }
-
-        function deleteSchool(id) {
-            if (confirm("¿Eliminar escuela?")) {
-                schools = schools.filter(s => s.id !== id);
-                localStorage.setItem('dacapo_schools', JSON.stringify(schools));
-                if (db) db.collection("schools").doc(id).delete();
-                renderSchools(); renderWeekNavigator(); populateAttendanceDropdown();
+                renderStudents(); renderWeekNavigator(); populateAttendanceDropdown(); checkNotifications();
             }
         }
 
         function openOccasionalModal() { document.getElementById('occasionalModal').classList.add('active'); }
         function closeOccasionalModal() { document.getElementById('occasionalModal').classList.remove('active'); }
-
         function saveOccasionalClass() {
             const name = document.getElementById('occName').value.trim();
             const date = document.getElementById('occDate').value;
@@ -1149,18 +1458,20 @@
             if (!name || !date) return alert("Completa los campos");
             const occ = { id: Date.now().toString(), name, date, time };
             occasionalClasses.push(occ);
-
             localStorage.setItem('dacapo_occasional', JSON.stringify(occasionalClasses));
             if (db) db.collection("occasional").doc(occ.id).set(occ);
-
-            renderClassesForDay(selectedDayAbbr); closeOccasionalModal();
+            renderClassesForDay(selectedDayAbbr); closeOccasionalModal(); checkNotifications();
         }
 
         function populateAttendanceDropdown() {
             const sel = document.getElementById('attendanceStudentSelect');
-            if (!sel) return;
-            let opts = students.map(s => `<option value="${s.id}|${s.name}|${s.phone||''}">${s.name} (${s.day1} ${s.time1})</option>`);
-            opts = opts.concat(schools.map(sc => `<option value="${sc.id}|Escuela: ${sc.name}|${sc.phone||''}">Escuela: ${sc.name}</option>`));
+            let opts = [];
+            students.forEach(s => {
+                opts.push(`<option value="${s.id}_0|${s.name} (${s.day1})|${s.phone || ''}">Particular: ${s.name} (${s.day1} ${s.time1})</option>`);
+                if(s.day2) opts.push(`<option value="${s.id}_1|${s.name} (${s.day2})|${s.phone || ''}">Particular: ${s.name} (${s.day2} ${s.time2})</option>`);
+                if(s.day3) opts.push(`<option value="${s.id}_2|${s.name} (${s.day3})|${s.phone || ''}">Particular: ${s.name} (${s.day3} ${s.time3})</option>`);
+            });
+            opts = opts.concat(schools.map(sc => `<option value="${sc.id}|Escuela: ${sc.name}|${sc.phone || ''}">Escuela: ${sc.name}</option>`));
             sel.innerHTML = opts.join('') || `<option value="">Sin registros</option>`;
         }
 
@@ -1171,83 +1482,74 @@
             if (!val || !date) return alert("Selecciona datos");
 
             const parts = val.split('|');
-            const rec = { id: Date.now().toString(), studentId: parts[0], studentName: parts[1], date, status };
-            attendances.unshift(rec);
+            const studentId = parts[0];
+            const studentName = parts[1];
 
+            const rec = { id: Date.now().toString(), studentId, studentName, date, status };
+            attendances.unshift(rec);
             localStorage.setItem('dacapo_attendances', JSON.stringify(attendances));
             if (db) db.collection("attendances").doc(rec.id).set(rec);
+            renderAttendanceHistory(); renderStudents(); renderSchools(); alert("Asistencia guardada.");
+        }
 
-            renderAttendanceHistory(); alert("Asistencia guardada.");
+        function sendCustomAttendanceWhatsApp() {
+            const date = document.getElementById('attendanceDate').value;
+            const val = document.getElementById('attendanceStudentSelect').value;
+            const status = document.getElementById('attendanceStatusSelect').value;
+            if (!val || !date) return alert("Selecciona alumno/escuela y fecha.");
+
+            const parts = val.split('|');
+            const studentName = parts[1];
+            const phone = parts[2];
+
+            if (!phone) return alert("El alumno/escuela seleccionado no tiene número de teléfono registrado.");
+
+            let template = document.getElementById('templateAsistencia').value;
+            let text = template.replace('{nombre}', studentName).replace('{fecha}', date).replace('{estado}', status);
+            const phoneClean = phone.replace(/[^0-9+]/g, '');
+            window.open(`https://wa.me/${phoneClean}?text=${encodeURIComponent(text)}`, '_blank');
         }
 
         function renderAttendanceHistory() {
             const container = document.getElementById('attendanceHistoryContainer');
-            if (!container) return;
-            if (attendances.length === 0) { container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted);">Sin asistencias.</p>`; return; }
-            container.innerHTML = attendances.slice(0, 15).map(a => `
+            if (attendances.length === 0) { container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted);">Sin asistencias registradas.</p>`; return; }
+            container.innerHTML = attendances.slice(0, 20).map(a => `
                 <div class="card" style="padding:10px 14px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
-                    <div><strong>${a.studentName}</strong><div style="font-size:0.75rem; color:var(--text-muted);">📅 ${a.date} • ${a.status}</div></div>
+                    <div>
+                        <strong>${a.studentName}</strong>
+                        <div style="font-size:0.75rem; color:var(--text-muted);">📅 ${a.date} • Estado: ${a.status}</div>
+                    </div>
                     <button class="btn btn-small btn-danger" onclick="deleteAttendance('${a.id}')">🗑️</button>
                 </div>
             `).join('');
         }
 
         function deleteAttendance(id) {
-            attendances = attendances.filter(a => a.id !== id);
-            localStorage.setItem('dacapo_attendances', JSON.stringify(attendances));
-            if (db) db.collection("attendances").doc(id).delete();
-            renderAttendanceHistory();
-        }
-
-        function clearOldAttendances() {
-            if (confirm("¿Borrar todo el historial?")) {
-                attendances = [];
-                localStorage.removeItem('dacapo_attendances');
-                renderAttendanceHistory();
+            if (confirm("¿Deseas eliminar este registro de asistencia?")) {
+                attendances = attendances.filter(a => a.id !== id);
+                localStorage.setItem('dacapo_attendances', JSON.stringify(attendances));
+                if (db) db.collection("attendances").doc(id).delete();
+                renderAttendanceHistory(); renderStudents(); renderSchools();
             }
         }
 
-        function sendWhatsAppPaymentReminder(studentId) {
-            const s = students.find(item => item.id === studentId);
-            if (!s || !s.phone) return alert("Sin teléfono");
-            let text = document.getElementById('templateCobro').value.replace('{nombre}', s.name).replace('{monto}', (s.fee||0).toLocaleString()).replace('{vencimiento}', s.dueDate||'pronto');
-            window.open(`https://wa.me/${s.phone.replace(/[^0-9+]/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
-        }
-
-        function openReceiptModal(studentId) {
-            const s = students.find(item => item.id === studentId);
-            if (!s) return;
-            document.getElementById('receiptStudentId').value = s.id;
-            document.getElementById('receiptStudentName').value = s.name;
-            document.getElementById('receiptAmount').value = s.fee || 0;
-            document.getElementById('receiptDate').value = new Date().toISOString().substring(0, 10);
-            document.getElementById('receiptModal').classList.add('active');
-        }
-
-        function closeReceiptModal() { document.getElementById('receiptModal').classList.remove('active'); }
-
-        function sendWhatsAppReceipt() {
-            const s = students.find(item => item.id === document.getElementById('receiptStudentId').value);
-            if (!s || !s.phone) return;
-            let text = document.getElementById('templateComprobante').value.replace('{nombre}', s.name).replace('{monto}', document.getElementById('receiptAmount').value).replace('{fecha}', document.getElementById('receiptDate').value);
-            window.open(`https://wa.me/${s.phone.replace(/[^0-9+]/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
-            closeReceiptModal();
-        }
-
-        function sendCustomAttendanceWhatsApp() {
-            const val = document.getElementById('attendanceStudentSelect').value;
-            if (!val) return;
-            const parts = val.split('|');
-            if (!parts[2]) return alert("Sin teléfono registrado");
-            let text = document.getElementById('templateAsistencia').value.replace('{nombre}', parts[1]).replace('{fecha}', document.getElementById('attendanceDate').value).replace('{estado}', document.getElementById('attendanceStatusSelect').value);
-            window.open(`https://wa.me/${parts[2].replace(/[^0-9+]/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
+        function clearOldAttendances() {
+            if (confirm("¿Estás seguro de eliminar todo el historial de asistencias?")) {
+                const idsToDelete = attendances.map(a => a.id);
+                attendances = [];
+                localStorage.removeItem('dacapo_attendances');
+                if (db) {
+                    idsToDelete.forEach(id => db.collection("attendances").doc(id).delete());
+                }
+                renderAttendanceHistory(); renderStudents(); renderSchools();
+            }
         }
 
         function switchTab(id, btn) {
             document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(e => e.classList.remove('active'));
             document.getElementById(`tab-${id}`).classList.add('active');
-            if(btn) btn.classList.add('active');
+            btn.classList.add('active');
         }
 
         function openCloudModal() { document.getElementById('cloudModal').classList.add('active'); }
@@ -1256,7 +1558,9 @@
             const blob = new Blob([JSON.stringify({students, schools, occasionalClasses, attendances})], {type: 'application/json'});
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'dacapo_respaldo.json'; a.click();
         }
-        function clearLocalData() { if (confirm("¿Limpiar datos locales?")) { localStorage.clear(); location.reload(); } }
+        function clearLocalData() {
+            if (confirm("¿Limpiar datos locales?")) { localStorage.clear(); location.reload(); }
+        }
     </script>
 </body>
 </html>
