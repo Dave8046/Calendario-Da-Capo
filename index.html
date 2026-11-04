@@ -279,15 +279,18 @@
             color: var(--text-muted);
         }
 
+        /* TARJETA DE CLASE CON ACCIONES LATERALES (SWIPE SIMULADO / BOTONES RÁPIDOS) */
         .class-card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 12px;
-            padding: 14px;
+            padding: 12px 14px;
             display: flex;
             align-items: center;
             gap: 12px;
             margin-bottom: 10px;
+            overflow: hidden;
+            position: relative;
         }
 
         .class-icon-box {
@@ -299,6 +302,7 @@
             align-items: center;
             justify-content: center;
             font-size: 1rem;
+            flex-shrink: 0;
         }
 
         .class-details {
@@ -350,6 +354,33 @@
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
+        }
+
+        .swipe-actions {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .btn-swipe {
+            padding: 6px 10px;
+            font-size: 0.7rem;
+            border-radius: 6px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-swipe-present {
+            background: rgba(0, 200, 83, 0.2);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .btn-swipe-absent {
+            background: rgba(255, 68, 68, 0.2);
+            color: var(--danger);
+            border: 1px solid var(--danger);
         }
 
         .kpi-card {
@@ -770,12 +801,12 @@
 
         let currentWeekOffset = 0;
         let selectedDayIndex = 5;
+        let selectedDateStr = new Date().toISOString().substring(0, 10);
 
         const daysMap = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
 
         document.addEventListener("DOMContentLoaded", () => {
-            const today = new Date().toISOString().substring(0, 10);
-            document.getElementById('attendanceDate').value = today;
+            document.getElementById('attendanceDate').value = selectedDateStr;
 
             loadTemplatesToUI();
             initFirebaseFromStorage();
@@ -878,17 +909,16 @@
                 attendances = cloudAttendances;
                 localStorage.setItem('dacapo_attendances', JSON.stringify(attendances));
                 renderAttendanceHistory();
+                renderStudents();
             });
         }
 
-        // CENTRO DE NOTIFICACIONES CON OPCIÓN DE CONFIRMAR / DEJAR PENDIENTE
         function checkNotifications() {
             const todayIndex = new Date().getDay();
             const todayAbbr = daysMap[todayIndex];
             const todayStr = new Date().toISOString().substring(0, 10);
             const todayKey = `class_${todayStr}`;
 
-            // 1. Notificaciones de Clases de Hoy
             const alertContainer = document.getElementById('notificationsContainer');
             const todayClasses = students.filter(s => s.day === todayAbbr);
             
@@ -911,7 +941,6 @@
                 `;
             }
 
-            // Mostrar botón para ver resueltas si hay alguna ocultada
             if (isClassDismissed) {
                 htmlClasses += `
                     <div class="toggle-resolved-section">
@@ -922,7 +951,6 @@
 
             alertContainer.innerHTML = htmlClasses;
 
-            // 2. Notificaciones de Cobros / Mensualidades
             const uniqueNames = [...new Set(students.map(s => s.name))];
             const uniqueList = uniqueNames.map(name => students.find(s => s.name === name));
             
@@ -999,11 +1027,12 @@
                 dayDate.setDate(startDate.getDate() + i);
                 const dayAbbr = daysMap[dayDate.getDay()];
                 const dayNum = dayDate.getDate();
+                const dateStrFormatted = dayDate.toISOString().substring(0, 10);
 
                 const isSelected = (i === selectedDayIndex);
 
                 html += `
-                    <div class="day-chip ${isSelected ? 'active' : ''}" onclick="selectDay(${i}, '${dayAbbr}', '${dayDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}')">
+                    <div class="day-chip ${isSelected ? 'active' : ''}" onclick="selectDay(${i}, '${dayAbbr}', '${dateStrFormatted}', '${dayDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}')">
                         <span class="day-name">${dayAbbr}</span>
                         <span class="day-num">${dayNum}</span>
                         ${isSelected ? '<div class="day-dot"></div>' : ''}
@@ -1012,11 +1041,14 @@
             }
 
             carousel.innerHTML = html;
-            selectDay(selectedDayIndex, daysMap[(startDate.getDay() + selectedDayIndex) % 7], "Sábado, 31 de octubre");
+            const targetDate = new Date(startDate);
+            targetDate.setDate(startDate.getDate() + selectedDayIndex);
+            selectDay(selectedDayIndex, daysMap[targetDate.getDay()], targetDate.toISOString().substring(0, 10), targetDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }));
         }
 
-        function selectDay(index, dayAbbr, fullTitle) {
+        function selectDay(index, dayAbbr, dateStr, fullTitle) {
             selectedDayIndex = index;
+            selectedDateStr = dateStr;
             document.querySelectorAll('.day-chip').forEach((chip, idx) => {
                 if (idx === index) chip.classList.add('active');
                 else chip.classList.remove('active');
@@ -1051,8 +1083,26 @@
                             <span>🎵 ${s.instrument || 'Otro'}</span>
                         </div>
                     </div>
+                    <div class="swipe-actions">
+                        <button class="btn-swipe btn-swipe-present" onclick="quickMarkAttendance('${s.id}', '${s.name}', 'Presente')">✓ Se hizo</button>
+                        <button class="btn-swipe btn-swipe-absent" onclick="quickMarkAttendance('${s.id}', '${s.name}', 'Ausente')">✕ No fue</button>
+                    </div>
                 </div>
             `).join('');
+        }
+
+        // ACCIÓN RÁPIDA DESDE LAS TARJETAS DE LA AGENDA
+        function quickMarkAttendance(studentId, studentName, status) {
+            const record = { id: Date.now().toString(), studentId, studentName: `${studentName}`, date: selectedDateStr, status };
+
+            attendances.unshift(record);
+            localStorage.setItem('dacapo_attendances', JSON.stringify(attendances));
+
+            if (db) db.collection("attendances").doc(record.id).set(record);
+
+            renderAttendanceHistory();
+            renderStudents();
+            alert(`Asistencia registrada: ${studentName} - ${status} (${selectedDateStr})`);
         }
 
         function switchTab(tabId, btn) {
@@ -1209,9 +1259,19 @@
                 return;
             }
 
+            const currentMonthPrefix = new Date().toISOString().substring(0, 7); // "YYYY-MM"
+
             container.innerHTML = filtered.map(s => {
                 const studentClasses = students.filter(st => st.name.toLowerCase() === s.name.toLowerCase());
                 const scheduleText = studentClasses.map(sc => `${sc.day} (${sc.time})`).join(' • ');
+
+                // CONTADOR DE CLASES RECIBIDAS EN EL MES
+                const monthClassesCount = attendances.filter(a => {
+                    const matchesName = a.studentName && a.studentName.toLowerCase().includes(s.name.toLowerCase());
+                    const matchesMonth = a.date && a.date.startsWith(currentMonthPrefix);
+                    const isPresent = a.status === 'Presente';
+                    return matchesName && matchesMonth && isPresent;
+                }).length;
 
                 return `
                     <div class="class-card" style="flex-direction:column; align-items:stretch;">
@@ -1227,6 +1287,7 @@
                         <div class="class-meta" style="margin-top:6px;">
                             <span>🎵 ${s.instrument || 'Otro'}</span>
                             <span>📅 Vence: ${s.dueDate || 'No asignada'}</span>
+                            <span>✔ Clases este mes: <strong>${monthClassesCount}</strong></span>
                             <span>⏰ ${scheduleText}</span>
                         </div>
                         <div class="actions-group">
@@ -1272,7 +1333,7 @@
             if (!studentId || !date) return alert("Selecciona alumno y fecha.");
 
             const student = students.find(s => s.id === studentId);
-            const record = { id: Date.now().toString(), studentId, studentName: student ? `${student.name} (${student.day})` : 'Alumno', date, status };
+            const record = { id: Date.now().toString(), studentId, studentName: student ? `${student.name}` : 'Alumno', date, status };
 
             attendances.unshift(record);
             localStorage.setItem('dacapo_attendances', JSON.stringify(attendances));
@@ -1280,6 +1341,7 @@
             if (db) db.collection("attendances").doc(record.id).set(record);
 
             renderAttendanceHistory();
+            renderStudents();
             alert("Asistencia guardada correctamente.");
         }
 
@@ -1327,6 +1389,7 @@
                 localStorage.setItem('dacapo_attendances', JSON.stringify(attendances));
                 if (db) db.collection("attendances").doc(id).delete();
                 renderAttendanceHistory();
+                renderStudents();
             }
         }
 
@@ -1339,6 +1402,7 @@
                     idsToDelete.forEach(id => db.collection("attendances").doc(id).delete());
                 }
                 renderAttendanceHistory();
+                renderStudents();
             }
         }
 
