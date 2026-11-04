@@ -618,7 +618,7 @@
             <div class="days-carousel" id="daysCarousel"></div>
 
             <div class="day-section-header">
-                <h2 id="selectedDayTitle">Cargando día...</h2>
+                <h2 id="selectedDayTitle">Lunes</h2>
                 <span class="classes-count-badge" id="classesCountBadge">0 clase(s)</span>
             </div>
 
@@ -770,7 +770,6 @@
             <div class="form-group"><label>WhatsApp (ej. +52...)</label><input type="tel" id="studentPhone"></div>
             <div class="form-group"><label>Instrumento</label><input type="text" id="studentInstrument"></div>
             
-            <!-- SOPORTE MULTI-CLASE (2 A 3 CLASES POR SEMANA) -->
             <div class="form-group">
                 <label>Día Clase 1</label>
                 <select id="studentDay1">
@@ -861,6 +860,7 @@
         let selectedDayAbbr = "SÁB";
 
         const daysMap = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
+        const daysFullMap = { "DOM": "Domingo", "LUN": "Lunes", "MAR": "Martes", "MIÉ": "Miércoles", "JUE": "Jueves", "VIE": "Viernes", "SÁB": "Sábado" };
 
         document.addEventListener("DOMContentLoaded", () => {
             document.getElementById('attendanceDate').value = selectedDateStr;
@@ -1049,6 +1049,7 @@
             selectedDayIndex = idx;
             selectedDateStr = dStr;
             selectedDayAbbr = abbr;
+            document.getElementById('selectedDayTitle').innerText = daysFullMap[abbr] || abbr;
             document.querySelectorAll('.day-chip').forEach((c, i) => c.classList.toggle('active', i === idx));
             renderClassesForDay(abbr);
         }
