@@ -903,7 +903,7 @@
         let db = null;
 
         let currentWeekOffset = 0;
-        let selectedDayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1; // Ajuste para índice de Lunes a Domingo
+        let selectedDayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
         let selectedDateStr = new Date().toISOString().substring(0, 10);
         let selectedDayAbbr = daysMapFromDate(new Date());
 
@@ -1075,7 +1075,6 @@
 
         function renderWeekNavigator() {
             const curr = new Date();
-            // Ajustar para iniciar la semana en Lunes (getDay(): 0 es domingo, 1 es lunes...)
             const dayOfWeek = curr.getDay() === 0 ? 6 : curr.getDay() - 1;
             const first = curr.getDate() - dayOfWeek + (currentWeekOffset * 7);
             const start = new Date(curr.setDate(first));
@@ -1090,13 +1089,11 @@
         function renderDaysCarousel(startDate) {
             const carousel = document.getElementById('daysCarousel');
             let html = '';
-            // Ordenar de Lunes (0) a Domingo (6)
             const orderedDaysIndices = [1, 2, 3, 4, 5, 6, 0];
             const todayStr = new Date().toISOString().substring(0, 10);
 
             orderedDaysIndices.forEach((dayOffset, i) => {
                 const d = new Date(startDate);
-                // Ajustar fecha base al lunes de esa semana
                 const currentDayOfWeek = d.getDay() === 0 ? 6 : d.getDay() - 1;
                 d.setDate(d.getDate() - currentDayOfWeek + dayOffset);
 
@@ -1105,7 +1102,6 @@
                 const dStr = d.toISOString().substring(0, 10);
                 const isToday = (dStr === todayStr);
                 
-                // Seleccionar por defecto el día actual si estamos en la semana 0
                 if (currentWeekOffset === 0 && isToday && selectedDayAbbr !== abbr && !window._initializedToday) {
                     selectedDayIndex = i;
                     selectedDateStr = dStr;
@@ -1119,7 +1115,6 @@
 
             carousel.innerHTML = html;
             
-            // Renderizar el día activo correspondiente
             const activeDate = new Date(startDate);
             const activeDayOfWeek = activeDate.getDay() === 0 ? 6 : activeDate.getDay() - 1;
             activeDate.setDate(activeDate.getDate() - activeDayOfWeek + orderedDaysIndices[selectedDayIndex]);
@@ -1139,7 +1134,6 @@
             const container = document.getElementById('classesListContainer');
             let classItems = [];
 
-            // 1. Recolectar Clases Fijas de Particulares
             students.forEach(s => {
                 const slots = [
                     { day: s.day1, time: s.time1 },
@@ -1156,7 +1150,6 @@
                 });
             });
 
-            // 2. Recolectar Clases en Escuelas
             schools.filter(sc => sc.day === abbr).forEach(sc => {
                 classItems.push({
                     time: sc.time || '09:00',
@@ -1164,7 +1157,6 @@
                 });
             });
 
-            // 3. Recolectar Clases Ocasionales para la fecha exacta
             occasionalClasses.filter(o => o.date === selectedDateStr).forEach(o => {
                 classItems.push({
                     time: o.time || '10:00',
@@ -1172,7 +1164,6 @@
                 });
             });
 
-            // Ordenar cronológicamente por la hora (de mañana a noche)
             classItems.sort((a, b) => a.time.localeCompare(b.time));
 
             document.getElementById('classesCountBadge').innerText = `${classItems.length} clase(s)`;
