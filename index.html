@@ -114,45 +114,57 @@
             color: #ffffff;
         }
 
+        /* APARTADO DE NOTIFICACIONES INDIVIDUALES */
+        .notif-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .notif-section-header h2 {
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
         .notification-card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 12px;
-            padding: 14px;
-            margin-bottom: 10px;
+            padding: 12px 14px;
+            margin-bottom: 8px;
             display: flex;
-            flex-direction: column;
-            gap: 8px;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
         }
 
-        .notification-card.pending-alert {
+        .notification-card.type-class {
             border-left: 4px solid var(--warning);
         }
 
-        .notification-card.danger-alert {
+        .notification-card.type-payment {
             border-left: 4px solid var(--danger);
         }
 
-        .notification-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
+        .notif-info {
+            flex: 1;
         }
 
-        .notification-title {
-            font-size: 0.9rem;
+        .notif-title {
+            font-size: 0.88rem;
             font-weight: 700;
         }
 
-        .notification-body {
-            font-size: 0.8rem;
+        .notif-sub {
+            font-size: 0.78rem;
             color: var(--text-muted);
+            margin-top: 2px;
         }
 
-        .notification-actions {
+        .notif-actions {
             display: flex;
-            gap: 8px;
-            margin-top: 4px;
+            gap: 6px;
         }
 
         .week-navigator {
@@ -274,9 +286,9 @@
             color: var(--text-muted);
         }
 
-        /* CONTENEDOR DE TARJETA CON EFECTO SWIPE / MENÚ DESLIZABLE */
+        /* CONTENEDOR DE TARJETA CON SWIPE REVELADOR DE BOTONES */
         .class-card-container {
-            background: var(--card-bg);
+            background: #1a1528;
             border: 1px solid var(--border-color);
             border-radius: 12px;
             margin-bottom: 10px;
@@ -292,28 +304,30 @@
             background: var(--card-bg);
             position: relative;
             z-index: 2;
-            transition: transform 0.25s ease;
+            transition: transform 0.2s ease-out;
+            cursor: grab;
         }
 
-        /* Barra de acciones oculta que aparece al deslizar */
         .class-card-swipe-menu {
             position: absolute;
             top: 0; bottom: 0; left: 0; right: 0;
-            background: #1a1528;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 15px;
+            padding: 0 12px;
             z-index: 1;
         }
 
         .swipe-btn {
-            padding: 6px 12px;
-            font-size: 0.75rem;
+            padding: 8px 14px;
+            font-size: 0.78rem;
             font-weight: 700;
-            border-radius: 6px;
+            border-radius: 8px;
             border: none;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
 
         .swipe-btn-present {
@@ -603,7 +617,14 @@
     <div class="container">
         <!-- AGENDA -->
         <section id="tab-agenda" class="tab-content active">
-            <div id="notificationsContainer"></div>
+            <!-- APARTADO INDEPENDIENTE DE NOTIFICACIONES -->
+            <div id="notificationsSection" style="margin-bottom: 15px;">
+                <div class="notif-section-header">
+                    <h2>🔔 Centro de Notificaciones Avisos</h2>
+                    <button class="btn btn-small btn-outline" onclick="toggleResolvedNotifsView()" id="toggleNotifBtn">📂 Atendidas</button>
+                </div>
+                <div id="notificationsContainer"></div>
+            </div>
 
             <div class="subtabs">
                 <button class="subtab-btn active">📅 Esta Semana</button>
@@ -629,10 +650,8 @@
             <div id="classesListContainer"></div>
         </section>
 
-        <!-- ALUMNOS Y ALERTAS DE PAGO -->
+        <!-- ALUMNOS -->
         <section id="tab-alumnos" class="tab-content">
-            <div id="pendingPaymentsAlert"></div>
-
             <div class="kpi-card">
                 <div class="kpi-title">TOTAL MENSUALIDADES ESTIMADO</div>
                 <div class="kpi-value" id="totalFeeDisplay">$0.00</div>
@@ -854,6 +873,7 @@
         let occasionalClasses = JSON.parse(localStorage.getItem('dacapo_occasional')) || [];
         let attendances = JSON.parse(localStorage.getItem('dacapo_attendances')) || [];
         let dismissedNotifications = JSON.parse(localStorage.getItem('dacapo_dismissed_notifs')) || {};
+        let showResolvedNotifs = false;
         let db = null;
 
         let currentWeekOffset = 0;
@@ -967,6 +987,7 @@
                 occasionalClasses = cloudOcc;
                 localStorage.setItem('dacapo_occasional', JSON.stringify(occasionalClasses));
                 renderClassesForDay(selectedDayAbbr);
+                checkNotifications();
             });
 
             db.collection("attendances").onSnapshot((snapshot) => {
@@ -980,48 +1001,44 @@
             });
         }
 
+        /* APARTADO Y LÓGICA DE NOTIFICACIONES INDIVIDUALES */
         function checkNotifications() {
+            const container = document.getElementById('notificationsContainer');
             const todayIndex = new Date().getDay();
             const todayAbbr = daysMap[todayIndex];
             const todayStr = new Date().toISOString().substring(0, 10);
-            const todayKey = `class_${todayStr}`;
 
-            const alertContainer = document.getElementById('notificationsContainer');
+            let notifs = [];
+
+            // 1. Notificaciones de Clases del Día (Individuales)
             const todayClasses = students.filter(s => s.day === todayAbbr);
+            todayClasses.forEach(s => {
+                const key = `class_${todayStr}_${s.id}`;
+                notifs.push({
+                    key,
+                    type: 'class',
+                    title: `🎶 Clase Hoy: ${s.name}`,
+                    sub: `Hora: ${s.time || '08:00'} • ${s.instrument || 'Instrumento'}`,
+                    resolved: !!dismissedNotifications[key],
+                    studentName: s.name
+                });
+            });
+
+            // Clases ocasionales de hoy
             const todayOccasional = occasionalClasses.filter(o => o.date === todayStr);
-            
-            let htmlClasses = '';
-            const isClassDismissed = dismissedNotifications[todayKey];
+            todayOccasional.forEach(o => {
+                const key = `occ_${o.id}`;
+                notifs.push({
+                    key,
+                    type: 'class',
+                    title: `⭐ Clase Ocasional: ${o.name}`,
+                    sub: `Hora: ${o.time || '10:00'} • ${o.instrument || 'Extra'}`,
+                    resolved: !!dismissedNotifications[key],
+                    studentName: o.name
+                });
+            });
 
-            if ((todayClasses.length > 0 || todayOccasional.length > 0) && !isClassDismissed) {
-                const listFijas = todayClasses.map(s => `${s.name} (${s.time})`).join(', ');
-                const listOcc = todayOccasional.map(o => `${o.name} - Ocasional (${o.time})`).join(', ');
-                const combined = [listFijas, listOcc].filter(Boolean).join(' | ');
-
-                htmlClasses += `
-                    <div class="notification-card pending-alert">
-                        <div class="notification-header">
-                            <span class="notification-title">🔔 Clases de Hoy (${todayAbbr})</span>
-                            <span style="font-size:0.7rem; color:var(--warning);">Pendiente</span>
-                        </div>
-                        <div class="notification-body">${combined}</div>
-                        <div class="notification-actions">
-                            <button class="btn btn-small btn-outline" onclick="dismissNotification('${todayKey}')">✓ Marcar Atendida</button>
-                        </div>
-                    </div>
-                `;
-            }
-
-            if (isClassDismissed) {
-                htmlClasses += `
-                    <div style="margin: 10px 0;">
-                        <button class="btn btn-small btn-outline" style="width:100%; font-size:0.75rem;" onclick="restoreNotification('${todayKey}')">📂 Ver notificación de clases atendida</button>
-                    </div>
-                `;
-            }
-
-            alertContainer.innerHTML = htmlClasses;
-
+            // 2. Notificaciones de Mensualidades Pendientes (Individuales)
             const uniqueNames = [...new Set(students.map(s => s.name))];
             const uniqueList = uniqueNames.map(name => students.find(s => s.name === name));
             
@@ -1031,31 +1048,47 @@
                 return s.dueDate <= todayStr;
             });
 
-            const pendingAlertContainer = document.getElementById('pendingPaymentsAlert');
-            let htmlPayments = '';
-
             pendingList.forEach(s => {
-                const notifKey = `pay_${s.name}_${s.dueDate || 'nodate'}`;
-                const isDismissed = dismissedNotifications[notifKey];
-
-                if (!isDismissed) {
-                    htmlPayments += `
-                        <div class="notification-card danger-alert">
-                            <div class="notification-header">
-                                <span class="notification-title">⚠️ Mensualidad Pendiente: ${s.name}</span>
-                                <span style="font-size:0.7rem; color:var(--danger);">Vence: ${s.dueDate || 'Sin fecha'}</span>
-                            </div>
-                            <div class="notification-body">Monto: $${(s.fee || 0).toLocaleString()} • Recordatorio disponible.</div>
-                            <div class="notification-actions">
-                                <button class="btn btn-small btn-whatsapp" onclick="sendWhatsAppPaymentReminder('${s.name}')">💬 WhatsApp</button>
-                                <button class="btn btn-small btn-outline" onclick="dismissNotification('${notifKey}')">✓ Atender</button>
-                            </div>
-                        </div>
-                    `;
-                }
+                const key = `pay_${s.name}_${s.dueDate || 'nodate'}`;
+                notifs.push({
+                    key,
+                    type: 'payment',
+                    title: `⚠️ Cobro Pendiente: ${s.name}`,
+                    sub: `Monto: $${(s.fee || 0).toLocaleString()} • Vence: ${s.dueDate || 'Sin fecha'}`,
+                    resolved: !!dismissedNotifications[key],
+                    studentName: s.name
+                });
             });
 
-            pendingAlertContainer.innerHTML = htmlPayments;
+            // Filtrar según la pestaña activa (Pendientes o Atendidas)
+            const visibleNotifs = notifs.filter(n => showResolvedNotifs ? n.resolved : !n.resolved);
+
+            if (visibleNotifs.length === 0) {
+                container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted); padding: 6px 0;">No hay avisos ${showResolvedNotifs ? 'atendidos' : 'pendientes'}.</p>`;
+                return;
+            }
+
+            container.innerHTML = visibleNotifs.map(n => `
+                <div class="notification-card ${n.type === 'class' ? 'type-class' : 'type-payment'}">
+                    <div class="notif-info">
+                        <div class="notif-title">${n.title}</div>
+                        <div class="notif-sub">${n.sub}</div>
+                    </div>
+                    <div class="notif-actions">
+                        ${n.type === 'payment' && !n.resolved ? `<button class="btn btn-small btn-whatsapp" onclick="sendWhatsAppPaymentReminder('${n.studentName}')">💬</button>` : ''}
+                        ${n.resolved ? 
+                            `<button class="btn btn-small btn-outline" onclick="restoreNotification('${n.key}')">↩ Restaurar</button>` :
+                            `<button class="btn btn-small btn-outline" onclick="dismissNotification('${n.key}')">✓ Listo</button>`
+                        }
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleResolvedNotifsView() {
+            showResolvedNotifs = !showResolvedNotifs;
+            document.getElementById('toggleNotifBtn').innerText = showResolvedNotifs ? '📋 Ver Pendientes' : '📂 Atendidas';
+            checkNotifications();
         }
 
         function dismissNotification(key) {
@@ -1146,15 +1179,18 @@
 
             let html = '';
 
-            // Renderizar Clases Fijas con interacción Swipe Suave
+            // Renderizar Clases Fijas con Swipe Revelador
             html += dayClasses.map(s => `
                 <div class="class-card-container" id="container-${s.id}">
                     <div class="class-card-swipe-menu">
-                        <button class="swipe-btn swipe-btn-present" onclick="quickMarkAttendance('${s.id}', '${s.name}', 'Presente')">✓ Se hizo</button>
-                        <span style="font-size:0.75rem; color:var(--text-muted);">Desliza o presiona</span>
-                        <button class="swipe-btn swipe-btn-absent" onclick="quickMarkAttendance('${s.id}', '${s.name}', 'Ausente')">✕ No fue</button>
+                        <button class="swipe-btn swipe-btn-present" onclick="executeSwipeAction('${s.id}', '${s.name}', 'Presente')">✓ Se hizo</button>
+                        <button class="swipe-btn swipe-btn-absent" onclick="executeSwipeAction('${s.id}', '${s.name}', 'Ausente')">✕ No fue</button>
                     </div>
-                    <div class="class-card-content" id="card-${s.id}" ontouchstart="touchStart(event, 'card-${s.id}')" ontouchmove="touchMove(event, 'card-${s.id}')" ontouchend="touchEnd(event, 'card-${s.id}', '${s.id}', '${s.name}')" onmousedown="mouseStart(event, 'card-${s.id}')">
+                    <div class="class-card-content" id="card-${s.id}" 
+                         ontouchstart="handleTouchStart(event, 'card-${s.id}')" 
+                         ontouchmove="handleTouchMove(event, 'card-${s.id}')" 
+                         ontouchend="handleTouchEnd(event, 'card-${s.id}')"
+                         onmousedown="handleMouseDown(event, 'card-${s.id}')">
                         <div class="class-icon-box">🎶</div>
                         <div class="class-details">
                             <div class="class-header-row">
@@ -1165,6 +1201,7 @@
                             <div class="class-meta">
                                 <span>🕒 ${s.duration || '60'} min</span>
                                 <span>🎵 ${s.instrument || 'Otro'}</span>
+                                <span style="color:var(--accent-purple); font-weight:bold;">← Desliza →</span>
                             </div>
                         </div>
                     </div>
@@ -1175,19 +1212,24 @@
             html += dayOccasional.map(o => `
                 <div class="class-card-container" id="container-occ-${o.id}">
                     <div class="class-card-swipe-menu">
-                        <button class="swipe-btn swipe-btn-present" onclick="quickMarkAttendance('${o.id}', '${o.name}', 'Presente')">✓ Se hizo</button>
-                        <button class="swipe-btn swipe-btn-absent" onclick="quickMarkAttendance('${o.id}', '${o.name}', 'Ausente')">✕ No fue</button>
-                        <button class="swipe-btn btn-danger" onclick="deleteOccasional('${o.id}')">🗑️ Borrar</button>
+                        <button class="swipe-btn swipe-btn-present" onclick="executeSwipeAction('${o.id}', '${o.name}', 'Presente')">✓ Se hizo</button>
+                        <button class="swipe-btn swipe-btn-absent" onclick="executeSwipeAction('${o.id}', '${o.name}', 'Ausente')">✕ No fue</button>
                     </div>
-                    <div class="class-card-content" id="card-occ-${o.id}" ontouchstart="touchStart(event, 'card-occ-${o.id}')" ontouchmove="touchMove(event, 'card-occ-${o.id}')" ontouchend="touchEnd(event, 'card-occ-${o.id}', '${o.id}', '${o.name}')" onmousedown="mouseStart(event, 'card-occ-${o.id}')">
+                    <div class="class-card-content" id="card-occ-${o.id}" 
+                         ontouchstart="handleTouchStart(event, 'card-occ-${o.id}')" 
+                         ontouchmove="handleTouchMove(event, 'card-occ-${o.id}')" 
+                         ontouchend="handleTouchEnd(event, 'card-occ-${o.id}')"
+                         onmousedown="handleMouseDown(event, 'card-occ-${o.id}')">
                         <div class="class-icon-box" style="background:#2a2040;">⭐</div>
                         <div class="class-details">
                             <div class="class-header-row">
                                 <span class="class-student-name">${o.name}</span>
                                 <span class="badge-ocasional">Ocasional • ${o.time || '10:00'}</span>
+                                <button class="btn btn-small btn-danger" style="margin-left:auto; padding:2px 6px;" onclick="deleteOccasional('${o.id}')">🗑️</button>
                             </div>
                             <div class="class-meta">
                                 <span>🎵 ${o.instrument || 'Clase extra'}</span>
+                                <span style="color:var(--accent-purple); font-weight:bold;">← Desliza →</span>
                             </div>
                         </div>
                     </div>
@@ -1197,75 +1239,88 @@
             container.innerHTML = html;
         }
 
-        /* CONTROLADOR TÁCTIL Y MOUSE PARA DESLIZAMIENTO FLUIDO (SWIPE) */
-        let touchStartX = 0;
-        let activeCardId = null;
+        /* LÓGICA DE SWIPE CON MANTENIMIENTO VISUAL DE BOTONES */
+        let startX = 0;
+        let currentTranslateX = 0;
+        let isDragging = false;
+        let activeCardElem = null;
 
-        function touchStart(e, cardId) {
-            touchStartX = e.touches[0].clientX;
-            activeCardId = cardId;
+        function handleTouchStart(e, cardId) {
+            startX = e.touches[0].clientX;
+            activeCardElem = document.getElementById(cardId);
+            isDragging = true;
+            activeCardElem.style.transition = 'none';
         }
 
-        function touchMove(e, cardId) {
-            if (!touchStartX || activeCardId !== cardId) return;
-            let currentX = e.touches[0].clientX;
-            let diff = currentX - touchStartX;
-            
-            // Limitar el arrastre visual entre -110px y 110px
-            if (diff > 110) diff = 110;
-            if (diff < -110) diff = -110;
+        function handleTouchMove(e, cardId) {
+            if (!isDragging || !activeCardElem) return;
+            const x = e.touches[0].clientX;
+            const diff = x - startX;
 
-            const card = document.getElementById(cardId);
-            card.style.transform = `translateX(${diff}px)`;
-        }
-
-        function touchEnd(e, cardId, studentId, studentName) {
-            if (!touchStartX || activeCardId !== cardId) return;
-            let endX = e.changedTouches[0].clientX;
-            let diff = endX - touchStartX;
-            const card = document.getElementById(cardId);
-
-            if (diff > 60) {
-                // Deslizó hacia la derecha -> Presente
-                quickMarkAttendance(studentId, studentName, 'Presente');
-            } else if (diff < -60) {
-                // Deslizó hacia la izquierda -> Ausente
-                quickMarkAttendance(studentId, studentName, 'Ausente');
+            // Permitir deslizamiento hacia izquierda y derecha de hasta 120px
+            if (diff > -140 && diff < 140) {
+                activeCardElem.style.transform = `translateX(${diff}px)`;
             }
-
-            // Regresar la tarjeta a su posición original con animación
-            card.style.transition = 'transform 0.3s ease';
-            card.style.transform = 'translateX(0px)';
-            setTimeout(() => { card.style.transition = ''; }, 300);
-
-            touchStartX = 0;
-            activeCardId = null;
         }
 
-        function mouseStart(e, cardId) {
-            // Soporte alternativo para hacer clic o arrastrar con mouse en PC
-            const card = document.getElementById(cardId);
-            let startX = e.clientX;
+        function handleTouchEnd(e, cardId) {
+            if (!isDragging || !activeCardElem) return;
+            isDragging = false;
+            const endX = e.changedTouches[0].clientX;
+            const diff = endX - startX;
+
+            activeCardElem.style.transition = 'transform 0.2s ease-out';
+
+            // Si el deslizamiento fue suficiente, dejar la tarjeta abierta revelando los botones
+            if (diff > 50) {
+                activeCardElem.style.transform = 'translateX(100px)'; // Revela botón izquierdo
+            } else if (diff < -50) {
+                activeCardElem.style.transform = 'translateX(-100px)'; // Revela botón derecho
+            } else {
+                activeCardElem.style.transform = 'translateX(0px)'; // Regresa a su centro
+            }
+        }
+
+        function handleMouseDown(e, cardId) {
+            startX = e.clientX;
+            activeCardElem = document.getElementById(cardId);
+            activeCardElem.style.transition = 'none';
 
             function onMouseMove(ev) {
-                let diff = ev.clientX - startX;
-                if (diff > 100) diff = 100;
-                if (diff < -100) diff = -100;
-                card.style.transform = `translateX(${diff}px)`;
+                const diff = ev.clientX - startX;
+                if (diff > -140 && diff < 140) {
+                    activeCardElem.style.transform = `translateX(${diff}px)`;
+                }
             }
 
             function onMouseUp(ev) {
-                let diff = ev.clientX - startX;
-                card.style.transition = 'transform 0.3s ease';
-                card.style.transform = 'translateX(0px)';
-                setTimeout(() => { card.style.transition = ''; }, 300);
-
+                const diff = ev.clientX - startX;
+                activeCardElem.style.transition = 'transform 0.2s ease-out';
+                if (diff > 50) {
+                    activeCardElem.style.transform = 'translateX(100px)';
+                } else if (diff < -50) {
+                    activeCardElem.style.transform = 'translateX(-100px)';
+                } else {
+                    activeCardElem.style.transform = 'translateX(0px)';
+                }
                 window.removeEventListener('mousemove', onMouseMove);
                 window.removeEventListener('mouseup', onMouseUp);
             }
 
             window.addEventListener('mousemove', onMouseMove);
             window.addEventListener('mouseup', onMouseUp);
+        }
+
+        function executeSwipeAction(id, studentName, status) {
+            // Guardar la asistencia
+            quickMarkAttendance(id, studentName, status);
+
+            // Cerrar la tarjeta deslizante
+            const card = document.getElementById(`card-${id}`) || document.getElementById(`card-occ-${id}`);
+            if (card) {
+                card.style.transition = 'transform 0.2s ease-out';
+                card.style.transform = 'translateX(0px)';
+            }
         }
 
         function quickMarkAttendance(studentId, studentName, status) {
@@ -1477,7 +1532,7 @@
                 }).length;
 
                 return `
-                    <div class="class-card-content" style="flex-direction:column; align-items:stretch; border:1px solid var(--border-color); border-radius:12px; margin-bottom:10px;">
+                    <div class="card" style="margin-bottom:10px; padding:14px;">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <div>
                                 <span class="class-student-name">${s.name}</span>
@@ -1575,13 +1630,15 @@
             if (attendances.length === 0) { container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted);">Sin asistencias.</p>`; return; }
 
             container.innerHTML = attendances.slice(0, 15).map(a => `
-                <div class="class-card-content" style="padding:10px 14px; border:1px solid var(--border-color); border-radius:10px; margin-bottom:8px;">
+                <div class="card" style="padding:10px 14px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
                     <div class="class-details">
                         <div class="class-student-name">${a.studentName}</div>
                         <div class="class-meta"><span>📅 ${a.date}</span></div>
                     </div>
-                    <span class="badge-fija" style="background:#222; color:#fff; margin-right:6px;">${a.status}</span>
-                    <button class="btn btn-small btn-danger" onclick="deleteAttendance('${a.id}')">🗑️</button>
+                    <div>
+                        <span class="badge-fija" style="background:#222; color:#fff; margin-right:6px;">${a.status}</span>
+                        <button class="btn btn-small btn-danger" onclick="deleteAttendance('${a.id}')">🗑️</button>
+                    </div>
                 </div>
             `).join('');
         }
