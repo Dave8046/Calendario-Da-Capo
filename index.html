@@ -681,7 +681,7 @@
             <div class="card">
                 <div class="flex-between" style="margin-bottom: 8px;">
                     <h2>Historial Reciente</h2>
-                    <button class="btn btn-small btn-danger" onclick="clearOldAttendances()">🗑️ Borrar Historial</button>
+                    <button class="btn btn-small btn-danger" onclick="clearOldAttendances()">🗑️ Borrar Todo</button>
                 </div>
                 <div id="attendanceHistoryContainer">Sin registros.</div>
             </div>
@@ -908,7 +908,7 @@
                     html += `
                         <div class="notification-card type-class">
                             <div class="notif-info">
-                                <div class="notif-title">🎶 Clase de Hoy: ${s.name}</div>
+                                <div class="notif-title">🎶 Clase Hoy: ${s.name}</div>
                                 <div class="notif-sub">Hora: ${s.time} • Particular</div>
                             </div>
                             <button class="btn btn-small btn-outline" onclick="dismissNotif('${key}')">✓ Atender</button>
@@ -923,7 +923,7 @@
                     html += `
                         <div class="notification-card type-class">
                             <div class="notif-info">
-                                <div class="notif-title">🏫 Clase en Escuela: ${sc.name}</div>
+                                <div class="notif-title">🏫 Clase Escuela: ${sc.name}</div>
                                 <div class="notif-sub">Hora: ${sc.time}</div>
                             </div>
                             <button class="btn btn-small btn-outline" onclick="dismissNotif('${key}')">✓ Atender</button>
@@ -1070,7 +1070,6 @@
             alert(`Registrado: ${name} - ${status}`);
         }
 
-        // GESTIÓN DE ESCUELAS
         function openSchoolModal(id = null) {
             if (id) {
                 const sc = schools.find(item => item.id === id);
@@ -1153,7 +1152,6 @@
             }
         }
 
-        // ALUMNOS PARTICULARES (CÁLCULO EXACTO SIN DUPLICADOS)
         function openStudentModal(id = null) {
             if (id) {
                 const s = students.find(item => item.id === id);
@@ -1208,7 +1206,6 @@
             const q = document.getElementById('searchStudent').value.toLowerCase();
             const filtered = students.filter(s => s.name.toLowerCase().includes(q));
 
-            // Suma exacta basada en registros únicos por ID de alumno (evita duplicaciones de mensualidad)
             const total = students.reduce((acc, s) => acc + (parseFloat(s.fee) || 0), 0);
             const paid = students.filter(s => s.paid).reduce((acc, s) => acc + (parseFloat(s.fee) || 0), 0);
             document.getElementById('totalFeeDisplay').innerText = `$${total.toLocaleString()}`;
@@ -1277,7 +1274,6 @@
             renderClassesForDay(selectedDayAbbr); closeOccasionalModal(); checkNotifications();
         }
 
-        // CONTROL DE ASISTENCIA RESTAURADO
         function populateAttendanceDropdown() {
             const sel = document.getElementById('attendanceStudentSelect');
             let opts = students.map(s => `<option value="${s.id}|${s.name}">Particular: ${s.name}</option>`);
@@ -1309,12 +1305,9 @@
                 <div class="card" style="padding:10px 14px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
                     <div>
                         <strong>${a.studentName}</strong>
-                        <div style="font-size:0.75rem; color:var(--text-muted);">📅 ${a.date}</div>
+                        <div style="font-size:0.75rem; color:var(--text-muted);">📅 ${a.date} • Estado: ${a.status}</div>
                     </div>
-                    <div>
-                        <span class="badge-fija" style="background:#222; color:#fff; margin-right:6px;">${a.status}</span>
-                        <button class="btn btn-small btn-danger" onclick="deleteAttendance('${a.id}')">🗑️</button>
-                    </div>
+                    <button class="btn btn-small btn-danger" onclick="deleteAttendance('${a.id}')">🗑️</button>
                 </div>
             `).join('');
         }
