@@ -797,6 +797,14 @@
                     <textarea id="templateCobro" rows="3" oninput="saveTemplates()">Hola {nombre}, te saludamos de Da Capo - Casa Musical 🎶. Te recordamos que tienes pendiente tu mensualidad por un monto de ${monto} (Vence el {vencimiento}). ¡Muchas gracias! ✨</textarea>
                     <span style="font-size: 0.7rem; color: var(--text-muted);">Variables: {nombre}, {monto}, {vencimiento}</span>
                 </div>
+
+                <!-- NUEVA PLANTILLA RECORDATORIO DE CLASE -->
+                <div class="form-group">
+                    <label>Plantilla Recordatorio de Clase del Día</label>
+                    <textarea id="templateRecordatorioClase" rows="3" oninput="saveTemplates()">Hola {nombre}, te saludamos de Da Capo - Casa Musical 🎶. Te recordamos que hoy tenemos nuestra clase de {instrumento} a las {hora}. ¡Te esperamos! ✨</textarea>
+                    <span style="font-size: 0.7rem; color: var(--text-muted);">Variables: {nombre}, {instrumento}, {hora}, {fecha}</span>
+                </div>
+
                 <div class="form-group">
                     <label>Plantilla Comprobante de Pago</label>
                     <textarea id="templateComprobante" rows="3" oninput="saveTemplates()">🎵 *DA CAPO - CASA MUSICAL* 🎵\n\nEstimado/a *{nombre}*, le confirmamos que hemos recibido su pago con éxito.\n\n💰 *Monto recibido:* ${monto}\n📅 *Fecha de pago:* {fecha}\n✨ ¡Muchas gracias por su puntualidad y confianza!</textarea>
@@ -1159,9 +1167,23 @@
                         let template = document.getElementById('templateCobro').value;
                         let text = template.replace('{nombre}', s.name).replace('{monto}', (s.fee||0).toLocaleString()).replace('{vencimiento}', s.dueDate||'pronto');
                         window.open(`https://wa.me/${phoneClean}?text=${encodeURIComponent(text)}`, '_blank');
-                    }, index * 800); // Pequeño retraso entre pestañas para evitar bloqueo del navegador
+                    }, index * 800);
                 });
             }
+        }
+
+        // --- ENVIAR RECORDATORIO DE CLASE DESDE LA AGENDA ---
+        function sendDailyClassReminder(name, phone, instrument, time) {
+            if (!phone) return alert("Este registro no tiene número de WhatsApp.");
+            const phoneClean = phone.replace(/[^0-9+]/g, '');
+            let template = document.getElementById('templateRecordatorioClase').value;
+            let text = template
+                .replace('{nombre}', name)
+                .replace('{instrumento}', instrument || 'música')
+                .replace('{hora}', time || 'horario programado')
+                .replace('{fecha}', selectedDateStr);
+
+            window.open(`https://wa.me/${phoneClean}?text=${encodeURIComponent(text)}`, '_blank');
         }
 
         function loadTemplatesToUI() {
@@ -1171,6 +1193,7 @@
             const tAus = localStorage.getItem('dacapo_tpl_ausente');
             const tJust = localStorage.getItem('dacapo_tpl_justificado');
             const tRep = localStorage.getItem('dacapo_tpl_reporte_mensual');
+            const tRecClase = localStorage.getItem('dacapo_tpl_rec_clase');
 
             if(tCobro) document.getElementById('templateCobro').value = tCobro;
             if(tComp) document.getElementById('templateComprobante').value = tComp;
@@ -1178,6 +1201,7 @@
             if(tAus) document.getElementById('templateAusente').value = tAus;
             if(tJust) document.getElementById('templateJustificado').value = tJust;
             if(tRep) document.getElementById('templateReporteMensual').value = tRep;
+            if(tRecClase) document.getElementById('templateRecordatorioClase').value = tRecClase;
         }
 
         function saveTemplates() {
@@ -1187,6 +1211,7 @@
             const tAus = document.getElementById('templateAusente').value;
             const tJust = document.getElementById('templateJustificado').value;
             const tRep = document.getElementById('templateReporteMensual').value;
+            const tRecClase = document.getElementById('templateRecordatorioClase').value;
 
             localStorage.setItem('dacapo_tpl_cobro', tCobro);
             localStorage.setItem('dacapo_tpl_comp', tComp);
@@ -1194,6 +1219,7 @@
             localStorage.setItem('dacapo_tpl_ausente', tAus);
             localStorage.setItem('dacapo_tpl_justificado', tJust);
             localStorage.setItem('dacapo_tpl_reporte_mensual', tRep);
+            localStorage.setItem('dacapo_tpl_rec_clase', tRecClase);
         }
 
         function initFirebaseFromStorage() {
@@ -1256,10 +1282,9 @@
             const todayIndex = new Date().getDay();
             const todayAbbr = daysMap[todayIndex];
             const todayStr = new Date().toISOString().substring(0, 10);
-            const currentMonthDay = todayStr.substring(5); // formato MM-DD
+            const currentMonthDay = todayStr.substring(5);
             let html = '';
 
-            // CUMPLEAÑOS DE HOY
             students.forEach(s => {
                 if (s.birthday && s.birthday.substring(5) === currentMonthDay) {
                     const key = `bday_${todayStr}_${s.id}`;
@@ -1404,7 +1429,7 @@
                 slots.forEach((slot, idx) => {
                     if (slot.day === abbr) {
                         matchedCount++;
-                        html += buildSwipeCard(`${s.id}_${idx}`, s.name, `Fija • ${slot.time || '08:00'}`, `🎵 ${s.instrument||'Particular'} | 👨‍🏫 ${teacherName}`);
+                        html += buildSwipeCard(`${s.id}_${idx}`, s.name, `Fija • ${slot.time || '08:00'}`, `🎵 ${s.instrument||'Particular'} | 👨‍🏫 ${teacherName}`, s.phone, s.instrument, slot.time);
                     }
                 });
             });
@@ -1415,12 +1440,12 @@
                 
                 daySchools.forEach(sc => {
                     matchedCount++;
-                    html += buildSwipeCard(sc.id, sc.name, `Escuela • ${sc.time}`, `🏫 Escuela registrada`);
+                    html += buildSwipeCard(sc.id, sc.name, `Escuela • ${sc.time}`, `🏫 Escuela registrada`, sc.phone, 'Música', sc.time);
                 });
                 dayOcc.forEach(o => {
                     matchedCount++;
                     const badgeLabel = o.type === 'Escuela' ? `🏫 Ocasional Escuela • ${o.time}` : `⭐ Ocasional • ${o.time}`;
-                    html += buildSwipeCard(o.id, o.name, badgeLabel, `📅 Clase extra/taller`);
+                    html += buildSwipeCard(o.id, o.name, badgeLabel, `📅 Clase extra/taller`, '', 'Taller', o.time);
                 });
             }
 
@@ -1454,7 +1479,8 @@
             sX = 0; activeCard = null;
         }
 
-        function buildSwipeCard(id, name, badgeText, metaText) {
+        function buildSwipeCard(id, name, badgeText, metaText, phone, instrument, time) {
+            const whatsappBtn = phone ? `<button class="btn btn-small btn-whatsapp" onclick="sendDailyClassReminder('${name.replace(/'/g, "\\'")}', '${phone}', '${instrument||'música'}', '${time}')" style="margin-top:6px; width:auto;">💬 Recordar Clase</button>` : '';
             return `
                 <div class="class-card-container" id="cont-${id}">
                     <div class="class-card-swipe-menu">
@@ -1469,7 +1495,10 @@
                                 <span class="class-student-name">${name}</span>
                                 <span class="badge-fija">${badgeText}</span>
                             </div>
-                            <div class="class-meta"><span>${metaText}</span></div>
+                            <div class="class-meta" style="flex-direction:column; gap:2px;">
+                                <span>${metaText}</span>
+                                ${whatsappBtn}
+                            </div>
                         </div>
                     </div>
                 </div>
