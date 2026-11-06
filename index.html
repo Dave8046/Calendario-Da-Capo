@@ -855,6 +855,14 @@
             <div class="form-group"><label>Instrumento</label><input type="text" id="studentInstrument"></div>
             
             <div class="form-group">
+                <label>Profesor Asignado</label>
+                <select id="studentTeacher">
+                    <option value="Profesor 1 (Guitarra / Flauta)">Profesor 1 (Guitarra / Flauta)</option>
+                    <option value="Profesor 2 (Piano / Violín / Cello / Flauta Travers.)">Profesor 2 (Piano / Violín / Cello / Flauta Travers.)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
                 <label>Día Clase 1</label>
                 <select id="studentDay1">
                     <option value="LUN">Lunes</option><option value="MAR">Martes</option><option value="MIÉ">Miércoles</option>
@@ -1166,7 +1174,8 @@
                 slots.forEach((slot, idx) => {
                     if (slot.day === abbr) {
                         dayStudentsCount++;
-                        html += buildSwipeCard(`${s.id}_${idx}`, s.name, `Fija • ${slot.time || '08:00'}`, `🎵 ${s.instrument||'Particular'}`);
+                        const teacherShort = s.teacher ? s.teacher.split(' ')[0] + ' ' + s.teacher.split(' ')[1] : 'Profesor';
+                        html += buildSwipeCard(`${s.id}_${idx}`, s.name, `Fija • ${slot.time || '08:00'}`, `🎵 ${s.instrument||'Particular'} | 👨‍🏫 ${teacherShort}`);
                     }
                 });
             });
@@ -1440,6 +1449,7 @@
                     document.getElementById('studentName').value = s.name;
                     document.getElementById('studentPhone').value = s.phone || '';
                     document.getElementById('studentInstrument').value = s.instrument || '';
+                    document.getElementById('studentTeacher').value = s.teacher || 'Profesor 1 (Guitarra / Flauta)';
                     document.getElementById('studentDay1').value = s.day1 || 'LUN';
                     document.getElementById('studentTime1').value = s.time1 || '08:00';
                     document.getElementById('studentDay2').value = s.day2 || '';
@@ -1455,6 +1465,7 @@
                 document.getElementById('studentName').value = "";
                 document.getElementById('studentPhone').value = "";
                 document.getElementById('studentInstrument').value = "";
+                document.getElementById('studentTeacher').value = "Profesor 1 (Guitarra / Flauta)";
                 document.getElementById('studentDay1').value = "LUN";
                 document.getElementById('studentTime1').value = "08:00";
                 document.getElementById('studentDay2').value = "";
@@ -1468,22 +1479,62 @@
         }
         function closeStudentModal() { document.getElementById('studentModal').classList.remove('active'); }
 
+        // --- VALIDACIÓN DE CUPO MÁXIMO (4 ESTUDIANTES POR PROFESOR EN EL MISMO BLOQUE) ---
+        function checkTeacherCapacity(teacher, day, time, excludeStudentId, slotIndex) {
+            if (!day || !time) return true;
+            let count = 0;
+            students.forEach(s => {
+                // Si estamos editando al mismo estudiante, no contamos sus propios slots actuales
+                const isCurrentStudent = (s.id === excludeStudentId);
+                
+                const slots = [
+                    { day: s.day1, time: s.time1 },
+                    { day: s.day2, time: s.time2 },
+                    { day: s.day3, time: s.time3 }
+                ];
+
+                slots.forEach((slot, sIdx) => {
+                    if (s.teacher === teacher && slot.day === day && slot.time === time) {
+                        if (!(isCurrentStudent && sIdx === slotIndex)) {
+                            count++;
+                        }
+                    }
+                });
+            });
+            return count < 4; // Retorna true si hay menos de 4
+        }
+
         function saveStudent() {
             const id = document.getElementById('editingStudentId').value;
             const name = document.getElementById('studentName').value.trim();
             const phone = document.getElementById('studentPhone').value.trim();
             const instrument = document.getElementById('studentInstrument').value.trim();
+            const teacher = document.getElementById('studentTeacher').value;
+            
             const day1 = document.getElementById('studentDay1').value;
             const time1 = document.getElementById('studentTime1').value;
             const day2 = document.getElementById('studentDay2').value;
             const time2 = document.getElementById('studentTime2').value;
             const day3 = document.getElementById('studentDay3').value;
             const time3 = document.getElementById('studentTime3').value;
+            
             const fee = parseFloat(document.getElementById('studentFee').value) || 0;
             const dueDate = document.getElementById('studentDueDate').value;
 
-            if (!name) return alert("Ingresa el nombre.");
-            const studentObj = { id: id || Date.now().toString(), name, phone, instrument, day1, time1, day2, time2, day3, time3, fee, dueDate, paid: false, paymentHistory: [] };
+            if (!name) return alert("Ingresa el nombre del alumno.");
+
+            // Validar capacidad máxima de 4 alumnos por profesor en cada bloque horario
+            if (day1 && time1 && !checkTeacherCapacity(teacher, day1, time1, id, 0)) {
+                return alert(`⚠️ Cupo lleno: El docente "${teacher}" ya tiene 4 alumnos agendados el día ${day1} a las ${time1}.`);
+            }
+            if (day2 && time2 && !checkTeacherCapacity(teacher, day2, time2, id, 1)) {
+                return alert(`⚠️ Cupo lleno: El docente "${teacher}" ya tiene 4 alumnos agendados el día ${day2} a las ${time2}.`);
+            }
+            if (day3 && time3 && !checkTeacherCapacity(teacher, day3, time3, id, 2)) {
+                return alert(`⚠️ Cupo lleno: El docente "${teacher}" ya tiene 4 alumnos agendados el día ${day3} a las ${time3}.`);
+            }
+
+            const studentObj = { id: id || Date.now().toString(), name, phone, instrument, teacher, day1, time1, day2, time2, day3, time3, fee, dueDate, paid: false, paymentHistory: [] };
             
             if (id) {
                 const idx = students.findIndex(s => s.id === id);
@@ -1520,6 +1571,7 @@
                 if (s.day2) daysSummary += `, ${s.day2} (${s.time2})`;
                 if (s.day3) daysSummary += `, ${s.day3} (${s.time3})`;
                 const histCount = (s.paymentHistory || []).length;
+                const teacherShort = s.teacher ? s.teacher.split(' ')[0] + ' ' + s.teacher.split(' ')[1] : 'Profesor';
 
                 return `
                     <div class="card" style="margin-bottom:12px; padding:14px;">
@@ -1531,9 +1583,9 @@
                             <span style="font-weight:800; color:var(--success);">$${(s.fee||0).toLocaleString()}</span>
                         </div>
                         <div class="class-meta" style="margin-top:6px; flex-direction:column; gap:3px;">
-                            <span>🎵 ${s.instrument || 'Particular'} • 📅 Vence: ${s.dueDate || 'N/A'}</span>
+                            <span>🎵 ${s.instrument || 'Particular'} • 👨‍🏫 ${teacherShort}</span>
                             <span>⏰ Horarios: ${daysSummary}</span>
-                            <span>✔ Clases asistidas este mes: <strong>${count}</strong> | 📋 Pagos en historial: <strong>${histCount}</strong></span>
+                            <span>📅 Vence: ${s.dueDate || 'N/A'} | ✔ Asistencias este mes: <strong>${count}</strong></span>
                         </div>
                         <div class="actions-group" style="margin-top:10px;">
                             <button class="btn btn-small btn-outline" onclick="openStudentModal('${s.id}')">✏️ Editar</button>
