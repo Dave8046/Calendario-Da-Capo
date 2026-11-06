@@ -674,17 +674,23 @@
             <div id="schoolsListContainer" style="margin-top: 15px;"></div>
         </section>
 
-        <!-- ASISTENCIA -->
+        <!-- ASISTENCIA (CON AUTOFILL) -->
         <section id="tab-asistencia" class="tab-content">
-            <h2>Control de Asistencia</h2>
+            <h2>Control de Asistencia y Registro Rápido</h2>
             <div class="card">
+                <div class="form-group">
+                    <label>Seleccionar Alumno (Relleno Automático)</label>
+                    <select id="autofillStudentSelect" onchange="autofillAttendanceForm()">
+                        <option value="">-- Elige un alumno para autocompletar --</option>
+                    </select>
+                </div>
                 <div class="form-group">
                     <label>Fecha de Clase</label>
                     <input type="date" id="attendanceDate">
                 </div>
                 <div class="form-group">
-                    <label>Alumno o Escuela y Horario</label>
-                    <select id="attendanceStudentSelect"></select>
+                    <label>Detalle / Alumno o Escuela y Horario</label>
+                    <input type="text" id="attendanceStudentDisplay" placeholder="Se llena solo o escribe manualmente...">
                 </div>
                 <div class="form-group">
                     <label>Estado</label>
@@ -694,6 +700,7 @@
                         <option value="Justificado">Justificado</option>
                     </select>
                 </div>
+                <input type="hidden" id="attendancePhoneHidden">
                 <div style="display: flex; gap: 8px;">
                     <button class="btn" onclick="saveAttendance()">Registrar Asistencia</button>
                     <button class="btn btn-whatsapp" style="width: auto;" onclick="sendCustomAttendanceWhatsApp()">💬 WhatsApp</button>
@@ -842,6 +849,22 @@
         </div>
     </div>
 
+    <!-- MODAL REPERTORIO / NOTAS RÁPIDAS -->
+    <div class="modal" id="repertoireModal">
+        <div class="modal-body">
+            <div class="flex-between">
+                <h2 id="repertoireModalTitle">Repertorio y Notas Rápidas</h2>
+                <span onclick="closeRepertoireModal()" style="cursor:pointer; font-size: 1.2rem;">✕</span>
+            </div>
+            <input type="hidden" id="repertoireStudentId">
+            <div class="form-group">
+                <label>Notas de Repertorio y Avance (Piezas, Ejercicios)</label>
+                <textarea id="studentRepertoireNotes" rows="6" placeholder="Escribe aquí las obras que está practicando el alumno, dificultad, observaciones..."></textarea>
+            </div>
+            <button class="btn" onclick="saveRepertoireNotes()">Guardar Notas</button>
+        </div>
+    </div>
+
     <!-- MODAL CLASE FIJA / PARTICULAR -->
     <div class="modal" id="studentModal">
         <div class="modal-body">
@@ -963,7 +986,7 @@
             renderWeekNavigator();
             renderStudents();
             renderSchools();
-            populateAttendanceDropdown();
+            populateAutofillDropdown();
             renderAttendanceHistory();
             checkNotifications();
         });
@@ -1031,12 +1054,12 @@
             db.collection("students").onSnapshot(snap => {
                 students = []; snap.forEach(d => students.push({ id: d.id, ...d.data() }));
                 localStorage.setItem('dacapo_students', JSON.stringify(students));
-                renderStudents(); renderWeekNavigator(); populateAttendanceDropdown(); checkNotifications();
+                renderStudents(); renderWeekNavigator(); populateAutofillDropdown(); checkNotifications();
             });
             db.collection("schools").onSnapshot(snap => {
                 schools = []; snap.forEach(d => schools.push({ id: d.id, ...d.data() }));
                 localStorage.setItem('dacapo_schools', JSON.stringify(schools));
-                renderSchools(); renderWeekNavigator(); populateAttendanceDropdown(); checkNotifications();
+                renderSchools(); renderWeekNavigator(); populateAutofillDropdown(); checkNotifications();
             });
             db.collection("occasional").onSnapshot(snap => {
                 occasionalClasses = []; snap.forEach(d => occasionalClasses.push({ id: d.id, ...d.data() }));
@@ -1288,6 +1311,36 @@
             closeReceiptModal();
         }
 
+        // --- REPERTORIO Y NOTAS RÁPIDAS ---
+        function openRepertoireModal(studentId) {
+            const student = students.find(s => s.id === studentId);
+            if (!student) return;
+            document.getElementById('repertoireStudentId').value = student.id;
+            document.getElementById('repertoireModalTitle').innerText = `Repertorio: ${student.name}`;
+            document.getElementById('studentRepertoireNotes').value = student.repertoireNotes || '';
+            document.getElementById('repertoireModal').classList.add('active');
+        }
+
+        function closeRepertoireModal() {
+            document.getElementById('repertoireModal').classList.remove('active');
+        }
+
+        function saveRepertoireNotes() {
+            const studentId = document.getElementById('repertoireStudentId').value;
+            const student = students.find(s => s.id === studentId);
+            if (!student) return;
+
+            const notes = document.getElementById('studentRepertoireNotes').value;
+            student.repertoireNotes = notes;
+
+            localStorage.setItem('dacapo_students', JSON.stringify(students));
+            if (db) db.collection("students").doc(studentId).update({ repertoireNotes: notes });
+
+            closeRepertoireModal();
+            renderStudents();
+            alert("Notas de repertorio guardadas correctamente.");
+        }
+
         // --- HISTORIAL DE PAGOS POR ALUMNO ---
         function openPaymentHistoryModal(studentId) {
             const student = students.find(s => s.id === studentId);
@@ -1400,7 +1453,7 @@
             localStorage.setItem('dacapo_schools', JSON.stringify(schools));
             if (db) db.collection("schools").doc(schoolObj.id).set(schoolObj);
 
-            renderSchools(); renderWeekNavigator(); populateAttendanceDropdown(); closeSchoolModal(); checkNotifications();
+            renderSchools(); renderWeekNavigator(); populateAutofillDropdown(); closeSchoolModal(); checkNotifications();
         }
 
         function renderSchools() {
@@ -1436,7 +1489,7 @@
                 schools = schools.filter(s => s.id !== id);
                 localStorage.setItem('dacapo_schools', JSON.stringify(schools));
                 if (db) db.collection("schools").doc(id).delete();
-                renderSchools(); renderWeekNavigator(); populateAttendanceDropdown(); checkNotifications();
+                renderSchools(); renderWeekNavigator(); populateAutofillDropdown(); checkNotifications();
             }
         }
 
@@ -1531,13 +1584,20 @@
                 return alert(`⚠️ Cupo lleno: El profesor "${teacher}" ya tiene 4 alumnos agendados el día ${day3} a las ${time3}.`);
             }
 
-            const studentObj = { id: id || Date.now().toString(), name, phone, instrument, teacher, day1, time1, day2, time2, day3, time3, fee, dueDate, paid: false, paymentHistory: [] };
+            const studentObj = { 
+                id: id || Date.now().toString(), 
+                name, phone, instrument, teacher, day1, time1, day2, time2, day3, time3, fee, dueDate, 
+                paid: false, 
+                paymentHistory: [], 
+                repertoireNotes: '' 
+            };
             
             if (id) {
                 const idx = students.findIndex(s => s.id === id);
                 if (idx !== -1) {
                     studentObj.paid = students[idx].paid;
                     studentObj.paymentHistory = students[idx].paymentHistory || [];
+                    studentObj.repertoireNotes = students[idx].repertoireNotes || '';
                 }
                 students[idx] = studentObj;
             } else { students.push(studentObj); }
@@ -1545,7 +1605,7 @@
             localStorage.setItem('dacapo_students', JSON.stringify(students));
             if (db) db.collection("students").doc(studentObj.id).set(studentObj);
 
-            renderStudents(); renderWeekNavigator(); populateAttendanceDropdown(); closeStudentModal(); checkNotifications();
+            renderStudents(); renderWeekNavigator(); populateAutofillDropdown(); closeStudentModal(); checkNotifications();
         }
 
         function renderStudents() {
@@ -1567,7 +1627,6 @@
                 let daysSummary = `${s.day1} (${s.time1})`;
                 if (s.day2) daysSummary += `, ${s.day2} (${s.time2})`;
                 if (s.day3) daysSummary += `, ${s.day3} (${s.time3})`;
-                const histCount = (s.paymentHistory || []).length;
                 const teacherName = s.teacher ? s.teacher.split(' ')[0] : 'Profesor';
 
                 return `
@@ -1583,9 +1642,11 @@
                             <span>🎵 ${s.instrument || 'Particular'} • 👨‍🏫 ${teacherName}</span>
                             <span>⏰ Horarios: ${daysSummary}</span>
                             <span>📅 Vence: ${s.dueDate || 'N/A'} | ✔ Asistencias este mes: <strong>${count}</strong></span>
+                            ${s.repertoireNotes ? `<div style="margin-top:4px; font-size:0.75rem; color:var(--accent-purple); background:var(--card-inner); padding:6px; border-radius:6px;">🎼 <strong>Repertorio:</strong> ${s.repertoireNotes}</div>` : ''}
                         </div>
                         <div class="actions-group" style="margin-top:10px;">
                             <button class="btn btn-small btn-outline" onclick="openStudentModal('${s.id}')">✏️ Editar</button>
+                            <button class="btn btn-small btn-outline" onclick="openRepertoireModal('${s.id}')">🎼 Repertorio</button>
                             <button class="btn btn-small btn-outline" onclick="togglePay('${s.id}')">${s.paid ? '🔴 Pendiente' : '🟢 Pagado'}</button>
                             <button class="btn btn-small btn-outline" onclick="openPaymentHistoryModal('${s.id}')">📋 Historial</button>
                             ${s.phone ? `<button class="btn btn-small btn-whatsapp" onclick="sendWhatsAppPaymentReminder('${s.id}')">💬 Cobro</button>` : ''}
@@ -1612,7 +1673,7 @@
                 students = students.filter(s => s.id !== id);
                 localStorage.setItem('dacapo_students', JSON.stringify(students));
                 if (db) db.collection("students").doc(id).delete();
-                renderStudents(); renderWeekNavigator(); populateAttendanceDropdown(); checkNotifications();
+                renderStudents(); renderWeekNavigator(); populateAutofillDropdown(); checkNotifications();
             }
         }
 
@@ -1630,46 +1691,68 @@
             renderClassesForDay(selectedDayAbbr); closeOccasionalModal(); checkNotifications();
         }
 
-        function populateAttendanceDropdown() {
-            const sel = document.getElementById('attendanceStudentSelect');
-            let opts = [];
+        // --- RELLENO AUTOMÁTICO (AUTOFILL) EN ASISTENCIA ---
+        function populateAutofillDropdown() {
+            const sel = document.getElementById('autofillStudentSelect');
+            let opts = [`<option value="">-- Elige un alumno para autocompletar --</option>`];
+            
             students.forEach(s => {
                 opts.push(`<option value="${s.id}_0|${s.name} (${s.day1})|${s.phone || ''}">Particular: ${s.name} (${s.day1} ${s.time1})</option>`);
                 if(s.day2) opts.push(`<option value="${s.id}_1|${s.name} (${s.day2})|${s.phone || ''}">Particular: ${s.name} (${s.day2} ${s.time2})</option>`);
                 if(s.day3) opts.push(`<option value="${s.id}_2|${s.name} (${s.day3})|${s.phone || ''}">Particular: ${s.name} (${s.day3} ${s.time3})</option>`);
             });
-            opts = opts.concat(schools.map(sc => `<option value="${sc.id}|Escuela: ${sc.name}|${sc.phone || ''}">Escuela: ${sc.name}</option>`));
-            sel.innerHTML = opts.join('') || `<option value="">Sin registros</option>`;
+            
+            schools.forEach(sc => {
+                opts.push(`<option value="${sc.id}|Escuela: ${sc.name}|${sc.phone || ''}">Escuela: ${sc.name}</option>`);
+            });
+
+            sel.innerHTML = opts.join('');
+        }
+
+        function autofillAttendanceForm() {
+            const val = document.getElementById('autofillStudentSelect').value;
+            if (!val) {
+                document.getElementById('attendanceStudentDisplay').value = '';
+                document.getElementById('attendancePhoneHidden').value = '';
+                return;
+            }
+            const parts = val.split('|');
+            const displayName = parts[1];
+            const phone = parts[2];
+
+            document.getElementById('attendanceStudentDisplay').value = displayName;
+            document.getElementById('attendancePhoneHidden').value = phone;
         }
 
         function saveAttendance() {
             const date = document.getElementById('attendanceDate').value;
-            const val = document.getElementById('attendanceStudentSelect').value;
+            const studentName = document.getElementById('attendanceStudentDisplay').value.trim();
             const status = document.getElementById('attendanceStatusSelect').value;
-            if (!val || !date) return alert("Selecciona datos");
+            const autofillVal = document.getElementById('autofillStudentSelect').value;
+            
+            if (!studentName || !date) return alert("Completa los datos de la asistencia.");
 
-            const parts = val.split('|');
-            const studentId = parts[0];
-            const studentName = parts[1];
+            const studentId = autofillVal ? autofillVal.split('|')[0] : Date.now().toString();
 
             const rec = { id: Date.now().toString(), studentId, studentName, date, status };
             attendances.unshift(rec);
             localStorage.setItem('dacapo_attendances', JSON.stringify(attendances));
             if (db) db.collection("attendances").doc(rec.id).set(rec);
-            renderAttendanceHistory(); renderStudents(); renderSchools(); alert("Asistencia guardada.");
+            
+            renderAttendanceHistory(); 
+            renderStudents(); 
+            renderSchools(); 
+            alert("Asistencia guardada con éxito.");
         }
 
         function sendCustomAttendanceWhatsApp() {
             const date = document.getElementById('attendanceDate').value;
-            const val = document.getElementById('attendanceStudentSelect').value;
+            const studentName = document.getElementById('attendanceStudentDisplay').value.trim();
             const status = document.getElementById('attendanceStatusSelect').value;
-            if (!val || !date) return alert("Selecciona alumno/escuela y fecha.");
+            const phone = document.getElementById('attendancePhoneHidden').value;
 
-            const parts = val.split('|');
-            const studentName = parts[1];
-            const phone = parts[2];
-
-            if (!phone) return alert("El alumno/escuela seleccionado no tiene número de teléfono registrado.");
+            if (!studentName || !date) return alert("Faltan datos para enviar el mensaje.");
+            if (!phone) return alert("El alumno o escuela seleccionado no tiene número de teléfono registrado.");
 
             let templateId = 'templatePresente';
             if (status === 'Ausente') templateId = 'templateAusente';
@@ -1729,7 +1812,7 @@
             const blob = new Blob([JSON.stringify({students, schools, occasionalClasses, attendances})], {type: 'application/json'});
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'dacapo_respaldo.json'; a.click();
         }
-        clearLocalData = function() {
+        function clearLocalData() {
             if (confirm("¿Limpiar datos locales?")) { localStorage.clear(); location.reload(); }
         }
     </script>
