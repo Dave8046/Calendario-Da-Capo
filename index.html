@@ -116,6 +116,24 @@
             color: #ffffff;
         }
 
+        .timer-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .timer-display {
+            font-size: 1.2rem;
+            font-weight: 900;
+            font-variant-numeric: tabular-nums;
+            color: var(--success);
+        }
+
         .notif-section {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -151,6 +169,10 @@
 
         .notification-card.type-payment {
             border-left: 4px solid var(--danger);
+        }
+
+        .notification-card.type-bday {
+            border-left: 4px solid var(--accent-purple);
         }
 
         .notif-info {
@@ -646,6 +668,20 @@
                 <div id="notificationsContainer"></div>
             </div>
 
+            <!-- TEMPORIZADOR DE CLASE -->
+            <div class="timer-card">
+                <div>
+                    <label style="margin:0;">⏱️ Cronómetro de Clase</label>
+                    <div class="timer-display" id="timerDisplay">45:00</div>
+                </div>
+                <div style="display:flex; gap:6px;">
+                    <button class="btn btn-small btn-outline" onclick="setTimerTime(45)">45m</button>
+                    <button class="btn btn-small btn-outline" onclick="setTimerTime(60)">60m</button>
+                    <button class="btn btn-small" id="timerToggleBtn" onclick="toggleTimer()" style="width:auto;">▶️</button>
+                    <button class="btn btn-small btn-danger" onclick="resetTimer()">🔄</button>
+                </div>
+            </div>
+
             <div class="subtabs">
                 <button class="subtab-btn active">📅 Esta Semana</button>
                 <button class="subtab-btn" onclick="switchTab('alumnos', document.querySelectorAll('.nav-btn')[1])">🔄 Clases Fijas</button>
@@ -689,7 +725,10 @@
 
             <div class="flex-between">
                 <h2>Alumnos Particulares</h2>
-                <button class="btn btn-small" style="width: auto;" onclick="openStudentModal()">+ Alumno</button>
+                <div style="display:flex; gap:6px;">
+                    <button class="btn btn-small btn-whatsapp" onclick="sendBulkCobroWhatsApp()" title="Enviar recordatorio a todos los pendientes">💬 Cobro en Lote</button>
+                    <button class="btn btn-small" style="width: auto;" onclick="openStudentModal()">+ Alumno</button>
+                </div>
             </div>
 
             <div class="card" style="margin-top: 10px;">
@@ -782,7 +821,6 @@
                     <span style="font-size: 0.7rem; color: var(--text-muted);">Variables: {nombre}, {fecha}</span>
                 </div>
 
-                <!-- NUEVA PLANTILLA REPORTE MENSUAL -->
                 <div class="form-group" style="margin-top: 15px;">
                     <label>Plantilla Reporte Mensual para Padres</label>
                     <textarea id="templateReporteMensual" rows="6" oninput="saveTemplates()">🎵 *ACADEMIA DE MÚSICA DA CAPO* 🎵\n*Reporte Mensual de Progreso*\n\nEstimados padres de *{nombre}*, los saludamos con mucho gusto. Aquí tienen el resumen del mes:\n\n📊 *Asistencia:* \n✅ Presentes: {presentes} | ❌ Ausentes: {ausentes} | ⚠️ Justificadas: {justificadas}\n\n🎼 *Avance en Repertorio:* \n"{repertorio}"\n\n👨‍🏫 *Profesor:* {profesor} ({instrumento})\n💰 *Estado de Cuenta:* {estado_pago}\n\n✨ ¡Gracias por su confianza constante en la formación musical de su hijo/a!</textarea>
@@ -927,6 +965,7 @@
             <div class="form-group"><label>Nombre</label><input type="text" id="studentName"></div>
             <div class="form-group"><label>WhatsApp (ej. +57...)</label><input type="tel" id="studentPhone"></div>
             <div class="form-group"><label>Instrumento</label><input type="text" id="studentInstrument"></div>
+            <div class="form-group"><label>Fecha de Cumpleaños</label><input type="date" id="studentBirthday"></div>
             
             <div class="form-group">
                 <label>Profesor Asignado</label>
@@ -1036,6 +1075,11 @@
         let selectedDayAbbr = "SÁB";
         let currentTeacherFilter = "ALL";
 
+        // Temporizador de Clase Variables
+        let timerInterval = null;
+        let timerSecondsLeft = 45 * 60;
+        let timerRunning = false;
+
         const daysMap = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
         const daysFullMap = { "DOM": "Domingo", "LUN": "Lunes", "MAR": "Martes", "MIÉ": "Miércoles", "JUE": "Jueves", "VIE": "Viernes", "SÁB": "Sábado" };
 
@@ -1051,7 +1095,74 @@
             populateAutofillDropdown();
             renderAttendanceHistory();
             checkNotifications();
+            updateTimerDisplay();
         });
+
+        // --- TEMPORIZADOR DE CLASE ---
+        function setTimerTime(mins) {
+            pauseTimer();
+            timerSecondsLeft = mins * 60;
+            updateTimerDisplay();
+        }
+
+        function updateTimerDisplay() {
+            const m = Math.floor(timerSecondsLeft / 60);
+            const s = timerSecondsLeft % 60;
+            document.getElementById('timerDisplay').innerText = 
+                `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        function toggleTimer() {
+            if (timerRunning) {
+                pauseTimer();
+            } else {
+                startTimer();
+            }
+        }
+
+        function startTimer() {
+            if (timerRunning) return;
+            timerRunning = true;
+            document.getElementById('timerToggleBtn').innerText = '⏸️';
+            timerInterval = setInterval(() => {
+                if (timerSecondsLeft > 0) {
+                    timerSecondsLeft--;
+                    updateTimerDisplay();
+                } else {
+                    pauseTimer();
+                    alert("⏰ ¡El tiempo de la clase ha terminado!");
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            timerRunning = false;
+            document.getElementById('timerToggleBtn').innerText = '▶️';
+            clearInterval(timerInterval);
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            timerSecondsLeft = 45 * 60;
+            updateTimerDisplay();
+        }
+
+        // --- COBRO RÁPIDO EN LOTE POR WHATSAPP ---
+        function sendBulkCobroWhatsApp() {
+            const pendingStudents = students.filter(s => !s.paid && s.phone);
+            if (pendingStudents.length === 0) return alert("No hay alumnos con mensualidad pendiente y teléfono registrado.");
+            
+            if (confirm(`Se abrirán chats de WhatsApp para ${pendingStudents.length} alumno(s) pendientes. ¿Deseas continuar?`)) {
+                pendingStudents.forEach((s, index) => {
+                    setTimeout(() => {
+                        const phoneClean = s.phone.replace(/[^0-9+]/g, '');
+                        let template = document.getElementById('templateCobro').value;
+                        let text = template.replace('{nombre}', s.name).replace('{monto}', (s.fee||0).toLocaleString()).replace('{vencimiento}', s.dueDate||'pronto');
+                        window.open(`https://wa.me/${phoneClean}?text=${encodeURIComponent(text)}`, '_blank');
+                    }, index * 800); // Pequeño retraso entre pestañas para evitar bloqueo del navegador
+                });
+            }
+        }
 
         function loadTemplatesToUI() {
             const tCobro = localStorage.getItem('dacapo_tpl_cobro');
@@ -1145,7 +1256,26 @@
             const todayIndex = new Date().getDay();
             const todayAbbr = daysMap[todayIndex];
             const todayStr = new Date().toISOString().substring(0, 10);
+            const currentMonthDay = todayStr.substring(5); // formato MM-DD
             let html = '';
+
+            // CUMPLEAÑOS DE HOY
+            students.forEach(s => {
+                if (s.birthday && s.birthday.substring(5) === currentMonthDay) {
+                    const key = `bday_${todayStr}_${s.id}`;
+                    if (!dismissedNotifications[key]) {
+                        html += `
+                            <div class="notification-card type-bday">
+                                <div class="notif-info">
+                                    <div class="notif-title">🎂 ¡Cumpleaños Hoy: ${s.name}!</div>
+                                    <div class="notif-sub">¡Felicitaciones de parte de Da Capo!</div>
+                                </div>
+                                <button class="btn btn-small btn-outline" onclick="dismissNotif('${key}')">✓</button>
+                            </div>
+                        `;
+                    }
+                }
+            });
 
             students.forEach(s => {
                 const days = [s.day1, s.day2, s.day3];
@@ -1394,7 +1524,6 @@
             closeReceiptModal();
         }
 
-        // --- REPERTORIO Y REPORTE MENSUAL PARA WHATSAPP ---
         function openRepertoireModal(studentId) {
             const student = students.find(s => s.id === studentId);
             if (!student) return;
@@ -1469,7 +1598,6 @@
             window.open(`https://wa.me/${phoneClean}?text=${encodeURIComponent(text)}`, '_blank');
         }
 
-        // --- HISTORIAL DE PAGOS POR ALUMNO ---
         function openPaymentHistoryModal(studentId) {
             const student = students.find(s => s.id === studentId);
             if (!student) return;
@@ -1630,6 +1758,7 @@
                     document.getElementById('studentName').value = s.name;
                     document.getElementById('studentPhone').value = s.phone || '';
                     document.getElementById('studentInstrument').value = s.instrument || '';
+                    document.getElementById('studentBirthday').value = s.birthday || '';
                     document.getElementById('studentTeacher').value = s.teacher || 'Fernando (Guitarra / Flauta)';
                     document.getElementById('studentDay1').value = s.day1 || 'LUN';
                     document.getElementById('studentTime1').value = s.time1 || '08:00';
@@ -1646,6 +1775,7 @@
                 document.getElementById('studentName').value = "";
                 document.getElementById('studentPhone').value = "";
                 document.getElementById('studentInstrument').value = "";
+                document.getElementById('studentBirthday').value = "";
                 document.getElementById('studentTeacher').value = "Fernando (Guitarra / Flauta)";
                 document.getElementById('studentDay1').value = "LUN";
                 document.getElementById('studentTime1').value = "08:00";
@@ -1687,6 +1817,7 @@
             const name = document.getElementById('studentName').value.trim();
             const phone = document.getElementById('studentPhone').value.trim();
             const instrument = document.getElementById('studentInstrument').value.trim();
+            const birthday = document.getElementById('studentBirthday').value;
             const teacher = document.getElementById('studentTeacher').value;
             
             const day1 = document.getElementById('studentDay1').value;
@@ -1713,7 +1844,7 @@
 
             const studentObj = { 
                 id: id || Date.now().toString(), 
-                name, phone, instrument, teacher, day1, time1, day2, time2, day3, time3, fee, dueDate, 
+                name, phone, instrument, birthday, teacher, day1, time1, day2, time2, day3, time3, fee, dueDate, 
                 paid: false, 
                 paymentHistory: [], 
                 repertoireNotes: '' 
@@ -1769,6 +1900,7 @@
                             <span>🎵 ${s.instrument || 'Particular'} • 👨‍🏫 ${teacherName}</span>
                             <span>⏰ Horarios: ${daysSummary}</span>
                             <span>📅 Vence: ${s.dueDate || 'N/A'} | ✔ Asistencias este mes: <strong>${count}</strong></span>
+                            ${s.birthday ? `<span>🎂 Cumpleaños: ${s.birthday}</span>` : ''}
                             ${s.repertoireNotes ? `<div style="margin-top:4px; font-size:0.75rem; color:var(--accent-purple); background:var(--card-inner); padding:6px; border-radius:6px;">🎼 <strong>Repertorio:</strong> ${s.repertoireNotes}</div>` : ''}
                         </div>
                         <div class="actions-group" style="margin-top:10px;">
