@@ -857,8 +857,8 @@
             <div class="form-group">
                 <label>Profesor Asignado</label>
                 <select id="studentTeacher">
-                    <option value="Profesor 1 (Guitarra / Flauta)">Profesor 1 (Guitarra / Flauta)</option>
-                    <option value="Profesor 2 (Piano / Violín / Cello / Flauta Travers.)">Profesor 2 (Piano / Violín / Cello / Flauta Travers.)</option>
+                    <option value="Fernando (Guitarra / Flauta)">Fernando (Guitarra / Flauta)</option>
+                    <option value="David (Piano / Violín / Cello / Flauta Travers.)">David (Piano / Violín / Cello / Flauta Travers.)</option>
                 </select>
             </div>
 
@@ -1174,8 +1174,8 @@
                 slots.forEach((slot, idx) => {
                     if (slot.day === abbr) {
                         dayStudentsCount++;
-                        const teacherShort = s.teacher ? s.teacher.split(' ')[0] + ' ' + s.teacher.split(' ')[1] : 'Profesor';
-                        html += buildSwipeCard(`${s.id}_${idx}`, s.name, `Fija • ${slot.time || '08:00'}`, `🎵 ${s.instrument||'Particular'} | 👨‍🏫 ${teacherShort}`);
+                        const teacherName = s.teacher ? s.teacher.split(' ')[0] : 'Profesor';
+                        html += buildSwipeCard(`${s.id}_${idx}`, s.name, `Fija • ${slot.time || '08:00'}`, `🎵 ${s.instrument||'Particular'} | 👨‍🏫 ${teacherName}`);
                     }
                 });
             });
@@ -1449,7 +1449,7 @@
                     document.getElementById('studentName').value = s.name;
                     document.getElementById('studentPhone').value = s.phone || '';
                     document.getElementById('studentInstrument').value = s.instrument || '';
-                    document.getElementById('studentTeacher').value = s.teacher || 'Profesor 1 (Guitarra / Flauta)';
+                    document.getElementById('studentTeacher').value = s.teacher || 'Fernando (Guitarra / Flauta)';
                     document.getElementById('studentDay1').value = s.day1 || 'LUN';
                     document.getElementById('studentTime1').value = s.time1 || '08:00';
                     document.getElementById('studentDay2').value = s.day2 || '';
@@ -1465,7 +1465,7 @@
                 document.getElementById('studentName').value = "";
                 document.getElementById('studentPhone').value = "";
                 document.getElementById('studentInstrument').value = "";
-                document.getElementById('studentTeacher').value = "Profesor 1 (Guitarra / Flauta)";
+                document.getElementById('studentTeacher').value = "Fernando (Guitarra / Flauta)";
                 document.getElementById('studentDay1').value = "LUN";
                 document.getElementById('studentTime1').value = "08:00";
                 document.getElementById('studentDay2').value = "";
@@ -1484,9 +1484,7 @@
             if (!day || !time) return true;
             let count = 0;
             students.forEach(s => {
-                // Si estamos editando al mismo estudiante, no contamos sus propios slots actuales
                 const isCurrentStudent = (s.id === excludeStudentId);
-                
                 const slots = [
                     { day: s.day1, time: s.time1 },
                     { day: s.day2, time: s.time2 },
@@ -1501,7 +1499,7 @@
                     }
                 });
             });
-            return count < 4; // Retorna true si hay menos de 4
+            return count < 4;
         }
 
         function saveStudent() {
@@ -1523,15 +1521,14 @@
 
             if (!name) return alert("Ingresa el nombre del alumno.");
 
-            // Validar capacidad máxima de 4 alumnos por profesor en cada bloque horario
             if (day1 && time1 && !checkTeacherCapacity(teacher, day1, time1, id, 0)) {
-                return alert(`⚠️ Cupo lleno: El docente "${teacher}" ya tiene 4 alumnos agendados el día ${day1} a las ${time1}.`);
+                return alert(`⚠️ Cupo lleno: El profesor "${teacher}" ya tiene 4 alumnos agendados el día ${day1} a las ${time1}.`);
             }
             if (day2 && time2 && !checkTeacherCapacity(teacher, day2, time2, id, 1)) {
-                return alert(`⚠️ Cupo lleno: El docente "${teacher}" ya tiene 4 alumnos agendados el día ${day2} a las ${time2}.`);
+                return alert(`⚠️ Cupo lleno: El profesor "${teacher}" ya tiene 4 alumnos agendados el día ${day2} a las ${time2}.`);
             }
             if (day3 && time3 && !checkTeacherCapacity(teacher, day3, time3, id, 2)) {
-                return alert(`⚠️ Cupo lleno: El docente "${teacher}" ya tiene 4 alumnos agendados el día ${day3} a las ${time3}.`);
+                return alert(`⚠️ Cupo lleno: El profesor "${teacher}" ya tiene 4 alumnos agendados el día ${day3} a las ${time3}.`);
             }
 
             const studentObj = { id: id || Date.now().toString(), name, phone, instrument, teacher, day1, time1, day2, time2, day3, time3, fee, dueDate, paid: false, paymentHistory: [] };
@@ -1571,7 +1568,7 @@
                 if (s.day2) daysSummary += `, ${s.day2} (${s.time2})`;
                 if (s.day3) daysSummary += `, ${s.day3} (${s.time3})`;
                 const histCount = (s.paymentHistory || []).length;
-                const teacherShort = s.teacher ? s.teacher.split(' ')[0] + ' ' + s.teacher.split(' ')[1] : 'Profesor';
+                const teacherName = s.teacher ? s.teacher.split(' ')[0] : 'Profesor';
 
                 return `
                     <div class="card" style="margin-bottom:12px; padding:14px;">
@@ -1583,7 +1580,7 @@
                             <span style="font-weight:800; color:var(--success);">$${(s.fee||0).toLocaleString()}</span>
                         </div>
                         <div class="class-meta" style="margin-top:6px; flex-direction:column; gap:3px;">
-                            <span>🎵 ${s.instrument || 'Particular'} • 👨‍🏫 ${teacherShort}</span>
+                            <span>🎵 ${s.instrument || 'Particular'} • 👨‍🏫 ${teacherName}</span>
                             <span>⏰ Horarios: ${daysSummary}</span>
                             <span>📅 Vence: ${s.dueDate || 'N/A'} | ✔ Asistencias este mes: <strong>${count}</strong></span>
                         </div>
@@ -1732,7 +1729,7 @@
             const blob = new Blob([JSON.stringify({students, schools, occasionalClasses, attendances})], {type: 'application/json'});
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'dacapo_respaldo.json'; a.click();
         }
-        function clearLocalData() {
+        clearLocalData = function() {
             if (confirm("¿Limpiar datos locales?")) { localStorage.clear(); location.reload(); }
         }
     </script>
