@@ -674,14 +674,14 @@
             <div id="schoolsListContainer" style="margin-top: 15px;"></div>
         </section>
 
-        <!-- ASISTENCIA (CON AUTOFILL) -->
+        <!-- ASISTENCIA -->
         <section id="tab-asistencia" class="tab-content">
             <h2>Control de Asistencia y Registro Rápido</h2>
             <div class="card">
                 <div class="form-group">
-                    <label>Seleccionar Alumno (Relleno Automático)</label>
+                    <label>Seleccionar Alumno o Escuela (Relleno Automático)</label>
                     <select id="autofillStudentSelect" onchange="autofillAttendanceForm()">
-                        <option value="">-- Elige un alumno para autocompletar --</option>
+                        <option value="">-- Elige un registro para autocompletar --</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -689,7 +689,7 @@
                     <input type="date" id="attendanceDate">
                 </div>
                 <div class="form-group">
-                    <label>Detalle / Alumno o Escuela y Horario</label>
+                    <label>Detalle / Alumno u Escuela y Horario</label>
                     <input type="text" id="attendanceStudentDisplay" placeholder="Se llena solo o escribe manualmente...">
                 </div>
                 <div class="form-group">
@@ -762,7 +762,7 @@
     <!-- BOTONES FLOTANTES -->
     <div class="fab-container">
         <div class="fab-button secondary" onclick="openOccasionalModal()" title="Clase ocasional">⭐</div>
-        <div class="fab-button" onclick="openStudentModal()" title="Agregar">+</div>
+        <div class="fab-button" onclick="openStudentModal()" title="Agregar Alumno">+</div>
     </div>
 
     <!-- NAVEGACIÓN -->
@@ -930,7 +930,7 @@
             <input type="hidden" id="editingSchoolId" value="">
             <div class="form-group"><label>Nombre de la Escuela</label><input type="text" id="schoolName" placeholder="Ej. Colegio San Juan"></div>
             <div class="form-group"><label>WhatsApp de Contacto (Opcional)</label><input type="tel" id="schoolPhone" placeholder="+57..."></div>
-            <div class="form-group"><label>Día de Clase</label>
+            <div class="form-group"><label>Día de Clase Fija</label>
                 <select id="schoolDay">
                     <option value="LUN">Lunes</option><option value="MAR">Martes</option><option value="MIÉ">Miércoles</option>
                     <option value="JUE">Jueves</option><option value="VIE">Viernes</option><option value="SÁB">Sábado</option><option value="DOM">Domingo</option>
@@ -943,17 +943,27 @@
         </div>
     </div>
 
-    <!-- MODAL OCASIONAL -->
+    <!-- MODAL OCASIONAL (PARTICULAR O ESCUELA) -->
     <div class="modal" id="occasionalModal">
         <div class="modal-body">
             <div class="flex-between">
-                <h2>Clase Ocasional</h2>
+                <h2>Registrar Clase Ocasional</h2>
                 <span onclick="closeOccasionalModal()" style="cursor:pointer; font-size: 1.2rem;">✕</span>
             </div>
-            <div class="form-group"><label>Alumno / Nota</label><input type="text" id="occName"></div>
+            <div class="form-group">
+                <label>Tipo</label>
+                <select id="occType" onchange="toggleOccasionalType()">
+                    <option value="Particular">Particular / Estudiante</option>
+                    <option value="Escuela">Escuela</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label id="occLabelName">Nombre de la Nota o Alumno</label>
+                <input type="text" id="occName" placeholder="Ej. Taller especial o Nombre...">
+            </div>
             <div class="form-group"><label>Fecha</label><input type="date" id="occDate"></div>
             <div class="form-group"><label>Hora</label><input type="time" id="occTime" value="10:00"></div>
-            <button class="btn" onclick="saveOccasionalClass()">Guardar</button>
+            <button class="btn" onclick="saveOccasionalClass()">Guardar Clase Ocasional</button>
         </div>
     </div>
 
@@ -1214,7 +1224,8 @@
                 html += buildSwipeCard(sc.id, sc.name, `Escuela • ${sc.time}`, `🏫 Escuela registrada`);
             });
             dayOcc.forEach(o => {
-                html += buildSwipeCard(o.id, o.name, `Ocasional • ${o.time}`, `⭐ Clase extra`);
+                const badgeLabel = o.type === 'Escuela' ? `🏫 Ocasional Escuela • ${o.time}` : `⭐ Ocasional • ${o.time}`;
+                html += buildSwipeCard(o.id, o.name, badgeLabel, `📅 Clase extra/taller`);
             });
             container.innerHTML = html;
         }
@@ -1679,22 +1690,42 @@
 
         function openOccasionalModal() { document.getElementById('occasionalModal').classList.add('active'); }
         function closeOccasionalModal() { document.getElementById('occasionalModal').classList.remove('active'); }
+        
+        function toggleOccasionalType() {
+            const type = document.getElementById('occType').value;
+            const label = document.getElementById('occLabelName');
+            const input = document.getElementById('occName');
+            if (type === 'Escuela') {
+                label.innerText = "Nombre de la Escuela / Taller";
+                input.placeholder = "Ej. Colegio San Juan (Taller especial)";
+            } else {
+                label.innerText = "Nombre de la Nota o Alumno";
+                input.placeholder = "Ej. Taller especial o Nombre...";
+            }
+        }
+
         function saveOccasionalClass() {
+            const type = document.getElementById('occType').value;
             const name = document.getElementById('occName').value.trim();
             const date = document.getElementById('occDate').value;
             const time = document.getElementById('occTime').value;
-            if (!name || !date) return alert("Completa los campos");
-            const occ = { id: Date.now().toString(), name, date, time };
+            if (!name || !date) return alert("Completa los campos requeridos.");
+            
+            const occ = { id: Date.now().toString(), type, name, date, time };
             occasionalClasses.push(occ);
             localStorage.setItem('dacapo_occasional', JSON.stringify(occasionalClasses));
             if (db) db.collection("occasional").doc(occ.id).set(occ);
-            renderClassesForDay(selectedDayAbbr); closeOccasionalModal(); checkNotifications();
+            
+            renderClassesForDay(selectedDayAbbr); 
+            closeOccasionalModal(); 
+            checkNotifications();
+            alert("Clase ocasional guardada con éxito.");
         }
 
         // --- RELLENO AUTOMÁTICO (AUTOFILL) EN ASISTENCIA ---
         function populateAutofillDropdown() {
             const sel = document.getElementById('autofillStudentSelect');
-            let opts = [`<option value="">-- Elige un alumno para autocompletar --</option>`];
+            let opts = [`<option value="">-- Elige un registro para autocompletar --</option>`];
             
             students.forEach(s => {
                 opts.push(`<option value="${s.id}_0|${s.name} (${s.day1})|${s.phone || ''}">Particular: ${s.name} (${s.day1} ${s.time1})</option>`);
