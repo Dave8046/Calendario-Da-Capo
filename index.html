@@ -819,6 +819,29 @@
         </div>
     </div>
 
+    <!-- MODAL HISTORIAL DE PAGOS -->
+    <div class="modal" id="paymentHistoryModal">
+        <div class="modal-body">
+            <div class="flex-between">
+                <h2 id="historyModalTitle">Historial de Pagos</h2>
+                <span onclick="closePaymentHistoryModal()" style="cursor:pointer; font-size: 1.2rem;">✕</span>
+            </div>
+            <input type="hidden" id="historyStudentId">
+            <div class="form-group">
+                <label>Registrar Nuevo Pago (Mes / Fecha)</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="date" id="newPaymentDate" style="flex: 2;">
+                    <input type="number" id="newPaymentAmount" placeholder="Monto ($)" style="flex: 1;">
+                    <button class="btn btn-small" onclick="addPaymentRecord()" style="width: auto;">+ Agregar</button>
+                </div>
+            </div>
+            <div style="margin-top: 14px;">
+                <label>Pagos Registrados</label>
+                <div id="paymentHistoryListContainer" style="margin-top: 8px; max-height: 250px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL CLASE FIJA / PARTICULAR -->
     <div class="modal" id="studentModal">
         <div class="modal-body">
@@ -1256,6 +1279,73 @@
             closeReceiptModal();
         }
 
+        // --- HISTORIAL DE PAGOS POR ALUMNO ---
+        function openPaymentHistoryModal(studentId) {
+            const student = students.find(s => s.id === studentId);
+            if (!student) return;
+            document.getElementById('historyStudentId').value = student.id;
+            document.getElementById('historyModalTitle').innerText = `Historial de Pagos: ${student.name}`;
+            document.getElementById('newPaymentDate').value = new Date().toISOString().substring(0, 10);
+            document.getElementById('newPaymentAmount').value = student.fee || '';
+            renderPaymentHistoryList(student);
+            document.getElementById('paymentHistoryModal').classList.add('active');
+        }
+
+        function closePaymentHistoryModal() {
+            document.getElementById('paymentHistoryModal').classList.remove('active');
+        }
+
+        function renderPaymentHistoryList(student) {
+            const container = document.getElementById('paymentHistoryListContainer');
+            const history = student.paymentHistory || [];
+            if (history.length === 0) {
+                container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted);">Sin pagos registrados en el historial.</p>`;
+                return;
+            }
+            container.innerHTML = history.map((p, idx) => `
+                <div class="card" style="padding:10px 12px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <strong style="color:var(--success);">$${(p.amount||0).toLocaleString()}</strong>
+                        <div style="font-size:0.75rem; color:var(--text-muted);">📅 Fecha: ${p.date}</div>
+                    </div>
+                    <button class="btn btn-small btn-danger" onclick="deletePaymentRecord('${student.id}', ${idx})">🗑️</button>
+                </div>
+            `).join('');
+        }
+
+        function addPaymentRecord() {
+            const studentId = document.getElementById('historyStudentId').value;
+            const student = students.find(s => s.id === studentId);
+            if (!student) return;
+
+            const date = document.getElementById('newPaymentDate').value;
+            const amount = parseFloat(document.getElementById('newPaymentAmount').value) || 0;
+            if (!date) return alert("Selecciona la fecha del pago.");
+
+            if (!student.paymentHistory) student.paymentHistory = [];
+            student.paymentHistory.unshift({ date, amount });
+
+            localStorage.setItem('dacapo_students', JSON.stringify(students));
+            if (db) db.collection("students").doc(studentId).update({ paymentHistory: student.paymentHistory });
+
+            renderPaymentHistoryList(student);
+            renderStudents();
+            alert("Pago agregado al historial.");
+        }
+
+        function deletePaymentRecord(studentId, index) {
+            if (confirm("¿Eliminar este registro del historial?")) {
+                const student = students.find(s => s.id === studentId);
+                if (student && student.paymentHistory) {
+                    student.paymentHistory.splice(index, 1);
+                    localStorage.setItem('dacapo_students', JSON.stringify(students));
+                    if (db) db.collection("students").doc(studentId).update({ paymentHistory: student.paymentHistory });
+                    renderPaymentHistoryList(student);
+                    renderStudents();
+                }
+            }
+        }
+
         function openSchoolModal(id = null) {
             if (id) {
                 const sc = schools.find(item => item.id === id);
@@ -1393,11 +1483,14 @@
             const dueDate = document.getElementById('studentDueDate').value;
 
             if (!name) return alert("Ingresa el nombre.");
-            const studentObj = { id: id || Date.now().toString(), name, phone, instrument, day1, time1, day2, time2, day3, time3, fee, dueDate, paid: false };
+            const studentObj = { id: id || Date.now().toString(), name, phone, instrument, day1, time1, day2, time2, day3, time3, fee, dueDate, paid: false, paymentHistory: [] };
             
             if (id) {
                 const idx = students.findIndex(s => s.id === id);
-                if (idx !== -1) studentObj.paid = students[idx].paid;
+                if (idx !== -1) {
+                    studentObj.paid = students[idx].paid;
+                    studentObj.paymentHistory = students[idx].paymentHistory || [];
+                }
                 students[idx] = studentObj;
             } else { students.push(studentObj); }
 
@@ -1426,6 +1519,7 @@
                 let daysSummary = `${s.day1} (${s.time1})`;
                 if (s.day2) daysSummary += `, ${s.day2} (${s.time2})`;
                 if (s.day3) daysSummary += `, ${s.day3} (${s.time3})`;
+                const histCount = (s.paymentHistory || []).length;
 
                 return `
                     <div class="card" style="margin-bottom:12px; padding:14px;">
@@ -1439,11 +1533,12 @@
                         <div class="class-meta" style="margin-top:6px; flex-direction:column; gap:3px;">
                             <span>🎵 ${s.instrument || 'Particular'} • 📅 Vence: ${s.dueDate || 'N/A'}</span>
                             <span>⏰ Horarios: ${daysSummary}</span>
-                            <span>✔ Clases asistidas este mes: <strong>${count}</strong></span>
+                            <span>✔ Clases asistidas este mes: <strong>${count}</strong> | 📋 Pagos en historial: <strong>${histCount}</strong></span>
                         </div>
                         <div class="actions-group" style="margin-top:10px;">
                             <button class="btn btn-small btn-outline" onclick="openStudentModal('${s.id}')">✏️ Editar</button>
                             <button class="btn btn-small btn-outline" onclick="togglePay('${s.id}')">${s.paid ? '🔴 Pendiente' : '🟢 Pagado'}</button>
+                            <button class="btn btn-small btn-outline" onclick="openPaymentHistoryModal('${s.id}')">📋 Historial</button>
                             ${s.phone ? `<button class="btn btn-small btn-whatsapp" onclick="sendWhatsAppPaymentReminder('${s.id}')">💬 Cobro</button>` : ''}
                             ${s.phone ? `<button class="btn btn-small btn-whatsapp" onclick="openReceiptModal('${s.id}')">💳 Recibo</button>` : ''}
                             <button class="btn btn-small btn-danger" onclick="deleteStudent('${s.id}')">🗑️</button>
