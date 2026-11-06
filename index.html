@@ -210,6 +210,32 @@
             font-weight: 700;
         }
 
+        .teacher-filter-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .filter-btn {
+            flex: 1;
+            padding: 8px 10px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-muted);
+            font-size: 0.76rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .filter-btn.active {
+            background: var(--card-inner);
+            border-color: var(--accent-purple);
+            color: var(--text-color);
+        }
+
         .days-carousel {
             display: flex;
             gap: 8px;
@@ -634,6 +660,13 @@
                 <button class="nav-arrow" onclick="changeWeek(1)">›</button>
             </div>
 
+            <!-- FILTRO RÁPIDO POR PROFESOR -->
+            <div class="teacher-filter-bar">
+                <button class="filter-btn active" id="filterBtnAll" onclick="setTeacherFilter('ALL')">🌐 Todos</button>
+                <button class="filter-btn" id="filterBtnFernando" onclick="setTeacherFilter('Fernando')">🎸 Fernando</button>
+                <button class="filter-btn" id="filterBtnDavid" onclick="setTeacherFilter('David')">🎹 David</button>
+            </div>
+
             <div class="days-carousel" id="daysCarousel"></div>
 
             <div class="day-section-header">
@@ -983,6 +1016,7 @@
         let selectedDayIndex = 5;
         let selectedDateStr = new Date().toISOString().substring(0, 10);
         let selectedDayAbbr = "SÁB";
+        let currentTeacherFilter = "ALL"; // Filtro activo: ALL, Fernando, David
 
         const daysMap = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
         const daysFullMap = { "DOM": "Domingo", "LUN": "Lunes", "MAR": "Martes", "MIÉ": "Miércoles", "JUE": "Jueves", "VIE": "Viernes", "SÁB": "Sábado" };
@@ -1193,12 +1227,28 @@
             renderClassesForDay(abbr);
         }
 
+        function setTeacherFilter(teacher) {
+            currentTeacherFilter = teacher;
+            document.getElementById('filterBtnAll').classList.toggle('active', teacher === 'ALL');
+            document.getElementById('filterBtnFernando').classList.toggle('active', teacher === 'Fernando');
+            document.getElementById('filterBtnDavid').classList.toggle('active', teacher === 'David');
+            renderClassesForDay(selectedDayAbbr);
+        }
+
         function renderClassesForDay(abbr) {
             const container = document.getElementById('classesListContainer');
-            let dayStudentsCount = 0;
+            let matchedCount = 0;
             let html = '';
 
+            // Filtrar alumnos particulares según profesor
             students.forEach(s => {
+                const teacherName = s.teacher ? s.teacher.split(' ')[0] : 'Profesor';
+                
+                // Aplicar filtro de profesor si está activo
+                if (currentTeacherFilter !== 'ALL' && !s.teacher.includes(currentTeacherFilter)) {
+                    return;
+                }
+
                 const slots = [
                     { day: s.day1, time: s.time1 },
                     { day: s.day2, time: s.time2 },
@@ -1206,27 +1256,33 @@
                 ];
                 slots.forEach((slot, idx) => {
                     if (slot.day === abbr) {
-                        dayStudentsCount++;
-                        const teacherName = s.teacher ? s.teacher.split(' ')[0] : 'Profesor';
+                        matchedCount++;
                         html += buildSwipeCard(`${s.id}_${idx}`, s.name, `Fija • ${slot.time || '08:00'}`, `🎵 ${s.instrument||'Particular'} | 👨‍🏫 ${teacherName}`);
                     }
                 });
             });
 
-            const daySchools = schools.filter(sc => sc.day === abbr);
-            const dayOcc = occasionalClasses.filter(o => o.date === selectedDateStr);
-            const total = dayStudentsCount + daySchools.length + dayOcc.length;
+            // Las escuelas y ocasionales solo se muestran si el filtro está en ALL (o podrías ajustarlo si deseas)
+            if (currentTeacherFilter === 'ALL') {
+                const daySchools = schools.filter(sc => sc.day === abbr);
+                const dayOcc = occasionalClasses.filter(o => o.date === selectedDateStr);
+                
+                daySchools.forEach(sc => {
+                    matchedCount++;
+                    html += buildSwipeCard(sc.id, sc.name, `Escuela • ${sc.time}`, `🏫 Escuela registrada`);
+                });
+                dayOcc.forEach(o => {
+                    matchedCount++;
+                    const badgeLabel = o.type === 'Escuela' ? `🏫 Ocasional Escuela • ${o.time}` : `⭐ Ocasional • ${o.time}`;
+                    html += buildSwipeCard(o.id, o.name, badgeLabel, `📅 Clase extra/taller`);
+                });
+            }
 
-            document.getElementById('classesCountBadge').innerText = `${total} clase(s)`;
-            if (total === 0) { container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-muted); padding:10px 0;">Sin clases este día.</p>`; return; }
-
-            daySchools.forEach(sc => {
-                html += buildSwipeCard(sc.id, sc.name, `Escuela • ${sc.time}`, `🏫 Escuela registrada`);
-            });
-            dayOcc.forEach(o => {
-                const badgeLabel = o.type === 'Escuela' ? `🏫 Ocasional Escuela • ${o.time}` : `⭐ Ocasional • ${o.time}`;
-                html += buildSwipeCard(o.id, o.name, badgeLabel, `📅 Clase extra/taller`);
-            });
+            document.getElementById('classesCountBadge').innerText = `${matchedCount} clase(s)`;
+            if (matchedCount === 0) { 
+                container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-muted); padding:10px 0;">No hay clases para este filtro en este día.</p>`; 
+                return; 
+            }
             container.innerHTML = html;
         }
 
