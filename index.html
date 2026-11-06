@@ -723,10 +723,23 @@
                     <textarea id="templateComprobante" rows="3" oninput="saveTemplates()">🎵 *DA CAPO - CASA MUSICAL* 🎵\n\nEstimado/a *{nombre}*, le confirmamos que hemos recibido su pago con éxito.\n\n💰 *Monto recibido:* ${monto}\n📅 *Fecha de pago:* {fecha}\n✨ ¡Muchas gracias por su puntualidad y confianza!</textarea>
                     <span style="font-size: 0.7rem; color: var(--text-muted);">Variables: {nombre}, {monto}, {fecha}</span>
                 </div>
+                
                 <div class="form-group">
-                    <label>Plantilla Aviso de Asistencia</label>
-                    <textarea id="templateAsistencia" rows="3" oninput="saveTemplates()">Hola {nombre}, te saludamos de Da Capo - Casa Musical 🎶. Te informamos que tu registro de clase del {fecha} quedó marcado como: *{estado}*. ¡Saludos! ✨</textarea>
-                    <span style="font-size: 0.7rem; color: var(--text-muted);">Variables: {nombre}, {fecha}, {estado}</span>
+                    <label>Plantilla Aviso: Presente ✅</label>
+                    <textarea id="templatePresente" rows="3" oninput="saveTemplates()">Hola {nombre}, te saludamos de Da Capo - Casa Musical 🎶. Nos encantó verte en tu clase de hoy {fecha}. ¡Excelente trabajo! ✨</textarea>
+                    <span style="font-size: 0.7rem; color: var(--text-muted);">Variables: {nombre}, {fecha}</span>
+                </div>
+
+                <div class="form-group">
+                    <label>Plantilla Aviso: Ausente ❌</label>
+                    <textarea id="templateAusente" rows="3" oninput="saveTemplates()">Hola {nombre}, te saludamos de Da Capo - Casa Musical 🎶. Notamos tu ausencia en la clase del {fecha}. Esperamos que te encuentres muy bien y te esperamos en la próxima. 📌</textarea>
+                    <span style="font-size: 0.7rem; color: var(--text-muted);">Variables: {nombre}, {fecha}</span>
+                </div>
+
+                <div class="form-group">
+                    <label>Plantilla Aviso: Justificado ⚠️</label>
+                    <textarea id="templateJustificado" rows="3" oninput="saveTemplates()">Hola {nombre}, te saludamos de Da Capo - Casa Musical 🎶. Hemos registrado tu inasistencia del {fecha} como justificada. ¡Saludos y nos vemos pronto! ✨</textarea>
+                    <span style="font-size: 0.7rem; color: var(--text-muted);">Variables: {nombre}, {fecha}</span>
                 </div>
             </div>
 
@@ -927,19 +940,29 @@
         function loadTemplatesToUI() {
             const tCobro = localStorage.getItem('dacapo_tpl_cobro');
             const tComp = localStorage.getItem('dacapo_tpl_comp');
-            const tAsis = localStorage.getItem('dacapo_tpl_asis');
+            const tPres = localStorage.getItem('dacapo_tpl_presente');
+            const tAus = localStorage.getItem('dacapo_tpl_ausente');
+            const tJust = localStorage.getItem('dacapo_tpl_justificado');
+
             if(tCobro) document.getElementById('templateCobro').value = tCobro;
             if(tComp) document.getElementById('templateComprobante').value = tComp;
-            if(tAsis) document.getElementById('templateAsistencia').value = tAsis;
+            if(tPres) document.getElementById('templatePresente').value = tPres;
+            if(tAus) document.getElementById('templateAusente').value = tAus;
+            if(tJust) document.getElementById('templateJustificado').value = tJust;
         }
 
         function saveTemplates() {
             const tCobro = document.getElementById('templateCobro').value;
             const tComp = document.getElementById('templateComprobante').value;
-            const tAsis = document.getElementById('templateAsistencia').value;
+            const tPres = document.getElementById('templatePresente').value;
+            const tAus = document.getElementById('templateAusente').value;
+            const tJust = document.getElementById('templateJustificado').value;
+
             localStorage.setItem('dacapo_tpl_cobro', tCobro);
             localStorage.setItem('dacapo_tpl_comp', tComp);
-            localStorage.setItem('dacapo_tpl_asis', tAsis);
+            localStorage.setItem('dacapo_tpl_presente', tPres);
+            localStorage.setItem('dacapo_tpl_ausente', tAus);
+            localStorage.setItem('dacapo_tpl_justificado', tJust);
         }
 
         function initFirebaseFromStorage() {
@@ -1504,8 +1527,12 @@
 
             if (!phone) return alert("El alumno/escuela seleccionado no tiene número de teléfono registrado.");
 
-            let template = document.getElementById('templateAsistencia').value;
-            let text = template.replace('{nombre}', studentName).replace('{fecha}', date).replace('{estado}', status);
+            let templateId = 'templatePresente';
+            if (status === 'Ausente') templateId = 'templateAusente';
+            if (status === 'Justificado') templateId = 'templateJustificado';
+
+            let template = document.getElementById(templateId).value;
+            let text = template.replace('{nombre}', studentName).replace('{fecha}', date);
             const phoneClean = phone.replace(/[^0-9+]/g, '');
             window.open(`https://wa.me/${phoneClean}?text=${encodeURIComponent(text)}`, '_blank');
         }
