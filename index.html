@@ -882,17 +882,25 @@
         </div>
     </div>
 
-    <!-- MODAL REPERTORIO / NOTAS RÁPIDAS -->
+    <!-- MODAL REPERTORIO / NOTAS RÁPIDAS Y ASISTENCIA INDIVIDUAL -->
     <div class="modal" id="repertoireModal">
         <div class="modal-body">
             <div class="flex-between">
-                <h2 id="repertoireModalTitle">Repertorio y Notas Rápidas</h2>
+                <h2 id="repertoireModalTitle">Repertorio y Asistencia</h2>
                 <span onclick="closeRepertoireModal()" style="cursor:pointer; font-size: 1.2rem;">✕</span>
             </div>
             <input type="hidden" id="repertoireStudentId">
+            
+            <div class="form-group">
+                <label>📊 Resumen de Asistencias del Alumno</label>
+                <div id="studentAttendanceSummary" style="font-size: 0.85rem; background: var(--card-inner); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 10px;">
+                    Cargando estadísticas...
+                </div>
+            </div>
+
             <div class="form-group">
                 <label>Notas de Repertorio y Avance (Piezas, Ejercicios)</label>
-                <textarea id="studentRepertoireNotes" rows="6" placeholder="Escribe aquí las obras que está practicando el alumno, dificultad, observaciones..."></textarea>
+                <textarea id="studentRepertoireNotes" rows="4" placeholder="Escribe aquí las obras que está practicando el alumno..."></textarea>
             </div>
             <button class="btn" onclick="saveRepertoireNotes()">Guardar Notas</button>
         </div>
@@ -1016,7 +1024,7 @@
         let selectedDayIndex = 5;
         let selectedDateStr = new Date().toISOString().substring(0, 10);
         let selectedDayAbbr = "SÁB";
-        let currentTeacherFilter = "ALL"; // Filtro activo: ALL, Fernando, David
+        let currentTeacherFilter = "ALL";
 
         const daysMap = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
         const daysFullMap = { "DOM": "Domingo", "LUN": "Lunes", "MAR": "Martes", "MIÉ": "Miércoles", "JUE": "Jueves", "VIE": "Viernes", "SÁB": "Sábado" };
@@ -1240,14 +1248,9 @@
             let matchedCount = 0;
             let html = '';
 
-            // Filtrar alumnos particulares según profesor
             students.forEach(s => {
                 const teacherName = s.teacher ? s.teacher.split(' ')[0] : 'Profesor';
-                
-                // Aplicar filtro de profesor si está activo
-                if (currentTeacherFilter !== 'ALL' && !s.teacher.includes(currentTeacherFilter)) {
-                    return;
-                }
+                if (currentTeacherFilter !== 'ALL' && !s.teacher.includes(currentTeacherFilter)) return;
 
                 const slots = [
                     { day: s.day1, time: s.time1 },
@@ -1262,7 +1265,6 @@
                 });
             });
 
-            // Las escuelas y ocasionales solo se muestran si el filtro está en ALL (o podrías ajustarlo si deseas)
             if (currentTeacherFilter === 'ALL') {
                 const daySchools = schools.filter(sc => sc.day === abbr);
                 const dayOcc = occasionalClasses.filter(o => o.date === selectedDateStr);
@@ -1378,13 +1380,27 @@
             closeReceiptModal();
         }
 
-        // --- REPERTORIO Y NOTAS RÁPIDAS ---
+        // --- REPERTORIO Y ASISTENCIA INDIVIDUAL ---
         function openRepertoireModal(studentId) {
             const student = students.find(s => s.id === studentId);
             if (!student) return;
             document.getElementById('repertoireStudentId').value = student.id;
-            document.getElementById('repertoireModalTitle').innerText = `Repertorio: ${student.name}`;
+            document.getElementById('repertoireModalTitle').innerText = `Detalles: ${student.name}`;
             document.getElementById('studentRepertoireNotes').value = student.repertoireNotes || '';
+            
+            // Calcular estadísticas de asistencia de este alumno específico
+            const studentAtts = attendances.filter(a => a.studentId && a.studentId.startsWith(student.id));
+            const totalPresentes = studentAtts.filter(a => a.status === 'Presente').length;
+            const totalAusentes = studentAtts.filter(a => a.status === 'Ausente').length;
+            const totalJustificados = studentAtts.filter(a => a.status === 'Justificado').length;
+
+            document.getElementById('studentAttendanceSummary').innerHTML = `
+                ✅ <strong>Presentes:</strong> ${totalPresentes} &nbsp;|&nbsp; 
+                ❌ <strong>Ausentes:</strong> ${totalAusentes} &nbsp;|&nbsp; 
+                ⚠️ <strong>Justificados:</strong> ${totalJustificados}
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">Total de registros en historial: ${studentAtts.length}</div>
+            `;
+
             document.getElementById('repertoireModal').classList.add('active');
         }
 
@@ -1599,7 +1615,6 @@
         }
         function closeStudentModal() { document.getElementById('studentModal').classList.remove('active'); }
 
-        // --- VALIDACIÓN DE CUPO MÁXIMO (4 ESTUDIANTES POR PROFESOR EN EL MISMO BLOQUE) ---
         function checkTeacherCapacity(teacher, day, time, excludeStudentId, slotIndex) {
             if (!day || !time) return true;
             let count = 0;
@@ -1713,7 +1728,7 @@
                         </div>
                         <div class="actions-group" style="margin-top:10px;">
                             <button class="btn btn-small btn-outline" onclick="openStudentModal('${s.id}')">✏️ Editar</button>
-                            <button class="btn btn-small btn-outline" onclick="openRepertoireModal('${s.id}')">🎼 Repertorio</button>
+                            <button class="btn btn-small btn-outline" onclick="openRepertoireModal('${s.id}')">🎼 Repertorio & Asistencia</button>
                             <button class="btn btn-small btn-outline" onclick="togglePay('${s.id}')">${s.paid ? '🔴 Pendiente' : '🟢 Pagado'}</button>
                             <button class="btn btn-small btn-outline" onclick="openPaymentHistoryModal('${s.id}')">📋 Historial</button>
                             ${s.phone ? `<button class="btn btn-small btn-whatsapp" onclick="sendWhatsAppPaymentReminder('${s.id}')">💬 Cobro</button>` : ''}
@@ -1778,7 +1793,6 @@
             alert("Clase ocasional guardada con éxito.");
         }
 
-        // --- RELLENO AUTOMÁTICO (AUTOFILL) EN ASISTENCIA ---
         function populateAutofillDropdown() {
             const sel = document.getElementById('autofillStudentSelect');
             let opts = [`<option value="">-- Elige un registro para autocompletar --</option>`];
