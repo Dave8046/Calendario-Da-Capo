@@ -781,6 +781,13 @@
                     <textarea id="templateJustificado" rows="3" oninput="saveTemplates()">Hola {nombre}, te saludamos de Da Capo - Casa Musical 🎶. Hemos registrado tu inasistencia del {fecha} como justificada. ¡Saludos y nos vemos pronto! ✨</textarea>
                     <span style="font-size: 0.7rem; color: var(--text-muted);">Variables: {nombre}, {fecha}</span>
                 </div>
+
+                <!-- NUEVA PLANTILLA REPORTE MENSUAL -->
+                <div class="form-group" style="margin-top: 15px;">
+                    <label>Plantilla Reporte Mensual para Padres</label>
+                    <textarea id="templateReporteMensual" rows="6" oninput="saveTemplates()">🎵 *ACADEMIA DE MÚSICA DA CAPO* 🎵\n*Reporte Mensual de Progreso*\n\nEstimados padres de *{nombre}*, los saludamos con mucho gusto. Aquí tienen el resumen del mes:\n\n📊 *Asistencia:* \n✅ Presentes: {presentes} | ❌ Ausentes: {ausentes} | ⚠️ Justificadas: {justificadas}\n\n🎼 *Avance en Repertorio:* \n"{repertorio}"\n\n👨‍🏫 *Profesor:* {profesor} ({instrumento})\n💰 *Estado de Cuenta:* {estado_pago}\n\n✨ ¡Gracias por su confianza constante en la formación musical de su hijo/a!</textarea>
+                    <span style="font-size: 0.7rem; color: var(--text-muted);">Variables: {nombre}, {presentes}, {ausentes}, {justificadas}, {repertorio}, {profesor}, {instrumento}, {estado_pago}</span>
+                </div>
             </div>
 
             <h2>Conexión y Nube</h2>
@@ -882,17 +889,17 @@
         </div>
     </div>
 
-    <!-- MODAL REPERTORIO / NOTAS RÁPIDAS Y ASISTENCIA INDIVIDUAL -->
+    <!-- MODAL REPERTORIO Y ASISTENCIA INDIVIDUAL -->
     <div class="modal" id="repertoireModal">
         <div class="modal-body">
             <div class="flex-between">
-                <h2 id="repertoireModalTitle">Repertorio y Asistencia</h2>
+                <h2 id="repertoireModalTitle">Detalles y Asistencia</h2>
                 <span onclick="closeRepertoireModal()" style="cursor:pointer; font-size: 1.2rem;">✕</span>
             </div>
             <input type="hidden" id="repertoireStudentId">
             
             <div class="form-group">
-                <label>📊 Resumen de Asistencias del Alumno</label>
+                <label>📊 Resumen de Asistencias (Mes Actual)</label>
                 <div id="studentAttendanceSummary" style="font-size: 0.85rem; background: var(--card-inner); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 10px;">
                     Cargando estadísticas...
                 </div>
@@ -902,7 +909,10 @@
                 <label>Notas de Repertorio y Avance (Piezas, Ejercicios)</label>
                 <textarea id="studentRepertoireNotes" rows="4" placeholder="Escribe aquí las obras que está practicando el alumno..."></textarea>
             </div>
-            <button class="btn" onclick="saveRepertoireNotes()">Guardar Notas</button>
+            <div style="display:flex; gap:8px;">
+                <button class="btn" onclick="saveRepertoireNotes()" style="flex:1;">Guardar Notas</button>
+                <button class="btn btn-whatsapp" onclick="sendMonthlyReportWhatsAppFromModal()" style="flex:1;">📊 Enviar Reporte</button>
+            </div>
         </div>
     </div>
 
@@ -984,7 +994,7 @@
         </div>
     </div>
 
-    <!-- MODAL OCASIONAL (PARTICULAR O ESCUELA) -->
+    <!-- MODAL OCASIONAL -->
     <div class="modal" id="occasionalModal">
         <div class="modal-body">
             <div class="flex-between">
@@ -1049,12 +1059,14 @@
             const tPres = localStorage.getItem('dacapo_tpl_presente');
             const tAus = localStorage.getItem('dacapo_tpl_ausente');
             const tJust = localStorage.getItem('dacapo_tpl_justificado');
+            const tRep = localStorage.getItem('dacapo_tpl_reporte_mensual');
 
             if(tCobro) document.getElementById('templateCobro').value = tCobro;
             if(tComp) document.getElementById('templateComprobante').value = tComp;
             if(tPres) document.getElementById('templatePresente').value = tPres;
             if(tAus) document.getElementById('templateAusente').value = tAus;
             if(tJust) document.getElementById('templateJustificado').value = tJust;
+            if(tRep) document.getElementById('templateReporteMensual').value = tRep;
         }
 
         function saveTemplates() {
@@ -1063,12 +1075,14 @@
             const tPres = document.getElementById('templatePresente').value;
             const tAus = document.getElementById('templateAusente').value;
             const tJust = document.getElementById('templateJustificado').value;
+            const tRep = document.getElementById('templateReporteMensual').value;
 
             localStorage.setItem('dacapo_tpl_cobro', tCobro);
             localStorage.setItem('dacapo_tpl_comp', tComp);
             localStorage.setItem('dacapo_tpl_presente', tPres);
             localStorage.setItem('dacapo_tpl_ausente', tAus);
             localStorage.setItem('dacapo_tpl_justificado', tJust);
+            localStorage.setItem('dacapo_tpl_reporte_mensual', tRep);
         }
 
         function initFirebaseFromStorage() {
@@ -1380,7 +1394,7 @@
             closeReceiptModal();
         }
 
-        // --- REPERTORIO Y ASISTENCIA INDIVIDUAL ---
+        // --- REPERTORIO Y REPORTE MENSUAL PARA WHATSAPP ---
         function openRepertoireModal(studentId) {
             const student = students.find(s => s.id === studentId);
             if (!student) return;
@@ -1388,17 +1402,17 @@
             document.getElementById('repertoireModalTitle').innerText = `Detalles: ${student.name}`;
             document.getElementById('studentRepertoireNotes').value = student.repertoireNotes || '';
             
-            // Calcular estadísticas de asistencia de este alumno específico
-            const studentAtts = attendances.filter(a => a.studentId && a.studentId.startsWith(student.id));
+            const currMonth = new Date().toISOString().substring(0, 7);
+            const studentAtts = attendances.filter(a => a.studentId && a.studentId.startsWith(student.id) && a.date && a.date.startsWith(currMonth));
             const totalPresentes = studentAtts.filter(a => a.status === 'Presente').length;
             const totalAusentes = studentAtts.filter(a => a.status === 'Ausente').length;
             const totalJustificados = studentAtts.filter(a => a.status === 'Justificado').length;
 
             document.getElementById('studentAttendanceSummary').innerHTML = `
+                📅 Mes actual (${currMonth}):<br>
                 ✅ <strong>Presentes:</strong> ${totalPresentes} &nbsp;|&nbsp; 
                 ❌ <strong>Ausentes:</strong> ${totalAusentes} &nbsp;|&nbsp; 
                 ⚠️ <strong>Justificados:</strong> ${totalJustificados}
-                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">Total de registros en historial: ${studentAtts.length}</div>
             `;
 
             document.getElementById('repertoireModal').classList.add('active');
@@ -1422,6 +1436,37 @@
             closeRepertoireModal();
             renderStudents();
             alert("Notas de repertorio guardadas correctamente.");
+        }
+
+        function sendMonthlyReportWhatsAppFromModal() {
+            const studentId = document.getElementById('repertoireStudentId').value;
+            const student = students.find(s => s.id === studentId);
+            if (!student || !student.phone) return alert("El alumno no tiene número de teléfono/WhatsApp registrado.");
+
+            const currMonth = new Date().toISOString().substring(0, 7);
+            const studentAtts = attendances.filter(a => a.studentId && a.studentId.startsWith(student.id) && a.date && a.date.startsWith(currMonth));
+            const presentes = studentAtts.filter(a => a.status === 'Presente').length;
+            const ausentes = studentAtts.filter(a => a.status === 'Ausente').length;
+            const justificadas = studentAtts.filter(a => a.status === 'Justificado').length;
+
+            const phoneClean = student.phone.replace(/[^0-9+]/g, '');
+            const repertorio = student.repertoireNotes || 'Sin notas de repertorio registradas este mes.';
+            const profesor = student.teacher ? student.teacher.split(' (')[0] : 'Profesor Da Capo';
+            const instrumento = student.instrument || 'Música';
+            const estadoPago = student.paid ? '✅ Al día (Pagado)' : '⚠️ Pendiente de pago';
+
+            let template = document.getElementById('templateReporteMensual').value;
+            let text = template
+                .replace('{nombre}', student.name)
+                .replace('{presentes}', presentes)
+                .replace('{ausentes}', ausentes)
+                .replace('{justificadas}', justificadas)
+                .replace('{repertorio}', repertorio)
+                .replace('{profesor}', profesor)
+                .replace('{instrumento}', instrumento)
+                .replace('{estado_pago}', estadoPago);
+
+            window.open(`https://wa.me/${phoneClean}?text=${encodeURIComponent(text)}`, '_blank');
         }
 
         // --- HISTORIAL DE PAGOS POR ALUMNO ---
