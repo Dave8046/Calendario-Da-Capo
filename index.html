@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Da Capo - Casa Musical</title>
+    
+    <!-- Configuración PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#050505">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Da Capo">
+
     <style>
         :root {
             --bg-color: #050505;
@@ -1069,6 +1077,15 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <script>
+        // Registro del Service Worker para PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Service Worker registrado con éxito', reg))
+                    .catch(err => console.log('Error al registrar el Service Worker', err));
+            });
+        }
+
         let students = JSON.parse(localStorage.getItem('dacapo_students')) || [];
         let schools = JSON.parse(localStorage.getItem('dacapo_schools')) || [];
         let occasionalClasses = JSON.parse(localStorage.getItem('dacapo_occasional')) || [];
